@@ -9,4 +9,30 @@ public class ApplicationDbContext : IdentityDbContext
         : base(options)
     {
     }
+
+    public DbSet<Character> Characters => this.Set<Character>();
+
+    public DbSet<CharacterClass> CharacterClasses => this.Set<CharacterClass>();
+
+    public DbSet<InventoryItem> InventoryItems => this.Set<InventoryItem>();
+
+    public DbSet<ProficiencyBonus> ProfiencyBonuses => this.Set<ProficiencyBonus>();
+
+    public DbSet<Spell> Spells => this.Set<Spell>();
+
+    public DbSet<SpellSlot> SpellSlots => this.Set<SpellSlot>();
+
+    public DbSet<Ability> Abilities => this.Set<Ability>();
+
+    public DbSet<Stats> AbilityModifiers => this.Set<Stats>();
+
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        if (modelBuilder == null)
+        {
+            throw new ArgumentNullException(nameof(modelBuilder));
+        }
+    }
 }
