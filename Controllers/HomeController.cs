@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using DndManager.Models;
+using DndManager.Data;
 
 namespace DndManager.Controllers;
 
