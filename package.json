@@ -7,6 +7,8 @@
   "license": "MIT",
   "devDependencies": {
     "gulp": "^4.0.2",
-    "gulp-elm": "^0.8.2"
+    "gulp-elm": "^0.8.2",
+    "gulp-less": "^5.0.0",
+    "gulp-plumber": "^1.2.1"
   }
 }
