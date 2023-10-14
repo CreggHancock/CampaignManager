@@ -11,12 +11,6 @@ public class Repository<T> : IRepository<T> where T : class
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly DbSet<T> _dbSet;
-    public Repository(ApplicationDbContext dbContext)
-    {
-        _dbContext = dbContext;
-        _dbSet = _dbContext.Set<T>();
-    }
-
     public async Task<T> GetById(object id)
     {
         var obj = await _dbSet.FindAsync(id);
@@ -28,15 +22,18 @@ public class Repository<T> : IRepository<T> where T : class
 
         return obj;
     }
-    
+    public Repository(ApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+        _dbSet = _dbContext.Set<T>();
+    }
     public IList<T> GetAll()
     {
         return _dbSet.ToList();
     }
-    public async Task<T> AddAsync(T entity)
+    public async Task Add(T entity)
     {
-        var addedEntity = await _dbSet.AddAsync(entity);
-        return addedEntity.Entity;
+        await _dbSet.AddAsync(entity);
     }
 
     public virtual async Task Delete(object id)

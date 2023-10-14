@@ -6,14 +6,12 @@ using System;
 public class UnitOfWork : IUnitOfWork, IDisposable
 {
     private readonly ApplicationDbContext _dbContext;
-    private bool disposed = false;
 
     public UnitOfWork(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
     }
-
-    public void SaveChanges()
+     public void SaveChanges()
     {
         _dbContext.SaveChanges();
     }
@@ -22,7 +20,6 @@ public class UnitOfWork : IUnitOfWork, IDisposable
     {
         await _dbContext.SaveChangesAsync();
     }
-
     public void Rollback()
     {
         foreach (var entry in _dbContext.ChangeTracker.Entries())
@@ -35,12 +32,11 @@ public class UnitOfWork : IUnitOfWork, IDisposable
             }
         }
     }
-
     public IRepository<T> Repository<T>() where T : class
     {
         return new Repository<T>(_dbContext);
     }
-    
+    private bool disposed = false;
     protected virtual void Dispose(bool disposing)
     {
         if (!this.disposed)
@@ -52,7 +48,6 @@ public class UnitOfWork : IUnitOfWork, IDisposable
         }
         this.disposed = true;
     }
-
     public void Dispose()
     {
         Dispose(true);
