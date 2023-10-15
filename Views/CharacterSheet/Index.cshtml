@@ -2,6 +2,8 @@
     ViewData["Title"] = "Index";
 }
 
+@model CharacterSheetViewModel
+
 <div id="app-container-character-sheet"></div>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -9,7 +11,8 @@
             node: document.getElementById("app-container-character-sheet"),
             flags: {
                 baseUrl: "https://localhost:7068",
-                headers: {}
+                headers: {},
+                character: @Html.Raw(Json.Serialize(Model.Character)),
             }
         });
     });

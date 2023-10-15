@@ -6,7 +6,7 @@ const plumber = require("gulp-plumber");
 function elmBundle() {
   return gulp
     .src("Views/**/Main.elm")
-    .pipe(elm.bundle("elm.js", { optimize: true }))
+    .pipe(elm.bundle("elm.js", { debug: true }))
     .pipe(gulp.dest("wwwroot/js/"));
 }
 

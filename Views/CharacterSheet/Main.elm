@@ -2,12 +2,13 @@ module CharacterSheet.Main exposing (Flags, Model, Msg(..), init, initialModel, 
 
 import Accessibility as Html exposing (Html)
 import Browser
+import Common.Character exposing (Character, characterDecoder)
 import Html as ElmHtml
 import Html.Attributes as Attr
 import Html.Extra
 import Http
 import Json.Decode as Decode exposing (Decoder)
-import Json.Decode.Pipeline exposing (requiredAt)
+import Json.Decode.Pipeline exposing (required, requiredAt)
 import Json.Encode as Encode
 
 
@@ -30,6 +31,7 @@ initialModel : Model
 initialModel =
     { httpConfig = { baseUrl = "", headers = [] }
     , errorMessage = Nothing
+    , character = Character Nothing "" 0 0 0 0 0 0 0 0 0 "" "" "" "" 0 0 0 "" False [] [] [] [] [] []
     }
 
 
@@ -42,11 +44,13 @@ type alias HttpConfig =
 type alias Model =
     { httpConfig : HttpConfig
     , errorMessage : Maybe String
+    , character : Character
     }
 
 
 type alias Flags =
     { httpConfig : HttpConfig
+    , character : Character
     }
 
 
@@ -1887,6 +1891,7 @@ flagsDecoder : Decoder Flags
 flagsDecoder =
     Decode.succeed Flags
         |> requiredAt [] httpConfigDecoder
+        |> required "character" characterDecoder
 
 
 httpConfigDecoder : Decoder HttpConfig
