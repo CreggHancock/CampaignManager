@@ -67,8 +67,26 @@
 .navbar.mb-3 {
   margin-bottom: 0rem !important;
 }
+main.pb-3,
+body {
+  padding-bottom: 0 !important;
+  background: #151515 !important;
+}
+nav.navbar,
+footer.footer {
+  background: #0c0c0c !important;
+  color: #f9f9f9 !important;
+  border-color: #111 !important;
+}
+nav.navbar a,
+footer.footer a,
+nav.navbar button,
+footer.footer button {
+  color: #f9f9f9 !important;
+  text-decoration: none;
+}
 .main-wrap {
-  font-family: var(--font__serif, 'Ubuntu');
+  font-family: var(--font__sans-serif);
   position: relative;
 }
 .main-wrap h1,
@@ -798,7 +816,7 @@
   display: flex;
   justify-content: space-around;
   align-items: baseline;
-  border-bottom: 3px solid #912a2a;
+  border-bottom: 3px solid var(--str-red);
   z-index: 9;
   position: relative;
 }
@@ -863,6 +881,10 @@
   padding: 0.45rem;
   flex: 1 1 calc(50% - 0.5rem);
 }
+.charsheet .main section.combat > div.hp > div.dmg-taken i,
+.charsheet .main section.combat > div.hp > div.dmg-taken input {
+  color: #ff8f8f;
+}
 .charsheet .main section.combat > div.hp > div.dmg-taken input {
   padding: 0.5rem 0;
   font-size: 20px;
@@ -896,6 +918,10 @@
   flex-direction: column-reverse;
   padding: 0.45rem;
   flex: 1 1 calc(50% - 0.5rem);
+}
+.charsheet .main section.combat > div.hp > div.hp-gained i,
+.charsheet .main section.combat > div.hp > div.hp-gained input {
+  color: #bcf8ff;
 }
 .charsheet .main section.combat > div.hp > div.hp-gained input {
   padding: 0.5rem 0;
@@ -936,7 +962,7 @@
 }
 .charsheet .main section.combat > div.armorclass > div input {
   font-size: var(--font-size--calc-xl) !important;
-  border-bottom: 3px solid #d18c43 !important;
+  border-bottom: 3px solid var(--const-orange) !important;
   width: 100%;
   border: 0px solid var(--black-000);
   text-align: center;
@@ -981,7 +1007,7 @@
 }
 .charsheet .main section.combat > div.initiative > div input {
   font-size: var(--font-size--calc-xl) !important;
-  border-bottom: 3px solid #43853e !important;
+  border-bottom: 3px solid var(--dex-green) !important;
   width: 100%;
   border: 0px solid var(--black-000);
   text-align: center;
@@ -1026,7 +1052,7 @@
 }
 .charsheet .main section.combat > div.speed > div input {
   font-size: var(--font-size--calc-xl) !important;
-  border-bottom: 3px solid #345994 !important;
+  border-bottom: 3px solid var(--int-blue) !important;
   width: 100%;
   border: 0px solid var(--black-000);
   text-align: center;
@@ -1396,51 +1422,51 @@
   border: 0;
 }
 .charsheet .main > section section.attributes div.scores ul li.strength {
-  background: linear-gradient(var(--inner-content-bg) 50%, #912a2a);
+  background: linear-gradient(var(--inner-content-bg) 50%, var(--str-red));
   border-color: var(--str-red);
 }
 .charsheet .main > section section.attributes div.scores ul li.strength .modifier input {
-  background: #912a2a;
+  background: var(--str-red);
   border-color: var(--str-red);
 }
 .charsheet .main > section section.attributes div.scores ul li.dexterity {
-  background: linear-gradient(var(--inner-content-bg) 50%, #43853e);
+  background: linear-gradient(var(--inner-content-bg) 50%, var(--dex-green));
   border-color: var(--dex-green);
 }
 .charsheet .main > section section.attributes div.scores ul li.dexterity .modifier input {
-  background: #43853e;
+  background: var(--dex-green);
   border-color: var(--dex-green);
 }
 .charsheet .main > section section.attributes div.scores ul li.constitution {
-  background: linear-gradient(var(--inner-content-bg) 50%, #d18c43);
+  background: linear-gradient(var(--inner-content-bg) 50%, var(--const-orange));
   border-color: var(--const-orange);
 }
 .charsheet .main > section section.attributes div.scores ul li.constitution .modifier input {
-  background: #af6c25;
+  background: var(--const-orange);
   border-color: var(--const-orange);
 }
 .charsheet .main > section section.attributes div.scores ul li.wisdom {
-  background: linear-gradient(var(--inner-content-bg) 50%, #542a75);
+  background: linear-gradient(var(--inner-content-bg) 50%, var(--wisdom-purple));
   border-color: var(--wisdom-purple);
 }
 .charsheet .main > section section.attributes div.scores ul li.wisdom .modifier input {
-  background: #542a75;
+  background: var(--wisdom-purple);
   border-color: var(--wisdom-purple);
 }
 .charsheet .main > section section.attributes div.scores ul li.intelligence {
-  background: linear-gradient(var(--inner-content-bg) 50%, #345994);
+  background: linear-gradient(var(--inner-content-bg) 50%, var(--int-blue));
   border-color: var(--int-blue);
 }
 .charsheet .main > section section.attributes div.scores ul li.intelligence .modifier input {
-  background: #345994;
+  background: var(--int-blue);
   border-color: var(--int-blue);
 }
 .charsheet .main > section section.attributes div.scores ul li.charisma {
-  background: linear-gradient(var(--inner-content-bg) 50%, #d7b80b);
+  background: linear-gradient(var(--inner-content-bg) 50%, var(--cha-yellow));
   border-color: var(--cha-yellow);
 }
 .charsheet .main > section section.attributes div.scores ul li.charisma .modifier input {
-  background: #b29804;
+  background: var(--cha-yellow);
   border-color: var(--cha-yellow);
 }
 .charsheet .main > section section.attributes div.scores label {
@@ -2120,14 +2146,17 @@
 }
 .utility-tabs details {
   transition: all 0.2s ease-in-out;
-  border-radius: 10px 0 0 10px;
-  border: 4px inset rgba(255, 255, 255, 0.25) !important;
+  border-radius: 4px 0 0 4px;
+  border: 4px inset rgba(255, 255, 255, 0.25);
   max-width: max-content;
   max-height: 100%;
   width: 100%;
   overflow: hidden;
   position: relative;
   background: #333;
+}
+.utility-tabs details:hover {
+  border-color: var(--dnd-color-accent);
 }
 .utility-tabs details[open] {
   max-width: 100%;
@@ -2402,7 +2431,7 @@
 }
 .bookmarks details {
   resize: none;
-  border-radius: 0 0 0 10px;
+  border-radius: 0 0 0 4px;
 }
 .bookmarks details > ul {
   overflow: auto;
@@ -3143,12 +3172,14 @@ details.charname summary {
   width: 100%;
   z-index: 9;
 }
-.main-abilities .content--wrapper,
-.main-spells .content--wrapper,
-.main-cantrips .content--wrapper,
-.main-guides .content--wrapper {
-  max-width: 900px;
-}
+/*.main-abilities,
+.main-spells,
+.main-cantrips,
+.main-guides {
+	.content--wrapper {
+		max-width: 900px;
+	}
+}*/
 .main-content .content--wrapper > ul.main-content--images > li {
   flex: 1 1 100%;
   padding: 0.5rem 1rem;

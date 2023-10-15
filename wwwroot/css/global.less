@@ -67,6 +67,7 @@
 	--level-14: #f15d5d;
 	--level-15: #e23939;
 }
+//default overrides
 .container {
     max-width: 100% !important;
 	padding-right: 0 !important;
@@ -75,22 +76,26 @@
 .navbar.mb-3 {
     margin-bottom: 0rem !important;
 }
-main.pb-3 {
+main.pb-3, body {
 	padding-bottom: 0 !important;
+	background: #151515 !important;
 }
 nav.navbar, footer.footer {
-    background: #151515 !important;
+    background: #0c0c0c !important;
     color: #f9f9f9 !important;
-		a {
+	border-color: #111 !important;
+		a, button {
 			color: #f9f9f9 !important;
+			text-decoration: none;
 		}
 }
 
 
 .main-wrap {
-	font-family: var(--font__serif, 'Ubuntu');
+	font-family: var(--font__sans-serif);
 	h1, h2, h3, h4 {
 		color: var(--header-blue);
+		font-family: var(--default-font);
 	}
 	a {
 		color: var(--link-color);
@@ -815,7 +820,7 @@ nav.navbar, footer.footer {
 						display: flex;
 						justify-content: space-around;
 						align-items: baseline;
-						border-bottom: 3px solid rgba(145, 42, 42, 1);
+						border-bottom: 3px solid var(--str-red);
 						z-index: 9;
 						position: relative;
 						label {
@@ -880,6 +885,9 @@ nav.navbar, footer.footer {
 					flex-direction: column-reverse;
 					padding: 0.45rem;
 					flex: 1 1 calc(50% - 0.5rem);
+					i, input {
+						color: #ff8f8f;
+					}
 					input {
 						&:focus-within {
 							outline: 0;
@@ -914,6 +922,9 @@ nav.navbar, footer.footer {
 					flex-direction: column-reverse;
 					padding: 0.45rem;
 					flex: 1 1 calc(50% - 0.5rem);
+					i, input {
+						color: #bcf8ff;
+					}
 					input {
 						&:focus-within {
 							outline: 0;
@@ -946,7 +957,7 @@ nav.navbar, footer.footer {
 				>div {
 					input {
 						font-size: var(--font-size--calc-xl) !important;
-						border-bottom: 3px solid rgba(209, 140, 67, 1) !important;
+						border-bottom: 3px solid var(--const-orange) !important;
 						width: 100%;
 						border: 0px solid var(--black-000);
 						text-align: center;
@@ -991,7 +1002,7 @@ nav.navbar, footer.footer {
 				>div {
 					input {
 						font-size: var(--font-size--calc-xl) !important;
-						border-bottom: 3px solid rgba(67, 133, 62, 1) !important;
+						border-bottom: 3px solid var(--dex-green) !important;
 						width: 100%;
 						border: 0px solid var(--black-000);
 						text-align: center;
@@ -1036,7 +1047,7 @@ nav.navbar, footer.footer {
 				>div {
 					input {
 						font-size: var(--font-size--calc-xl) !important;
-						border-bottom: 3px solid rgba(52, 89, 148, 1) !important;
+						border-bottom: 3px solid var(--int-blue) !important;
 						width: 100%;
 						border: 0px solid var(--black-000);
 						text-align: center;
@@ -1409,61 +1420,61 @@ nav.navbar, footer.footer {
 							}
 						}
 						li.strength {
-							background: linear-gradient(var(--inner-content-bg) 50%, rgba(145, 42, 42, 1));
+							background: linear-gradient(var(--inner-content-bg) 50%, var(--str-red));
 							border-color: var(--str-red);
 							.modifier {
 								input {
-									background: rgba(145, 42, 42, 1);
+									background: var(--str-red);
 									border-color: var(--str-red);
 								}
 							}
 						}
 						li.dexterity {
-							background: linear-gradient(var(--inner-content-bg) 50%, rgba(67, 133, 62, 1));
+							background: linear-gradient(var(--inner-content-bg) 50%, var(--dex-green));
 							border-color: var(--dex-green);
 							.modifier {
 								input {
-									background: rgba(67, 133, 62, 1);
+									background: var(--dex-green);
 									border-color: var(--dex-green);
 								}
 							}
 						}
 						li.constitution {
-							background: linear-gradient(var(--inner-content-bg) 50%, rgba(209, 140, 67, 1));
+							background: linear-gradient(var(--inner-content-bg) 50%, var(--const-orange));
 							border-color: var(--const-orange);
 							.modifier {
 								input {
-									background: rgb(175, 108, 37);
+									background: var(--const-orange);
 									border-color: var(--const-orange);
 								}
 							}
 						}
 						li.wisdom {
-							background: linear-gradient(var(--inner-content-bg) 50%, rgba(84, 42, 117, 1));
+							background: linear-gradient(var(--inner-content-bg) 50%, var(--wisdom-purple));
 							border-color: var(--wisdom-purple);
 							.modifier {
 								input {
-									background: rgba(84, 42, 117, 1);
+									background: var(--wisdom-purple);
 									border-color: var(--wisdom-purple);
 								}
 							}
 						}
 						li.intelligence {
-							background: linear-gradient(var(--inner-content-bg) 50%, rgba(52, 89, 148, 1));
+							background: linear-gradient(var(--inner-content-bg) 50%, var(--int-blue));
 							border-color: var(--int-blue);
 							.modifier {
 								input {
-									background: rgba(52, 89, 148, 1);
+									background: var(--int-blue);
 									border-color: var(--int-blue);
 								}
 							}
 						}
 						li.charisma {
-							background: linear-gradient(var(--inner-content-bg) 50%, rgba(215, 184, 11, 1));
+							background: linear-gradient(var(--inner-content-bg) 50%, var(--cha-yellow));
 							border-color: var(--cha-yellow);
 							.modifier {
 								input {
-									background: rgb(178, 152, 4);
+									background: var(--cha-yellow);
 									border-color: var(--cha-yellow);
 								}
 							}
@@ -2214,14 +2225,17 @@ nav.navbar, footer.footer {
     details {
         transition: all 0.2s ease-in-out;
 		background: #333;
-		border-radius: 10px 0 0 10px;
-		border: 4px inset rgba(255, 255, 255, 0.25) !important;
+		border-radius: 4px 0 0 4px;
+		border: 4px inset rgba(255, 255, 255, 0.25);
 		max-width: max-content;
 		max-height: 100%;
 		width: 100%;
 		overflow: hidden;
 		position: relative;
         background: #333;
+		&:hover {
+			border-color: var(--dnd-color-accent);
+		}
         &[open] {
             max-width: 100%;
             background: #252525;
@@ -2516,7 +2530,7 @@ nav.navbar, footer.footer {
 .bookmarks {
 	details {
         resize: none;
-		border-radius: 0 0 0 10px;
+		border-radius: 0 0 0 4px;
 		>ul {
 			overflow: auto;
 			direction: rtl;
