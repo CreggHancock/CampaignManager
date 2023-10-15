@@ -80,7 +80,7 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    Html.div []
+    Html.div [ Attr.class "main-wrap" ]
         [ case model.errorMessage of
             Just errorMessage ->
                 Html.div [] [ Html.text errorMessage ]

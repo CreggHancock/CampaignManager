@@ -11339,7 +11339,10 @@ var $tesk9$accessible_html$Accessibility$ul = function (attributes) {
 var $author$project$CharacterSheet$Main$view = function (model) {
 	return A2(
 		$tesk9$accessible_html$Accessibility$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('main-wrap')
+			]),
 		_List_fromArray(
 			[
 				function () {
