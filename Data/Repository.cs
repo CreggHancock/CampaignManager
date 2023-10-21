@@ -35,10 +35,21 @@ public class Repository<T> : IRepository<T> where T : class
         return obj != null;
     }
 
-    public IList<T> GetAll()
+    public async Task<IList<T>> GetAll()
     {
-        return _dbSet.ToList();
+        return await _dbSet.ToListAsync();
     }
+
+    public async Task<IList<T>> Get(Func<DbSet<T>, Task<IList<T>>> func)
+    {
+        return await func(_dbSet);
+    }
+
+    public async Task<T> Get(Func<DbSet<T>, Task<T>> func)
+    {
+        return await func(_dbSet);
+    }
+
     public async Task<T> AddAsync(T entity)
     {
         var addedEntity = await _dbSet.AddAsync(entity);

@@ -2,6 +2,8 @@
     ViewData["Title"] = "Home Page";
 }
 
+@model HomeViewModel;
+
 <div id="app-container-home"></div>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -9,7 +11,9 @@
             node: document.getElementById("app-container-home"),
             flags: {
                 baseUrl: "https://localhost:7068",
-                headers: {}
+                headers: {},
+                userCharacters: @Json.Serialize(Model.UserCharacters),
+                isLoggedIn: @Json.Serialize(Model.IsLoggedIn),
             }
         });
     });

@@ -1,4 +1,6 @@
-﻿namespace DndManager.Data;
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace DndManager.Data;
 
 public interface IRepository<T> where T : class
 {
@@ -6,7 +8,11 @@ public interface IRepository<T> where T : class
 
     Task<bool> ExistsAsync(object id);
 
-    IList<T> GetAll();
+    Task<IList<T>> GetAll();
+
+    Task<IList<T>> Get(Func<DbSet<T>, Task<IList<T>>> func);
+
+    Task<T> Get(Func<DbSet<T>, Task<T>> func);
 
     Task<T> AddAsync(T entity);
 

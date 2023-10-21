@@ -10689,110 +10689,15 @@ var $author$project$Home$Main$Init = function (a) {
 };
 var $author$project$Home$Main$initialModel = {
 	errorMessage: $elm$core$Maybe$Nothing,
-	httpConfig: {baseUrl: '', headers: _List_Nil}
+	httpConfig: {baseUrl: '', headers: _List_Nil},
+	isLoggedIn: false,
+	userCharacters: _List_Nil
 };
-var $author$project$Home$Main$Flags = function (httpConfig) {
-	return {httpConfig: httpConfig};
-};
-var $author$project$Home$Main$HttpConfig = F2(
-	function (baseUrl, headers) {
-		return {baseUrl: baseUrl, headers: headers};
+var $author$project$Home$Main$Flags = F3(
+	function (httpConfig, userCharacters, isLoggedIn) {
+		return {httpConfig: httpConfig, isLoggedIn: isLoggedIn, userCharacters: userCharacters};
 	});
-var $author$project$Home$Main$httpHeaderDecoder = function () {
-	var decoder = function (headers) {
-		return A2(
-			$elm$core$List$map,
-			function (_v0) {
-				var key = _v0.a;
-				var value = _v0.b;
-				return A2($elm$http$Http$header, key, value);
-			},
-			headers);
-	};
-	return A2(
-		$elm$json$Json$Decode$map,
-		decoder,
-		$elm$json$Json$Decode$keyValuePairs($elm$json$Json$Decode$string));
-}();
-var $author$project$Home$Main$httpConfigDecoder = A3(
-	$elm$json$Json$Decode$map2,
-	$author$project$Home$Main$HttpConfig,
-	A2($elm$json$Json$Decode$field, 'baseUrl', $elm$json$Json$Decode$string),
-	A2($elm$json$Json$Decode$field, 'headers', $author$project$Home$Main$httpHeaderDecoder));
-var $author$project$Home$Main$flagsDecoder = A3(
-	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$requiredAt,
-	_List_Nil,
-	$author$project$Home$Main$httpConfigDecoder,
-	$elm$json$Json$Decode$succeed($author$project$Home$Main$Flags));
-var $author$project$Home$Main$update = F2(
-	function (msg, model) {
-		if (msg.$ === 'Init') {
-			var flagsJson = msg.a;
-			var _v1 = A2($elm$json$Json$Decode$decodeValue, $author$project$Home$Main$flagsDecoder, flagsJson);
-			if (_v1.$ === 'Ok') {
-				var flags = _v1.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{httpConfig: flags.httpConfig}),
-					$elm$core$Platform$Cmd$none);
-			} else {
-				var error = _v1.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							errorMessage: $elm$core$Maybe$Just(
-								$elm$json$Json$Decode$errorToString(error))
-						}),
-					$elm$core$Platform$Cmd$none);
-			}
-		} else {
-			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-		}
-	});
-var $author$project$Home$Main$init = function (flags) {
-	return A2(
-		$author$project$Home$Main$update,
-		$author$project$Home$Main$Init(flags),
-		$author$project$Home$Main$initialModel);
-};
-var $author$project$Home$Main$view = function (model) {
-	return A2(
-		$tesk9$accessible_html$Accessibility$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				function () {
-				var _v0 = model.errorMessage;
-				if (_v0.$ === 'Just') {
-					var errorMessage = _v0.a;
-					return A2(
-						$tesk9$accessible_html$Accessibility$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$tesk9$accessible_html$Accessibility$text(errorMessage)
-							]));
-				} else {
-					return $elm_community$html_extra$Html$Extra$nothing;
-				}
-			}(),
-				$tesk9$accessible_html$Accessibility$text('Hello World!')
-			]));
-};
-var $author$project$Home$Main$main = $elm$browser$Browser$element(
-	{
-		init: $author$project$Home$Main$init,
-		subscriptions: function (_v0) {
-			return $elm$core$Platform$Sub$none;
-		},
-		update: $author$project$Home$Main$update,
-		view: $author$project$Home$Main$view
-	});
-var $author$project$CharacterSheet$Main$Init = function (a) {
-	return {$: 'Init', a: a};
-};
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Common$Character$Character = function (id) {
 	return function (userId) {
 		return function (level) {
@@ -10846,15 +10751,6 @@ var $author$project$Common$Character$Character = function (id) {
 		};
 	};
 };
-var $author$project$CharacterSheet$Main$initialModel = {
-	character: $author$project$Common$Character$Character($elm$core$Maybe$Nothing)('')(0)(0)(0)(0)(0)(0)(0)(0)(0)('')('')('')('')(0)(0)(0)('')(false)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil),
-	errorMessage: $elm$core$Maybe$Nothing,
-	httpConfig: {baseUrl: '', headers: _List_Nil}
-};
-var $author$project$CharacterSheet$Main$Flags = F2(
-	function (httpConfig, character) {
-		return {character: character, httpConfig: httpConfig};
-	});
 var $author$project$Common$Character$Ability = F4(
 	function (maxUses, remainingUses, name, description) {
 		return {description: description, maxUses: maxUses, name: name, remainingUses: remainingUses};
@@ -10883,7 +10779,6 @@ var $author$project$Common$Character$abilityDecoder = A3(
 				'maxUses',
 				$elm$json$Json$Decode$int,
 				$elm$json$Json$Decode$succeed($author$project$Common$Character$Ability)))));
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Common$Character$CharacterClass = F2(
 	function (name, level) {
 		return {level: level, name: name};
@@ -10905,15 +10800,6 @@ var $author$project$Common$Character$inventoryItemDecoder = A3(
 	'name',
 	$elm$json$Json$Decode$string,
 	$elm$json$Json$Decode$succeed($author$project$Common$Character$InventoryItem));
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$maybe = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
-				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
-			]));
-};
 var $author$project$Common$Character$ProficiencyBonus = F2(
 	function (skillType, statType) {
 		return {skillType: skillType, statType: statType};
@@ -11150,8 +11036,265 @@ var $author$project$Common$Character$characterDecoder = A3(
 																									A3(
 																										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 																										'id',
-																										$elm$json$Json$Decode$maybe($elm$json$Json$Decode$int),
+																										$elm$json$Json$Decode$int,
 																										$elm$json$Json$Decode$succeed($author$project$Common$Character$Character)))))))))))))))))))))))))));
+var $author$project$Home$Main$HttpConfig = F2(
+	function (baseUrl, headers) {
+		return {baseUrl: baseUrl, headers: headers};
+	});
+var $author$project$Home$Main$httpHeaderDecoder = function () {
+	var decoder = function (headers) {
+		return A2(
+			$elm$core$List$map,
+			function (_v0) {
+				var key = _v0.a;
+				var value = _v0.b;
+				return A2($elm$http$Http$header, key, value);
+			},
+			headers);
+	};
+	return A2(
+		$elm$json$Json$Decode$map,
+		decoder,
+		$elm$json$Json$Decode$keyValuePairs($elm$json$Json$Decode$string));
+}();
+var $author$project$Home$Main$httpConfigDecoder = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Home$Main$HttpConfig,
+	A2($elm$json$Json$Decode$field, 'baseUrl', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'headers', $author$project$Home$Main$httpHeaderDecoder));
+var $author$project$Home$Main$flagsDecoder = A3(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'isLoggedIn',
+	$elm$json$Json$Decode$bool,
+	A3(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'userCharacters',
+		$elm$json$Json$Decode$list($author$project$Common$Character$characterDecoder),
+		A3(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$requiredAt,
+			_List_Nil,
+			$author$project$Home$Main$httpConfigDecoder,
+			$elm$json$Json$Decode$succeed($author$project$Home$Main$Flags))));
+var $author$project$Home$Main$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'Init':
+				var flagsJson = msg.a;
+				var _v1 = A2($elm$json$Json$Decode$decodeValue, $author$project$Home$Main$flagsDecoder, flagsJson);
+				if (_v1.$ === 'Ok') {
+					var flags = _v1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{httpConfig: flags.httpConfig, isLoggedIn: flags.isLoggedIn, userCharacters: flags.userCharacters}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var error = _v1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								errorMessage: $elm$core$Maybe$Just(
+									$elm$json$Json$Decode$errorToString(error))
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'OnCreateClicked':
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		}
+	});
+var $author$project$Home$Main$init = function (flags) {
+	return A2(
+		$author$project$Home$Main$update,
+		$author$project$Home$Main$Init(flags),
+		$author$project$Home$Main$initialModel);
+};
+var $tesk9$accessible_html$Accessibility$a = function (attributes) {
+	return $elm$html$Html$a(
+		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
+};
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $tesk9$accessible_html$Accessibility$h2 = function (attributes) {
+	return $elm$html$Html$h2(
+		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
+};
+var $author$project$Common$Character$isEmpty = function (character) {
+	return _Utils_eq(character.id, -1);
+};
+var $tesk9$accessible_html$Accessibility$li = function (attributes) {
+	return $elm$html$Html$li(
+		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
+};
+var $tesk9$accessible_html$Accessibility$span = function (attributes) {
+	return $elm$html$Html$span(
+		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
+};
+var $tesk9$accessible_html$Accessibility$ul = function (attributes) {
+	return $elm$html$Html$ul(
+		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
+};
+var $author$project$Home$Main$viewCharacters = function (model) {
+	return A2(
+		$tesk9$accessible_html$Accessibility$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$tesk9$accessible_html$Accessibility$h2,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$tesk9$accessible_html$Accessibility$text('My Characters')
+					])),
+				(!model.isLoggedIn) ? A2(
+				$tesk9$accessible_html$Accessibility$span,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$tesk9$accessible_html$Accessibility$text('Please log in to start making characters.')
+					])) : A2(
+				$tesk9$accessible_html$Accessibility$ul,
+				_List_Nil,
+				A2(
+					$elm$core$List$map,
+					function (c) {
+						return $author$project$Common$Character$isEmpty(c) ? A2(
+							$tesk9$accessible_html$Accessibility$li,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$tesk9$accessible_html$Accessibility$a,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$href(model.httpConfig.baseUrl + '/CharacterSheet')
+										]),
+									_List_fromArray(
+										[
+											$tesk9$accessible_html$Accessibility$text('Create Character')
+										]))
+								])) : A2(
+							$tesk9$accessible_html$Accessibility$li,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$tesk9$accessible_html$Accessibility$a,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$href(
+											model.httpConfig.baseUrl + ('/CharacterSheet/' + $elm$core$String$fromInt(c.id)))
+										]),
+									_List_fromArray(
+										[
+											$tesk9$accessible_html$Accessibility$text(c.name)
+										]))
+								]));
+					},
+					model.userCharacters))
+			]));
+};
+var $author$project$Home$Main$NoOp = {$: 'NoOp'};
+var $tesk9$accessible_html$Accessibility$button = $elm$html$Html$button;
+var $author$project$Home$Main$viewParties = function (model) {
+	return A2(
+		$tesk9$accessible_html$Accessibility$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$tesk9$accessible_html$Accessibility$h2,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$tesk9$accessible_html$Accessibility$text('My Parties')
+					])),
+				(!model.isLoggedIn) ? A2(
+				$tesk9$accessible_html$Accessibility$span,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$tesk9$accessible_html$Accessibility$text('Please log in to manage your parties.')
+					])) : A2(
+				$tesk9$accessible_html$Accessibility$span,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$tesk9$accessible_html$Accessibility$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$type_('button'),
+								$elm$html$Html$Events$onClick($author$project$Home$Main$NoOp)
+							]),
+						_List_fromArray(
+							[
+								$tesk9$accessible_html$Accessibility$text('Join A Party')
+							])),
+						A2(
+						$tesk9$accessible_html$Accessibility$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$type_('button'),
+								$elm$html$Html$Events$onClick($author$project$Home$Main$NoOp)
+							]),
+						_List_fromArray(
+							[
+								$tesk9$accessible_html$Accessibility$text('Create A Party')
+							]))
+					]))
+			]));
+};
+var $author$project$Home$Main$view = function (model) {
+	return A2(
+		$tesk9$accessible_html$Accessibility$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				function () {
+				var _v0 = model.errorMessage;
+				if (_v0.$ === 'Just') {
+					var errorMessage = _v0.a;
+					return A2(
+						$tesk9$accessible_html$Accessibility$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$tesk9$accessible_html$Accessibility$text(errorMessage)
+							]));
+				} else {
+					return $elm_community$html_extra$Html$Extra$nothing;
+				}
+			}(),
+				$author$project$Home$Main$viewCharacters(model),
+				$author$project$Home$Main$viewParties(model)
+			]));
+};
+var $author$project$Home$Main$main = $elm$browser$Browser$element(
+	{
+		init: $author$project$Home$Main$init,
+		subscriptions: function (_v0) {
+			return $elm$core$Platform$Sub$none;
+		},
+		update: $author$project$Home$Main$update,
+		view: $author$project$Home$Main$view
+	});
+var $author$project$CharacterSheet$Main$Init = function (a) {
+	return {$: 'Init', a: a};
+};
+var $author$project$Common$Character$empty = $author$project$Common$Character$Character(-1)('')(0)(0)(0)(0)(0)(0)(0)(0)(0)('')('')('')('')(0)(0)(0)('')(false)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil);
+var $author$project$CharacterSheet$Main$initialModel = {
+	character: $author$project$Common$Character$empty,
+	errorMessage: $elm$core$Maybe$Nothing,
+	httpConfig: {baseUrl: '', headers: _List_Nil}
+};
+var $author$project$CharacterSheet$Main$Flags = F2(
+	function (httpConfig, character) {
+		return {character: character, httpConfig: httpConfig};
+	});
 var $author$project$CharacterSheet$Main$HttpConfig = F2(
 	function (baseUrl, headers) {
 		return {baseUrl: baseUrl, headers: headers};
@@ -11219,10 +11362,6 @@ var $author$project$CharacterSheet$Main$init = function (flags) {
 		$author$project$CharacterSheet$Main$Init(flags),
 		$author$project$CharacterSheet$Main$initialModel);
 };
-var $tesk9$accessible_html$Accessibility$a = function (attributes) {
-	return $elm$html$Html$a(
-		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
-};
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $elm$html$Html$br = _VirtualDom_node('br');
 var $tesk9$accessible_html$Accessibility$br = function (attributes) {
@@ -11231,7 +11370,6 @@ var $tesk9$accessible_html$Accessibility$br = function (attributes) {
 		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes),
 		_List_Nil);
 };
-var $tesk9$accessible_html$Accessibility$button = $elm$html$Html$button;
 var $elm$html$Html$details = _VirtualDom_node('details');
 var $tesk9$accessible_html$Accessibility$details = function (attributes) {
 	return $elm$html$Html$details(
@@ -11265,10 +11403,6 @@ var $tesk9$accessible_html$Accessibility$label = function (attributes) {
 	return $elm$html$Html$label(
 		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
 };
-var $tesk9$accessible_html$Accessibility$li = function (attributes) {
-	return $elm$html$Html$li(
-		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
-};
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
 var $tesk9$accessible_html$Accessibility$p = function (attributes) {
 	return $elm$html$Html$p(
@@ -11278,10 +11412,6 @@ var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProp
 var $elm$html$Html$section = _VirtualDom_node('section');
 var $tesk9$accessible_html$Accessibility$section = function (attributes) {
 	return $elm$html$Html$section(
-		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
-};
-var $tesk9$accessible_html$Accessibility$span = function (attributes) {
-	return $elm$html$Html$span(
 		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
 };
 var $elm$html$Html$Attributes$src = function (url) {
@@ -11330,10 +11460,6 @@ var $tesk9$accessible_html$Accessibility$thead = function (attributes) {
 var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $tesk9$accessible_html$Accessibility$tr = function (attributes) {
 	return $elm$html$Html$tr(
-		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
-};
-var $tesk9$accessible_html$Accessibility$ul = function (attributes) {
-	return $elm$html$Html$ul(
 		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
 };
 var $author$project$CharacterSheet$Main$view = function (model) {
@@ -18412,4 +18538,4 @@ var $author$project$CharacterSheet$Main$main = $elm$browser$Browser$element(
 		update: $author$project$CharacterSheet$Main$update,
 		view: $author$project$CharacterSheet$Main$view
 	});
-_Platform_export({'CharacterSheet':{'Main':{'init':$author$project$CharacterSheet$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"CharacterSheet.Main.Msg","aliases":{},"unions":{"CharacterSheet.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}},'MasterTools':{'Main':{'init':$author$project$MasterTools$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"MasterTools.Main.Msg","aliases":{},"unions":{"MasterTools.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}},'Home':{'Main':{'init':$author$project$Home$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Home.Main.Msg","aliases":{},"unions":{"Home.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}}});}(this));
+_Platform_export({'CharacterSheet':{'Main':{'init':$author$project$CharacterSheet$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"CharacterSheet.Main.Msg","aliases":{},"unions":{"CharacterSheet.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}},'MasterTools':{'Main':{'init':$author$project$MasterTools$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"MasterTools.Main.Msg","aliases":{},"unions":{"MasterTools.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}},'Home':{'Main':{'init':$author$project$Home$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Home.Main.Msg","aliases":{},"unions":{"Home.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"OnCreateClicked":[],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}}});}(this));

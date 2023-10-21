@@ -2,7 +2,7 @@ module CharacterSheet.Main exposing (Flags, Model, Msg(..), init, initialModel, 
 
 import Accessibility as Html exposing (Html)
 import Browser
-import Common.Character exposing (Character, characterDecoder)
+import Common.Character as Character exposing (Character, characterDecoder)
 import Html as ElmHtml
 import Html.Attributes as Attr
 import Html.Extra
@@ -31,7 +31,7 @@ initialModel : Model
 initialModel =
     { httpConfig = { baseUrl = "", headers = [] }
     , errorMessage = Nothing
-    , character = Character Nothing "" 0 0 0 0 0 0 0 0 0 "" "" "" "" 0 0 0 "" False [] [] [] [] [] []
+    , character = Character.empty
     }
 
 

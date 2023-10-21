@@ -1,4 +1,5 @@
 ﻿using DndManager.Data;
+using DndManager.Helpers;
 using DndManager.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -16,7 +17,8 @@ public class CharacterSheetController : Controller
 
     public async Task<IActionResult> Index(int? id)
     {
-        var character = this.BuildEmptyCharacter();
+        var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var character = CharacterHelpers.BuildEmptyCharacter(userIdentifier);
         if (id != null)
         {
             var repository = this.unitOfWork.Repository<Character>();
@@ -30,31 +32,5 @@ public class CharacterSheetController : Controller
         };
 
         return View(model);
-    }
-
-    private Character BuildEmptyCharacter()
-    {
-        var userIdentifier = this.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-        if (userIdentifier == null)
-        {
-            throw new InvalidOperationException("Can't use an invalid user ID");
-        }
-
-        return new Character()
-        {
-            UserId = userIdentifier,
-            Name = string.Empty,
-            Description = string.Empty,
-            Alignment = string.Empty,
-            Race = string.Empty,
-            HitDice = string.Empty,
-            CharacterClasses = Array.Empty<CharacterClass>(),
-            InventoryItems = Array.Empty<InventoryItem>(),
-            ProficiencyBonuses = Array.Empty<ProficiencyBonus>(),
-            Spells = Array.Empty<Spell>(),
-            SpellSlots = Array.Empty<SpellSlot>(),
-            Abilities = Array.Empty<Ability>(),
-        };
     }
 }

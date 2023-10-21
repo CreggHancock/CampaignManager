@@ -1,11 +1,11 @@
-module Common.Character exposing (Ability, Character, CharacterClass, InventoryItem, ProficiencyBonus, SkillType, Spell, SpellSlot, StatType, characterDecoder)
+module Common.Character exposing (Ability, Character, CharacterClass, InventoryItem, ProficiencyBonus, SkillType, Spell, SpellSlot, StatType, characterDecoder, empty, isEmpty)
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (required)
 
 
 type alias Character =
-    { id : Maybe Int
+    { id : Int
     , userId : String
     , level : Int
     , health : Int
@@ -102,10 +102,20 @@ type SkillType
     | Survival
 
 
+isEmpty : Character -> Bool
+isEmpty character =
+    character.id == -1
+
+
+empty : Character
+empty =
+    Character -1 "" 0 0 0 0 0 0 0 0 0 "" "" "" "" 0 0 0 "" False [] [] [] [] [] []
+
+
 characterDecoder : Decoder Character
 characterDecoder =
     Decode.succeed Character
-        |> required "id" (Decode.maybe Decode.int)
+        |> required "id" Decode.int
         |> required "userId" Decode.string
         |> required "level" Decode.int
         |> required "health" Decode.int

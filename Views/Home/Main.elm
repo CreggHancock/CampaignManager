@@ -2,10 +2,13 @@ module Home.Main exposing (Flags, Model, Msg(..), init, initialModel, main, upda
 
 import Accessibility as Html exposing (Html)
 import Browser
+import Common.Character as Character exposing (Character, characterDecoder)
+import Html.Attributes as Attr exposing (href)
+import Html.Events exposing (onClick)
 import Html.Extra
 import Http
 import Json.Decode as Decode exposing (Decoder)
-import Json.Decode.Pipeline exposing (requiredAt)
+import Json.Decode.Pipeline exposing (required, requiredAt)
 import Json.Encode as Encode
 
 
@@ -28,6 +31,8 @@ initialModel : Model
 initialModel =
     { httpConfig = { baseUrl = "", headers = [] }
     , errorMessage = Nothing
+    , userCharacters = []
+    , isLoggedIn = False
     }
 
 
@@ -40,16 +45,21 @@ type alias HttpConfig =
 type alias Model =
     { httpConfig : HttpConfig
     , errorMessage : Maybe String
+    , userCharacters : List Character
+    , isLoggedIn : Bool
     }
 
 
 type alias Flags =
     { httpConfig : HttpConfig
+    , userCharacters : List Character
+    , isLoggedIn : Bool
     }
 
 
 type Msg
     = Init Encode.Value
+    | OnCreateClicked
     | NoOp
 
 
@@ -61,12 +71,17 @@ update msg model =
                 Ok flags ->
                     ( { model
                         | httpConfig = flags.httpConfig
+                        , userCharacters = flags.userCharacters
+                        , isLoggedIn = flags.isLoggedIn
                       }
                     , Cmd.none
                     )
 
                 Err error ->
                     ( { model | errorMessage = Just (Decode.errorToString error) }, Cmd.none )
+
+        OnCreateClicked ->
+            ( model, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -81,7 +96,45 @@ view model =
 
             Nothing ->
                 Html.Extra.nothing
-        , Html.text "Hello World!"
+        , viewCharacters model
+        , viewParties model
+        ]
+
+
+viewCharacters : Model -> Html Msg
+viewCharacters model =
+    Html.div []
+        [ Html.h2 [] [ Html.text "My Characters" ]
+        , if not model.isLoggedIn then
+            Html.span [] [ Html.text "Please log in to start making characters." ]
+
+          else
+            Html.ul []
+                (model.userCharacters
+                    |> List.map
+                        (\c ->
+                            if Character.isEmpty c then
+                                Html.li [] [ Html.a [ href <| model.httpConfig.baseUrl ++ "/CharacterSheet" ] [ Html.text "Create Character" ] ]
+
+                            else
+                                Html.li [] [ Html.a [ href <| model.httpConfig.baseUrl ++ "/CharacterSheet/" ++ String.fromInt c.id ] [ Html.text c.name ] ]
+                        )
+                )
+        ]
+
+
+viewParties : Model -> Html Msg
+viewParties model =
+    Html.div []
+        [ Html.h2 [] [ Html.text "My Parties" ]
+        , if not model.isLoggedIn then
+            Html.span [] [ Html.text "Please log in to manage your parties." ]
+
+          else
+            Html.span []
+                [ Html.button [ Attr.type_ "button", onClick NoOp ] [ Html.text "Join A Party" ]
+                , Html.button [ Attr.type_ "button", onClick NoOp ] [ Html.text "Create A Party" ]
+                ]
         ]
 
 
@@ -89,6 +142,8 @@ flagsDecoder : Decoder Flags
 flagsDecoder =
     Decode.succeed Flags
         |> requiredAt [] httpConfigDecoder
+        |> required "userCharacters" (Decode.list characterDecoder)
+        |> required "isLoggedIn" Decode.bool
 
 
 httpConfigDecoder : Decoder HttpConfig

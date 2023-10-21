@@ -4,5 +4,5 @@ namespace DndManager.Models;
 
 public class CharacterSheetViewModel
 {
-    public Character Character { get; init; } = null!;
+    public required Character Character { get; init; } = null!;
 }

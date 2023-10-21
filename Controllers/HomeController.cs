@@ -2,21 +2,49 @@
 using Microsoft.AspNetCore.Mvc;
 using DndManager.Models;
 using DndManager.Data;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using DndManager.Helpers;
 
 namespace DndManager.Controllers;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly IUnitOfWork unitOfWork;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork)
     {
-        _logger = logger;
+        this._logger = logger;
+        this.unitOfWork = unitOfWork;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        var userAuthenticated = User.Identity?.IsAuthenticated ?? false;
+        IEnumerable<Character> characters = Array.Empty<Character>();
+        string? userId = null;
+        if (userAuthenticated) 
+        {
+            userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var characterRepository = unitOfWork.Repository<Character>();
+            characters = await characterRepository.Get(async dbSet =>
+            {
+                return await dbSet.Where(c => c.UserId == userId).ToListAsync();
+            });
+
+            var emptyCharacter = CharacterHelpers.BuildEmptyCharacter(userId);
+            characters = characters.Append(emptyCharacter);
+        }
+
+        var homeModel = new HomeViewModel
+        {
+            UserCharacters = characters,
+            IsLoggedIn = userAuthenticated,
+        };
+
+        return View(homeModel);
     }
 
     public IActionResult Privacy()
