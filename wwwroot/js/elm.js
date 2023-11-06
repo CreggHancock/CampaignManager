@@ -4953,7 +4953,182 @@ function _Browser_load(url)
 		}
 	}));
 }
-var $elm$core$Basics$EQ = {$: 'EQ'};
+
+
+
+// SEND REQUEST
+
+var _Http_toTask = F3(function(router, toTask, request)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		function done(response) {
+			callback(toTask(request.expect.a(response)));
+		}
+
+		var xhr = new XMLHttpRequest();
+		xhr.addEventListener('error', function() { done($elm$http$Http$NetworkError_); });
+		xhr.addEventListener('timeout', function() { done($elm$http$Http$Timeout_); });
+		xhr.addEventListener('load', function() { done(_Http_toResponse(request.expect.b, xhr)); });
+		$elm$core$Maybe$isJust(request.tracker) && _Http_track(router, xhr, request.tracker.a);
+
+		try {
+			xhr.open(request.method, request.url, true);
+		} catch (e) {
+			return done($elm$http$Http$BadUrl_(request.url));
+		}
+
+		_Http_configureRequest(xhr, request);
+
+		request.body.a && xhr.setRequestHeader('Content-Type', request.body.a);
+		xhr.send(request.body.b);
+
+		return function() { xhr.c = true; xhr.abort(); };
+	});
+});
+
+
+// CONFIGURE
+
+function _Http_configureRequest(xhr, request)
+{
+	for (var headers = request.headers; headers.b; headers = headers.b) // WHILE_CONS
+	{
+		xhr.setRequestHeader(headers.a.a, headers.a.b);
+	}
+	xhr.timeout = request.timeout.a || 0;
+	xhr.responseType = request.expect.d;
+	xhr.withCredentials = request.allowCookiesFromOtherDomains;
+}
+
+
+// RESPONSES
+
+function _Http_toResponse(toBody, xhr)
+{
+	return A2(
+		200 <= xhr.status && xhr.status < 300 ? $elm$http$Http$GoodStatus_ : $elm$http$Http$BadStatus_,
+		_Http_toMetadata(xhr),
+		toBody(xhr.response)
+	);
+}
+
+
+// METADATA
+
+function _Http_toMetadata(xhr)
+{
+	return {
+		url: xhr.responseURL,
+		statusCode: xhr.status,
+		statusText: xhr.statusText,
+		headers: _Http_parseHeaders(xhr.getAllResponseHeaders())
+	};
+}
+
+
+// HEADERS
+
+function _Http_parseHeaders(rawHeaders)
+{
+	if (!rawHeaders)
+	{
+		return $elm$core$Dict$empty;
+	}
+
+	var headers = $elm$core$Dict$empty;
+	var headerPairs = rawHeaders.split('\r\n');
+	for (var i = headerPairs.length; i--; )
+	{
+		var headerPair = headerPairs[i];
+		var index = headerPair.indexOf(': ');
+		if (index > 0)
+		{
+			var key = headerPair.substring(0, index);
+			var value = headerPair.substring(index + 2);
+
+			headers = A3($elm$core$Dict$update, key, function(oldValue) {
+				return $elm$core$Maybe$Just($elm$core$Maybe$isJust(oldValue)
+					? value + ', ' + oldValue.a
+					: value
+				);
+			}, headers);
+		}
+	}
+	return headers;
+}
+
+
+// EXPECT
+
+var _Http_expect = F3(function(type, toBody, toValue)
+{
+	return {
+		$: 0,
+		d: type,
+		b: toBody,
+		a: toValue
+	};
+});
+
+var _Http_mapExpect = F2(function(func, expect)
+{
+	return {
+		$: 0,
+		d: expect.d,
+		b: expect.b,
+		a: function(x) { return func(expect.a(x)); }
+	};
+});
+
+function _Http_toDataView(arrayBuffer)
+{
+	return new DataView(arrayBuffer);
+}
+
+
+// BODY and PARTS
+
+var _Http_emptyBody = { $: 0 };
+var _Http_pair = F2(function(a, b) { return { $: 0, a: a, b: b }; });
+
+function _Http_toFormData(parts)
+{
+	for (var formData = new FormData(); parts.b; parts = parts.b) // WHILE_CONS
+	{
+		var part = parts.a;
+		formData.append(part.a, part.b);
+	}
+	return formData;
+}
+
+var _Http_bytesToBlob = F2(function(mime, bytes)
+{
+	return new Blob([bytes], { type: mime });
+});
+
+
+// PROGRESS
+
+function _Http_track(router, xhr, tracker)
+{
+	// TODO check out lengthComputable on loadstart event
+
+	xhr.upload.addEventListener('progress', function(event) {
+		if (xhr.c) { return; }
+		_Scheduler_rawSpawn(A2($elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, $elm$http$Http$Sending({
+			sent: event.loaded,
+			size: event.total
+		}))));
+	});
+	xhr.addEventListener('progress', function(event) {
+		if (xhr.c) { return; }
+		_Scheduler_rawSpawn(A2($elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, $elm$http$Http$Receiving({
+			received: event.loaded,
+			size: event.lengthComputable ? $elm$core$Maybe$Just(event.total) : $elm$core$Maybe$Nothing
+		}))));
+	});
+}var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
@@ -11122,7 +11297,7 @@ var $tesk9$accessible_html$Accessibility$h2 = function (attributes) {
 		$tesk9$accessible_html$Accessibility$Utils$nonInteractive(attributes));
 };
 var $author$project$Common$Character$isEmpty = function (character) {
-	return _Utils_eq(character.id, -1);
+	return !character.id;
 };
 var $tesk9$accessible_html$Accessibility$li = function (attributes) {
 	return $elm$html$Html$li(
@@ -11285,7 +11460,7 @@ var $author$project$Home$Main$main = $elm$browser$Browser$element(
 var $author$project$CharacterSheet$Main$Init = function (a) {
 	return {$: 'Init', a: a};
 };
-var $author$project$Common$Character$empty = $author$project$Common$Character$Character(-1)('')(0)(0)(0)(0)(0)(0)(0)(0)(0)('')('')('')('')(0)(0)(0)('')(false)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil);
+var $author$project$Common$Character$empty = $author$project$Common$Character$Character(0)('')(0)(0)(0)(0)(0)(0)(0)(0)(0)('')('')('')('')(0)(0)(0)('')(false)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil)(_List_Nil);
 var $author$project$CharacterSheet$Main$initialModel = {
 	character: $author$project$Common$Character$empty,
 	errorMessage: $elm$core$Maybe$Nothing,
@@ -11329,31 +11504,550 @@ var $author$project$CharacterSheet$Main$flagsDecoder = A3(
 		_List_Nil,
 		$author$project$CharacterSheet$Main$httpConfigDecoder,
 		$elm$json$Json$Decode$succeed($author$project$CharacterSheet$Main$Flags)));
+var $author$project$CharacterSheet$Main$CharacterUpdated = function (a) {
+	return {$: 'CharacterUpdated', a: a};
+};
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $author$project$Common$Character$encodeSkillType = function (skillType) {
+	return $elm$json$Json$Encode$string(
+		function () {
+			switch (skillType.$) {
+				case 'Acrobatics':
+					return 'Acrobatics';
+				case 'AnimalHandling':
+					return 'AnimalHandling';
+				case 'Arcana':
+					return 'Arcana';
+				case 'Athletics':
+					return 'Athletics';
+				case 'Deception':
+					return 'Deception';
+				case 'History':
+					return 'History';
+				case 'Insight':
+					return 'Insight';
+				case 'Intimidation':
+					return 'Intimidation';
+				case 'Investigation':
+					return 'Investigation';
+				case 'Medicine':
+					return 'Medicine';
+				case 'Nature':
+					return 'Nature';
+				case 'Perception':
+					return 'Perception';
+				case 'Performance':
+					return 'Performance';
+				case 'Persuasion':
+					return 'Persuasion';
+				case 'Religion':
+					return 'Religion';
+				case 'SleightOfHand':
+					return 'SleightOfHand';
+				case 'Stealth':
+					return 'Stealth';
+				default:
+					return 'Survival';
+			}
+		}());
+};
+var $author$project$Common$Character$encodeStatType = function (statType) {
+	return $elm$json$Json$Encode$string(
+		function () {
+			switch (statType.$) {
+				case 'Strength':
+					return 'Strength';
+				case 'Dexterity':
+					return 'Dexterity';
+				case 'Constitution':
+					return 'Constitution';
+				case 'Intelligence':
+					return 'Intelligence';
+				case 'Wisdom':
+					return 'Wisdom';
+				default:
+					return 'Charisma';
+			}
+		}());
+};
+var $author$project$Common$Character$encodeProficiencyBonus = function (proficiencyBonus) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'skillType',
+				$author$project$Common$Character$encodeSkillType(proficiencyBonus.skillType)),
+				_Utils_Tuple2(
+				'statType',
+				$author$project$Common$Character$encodeStatType(proficiencyBonus.statType))
+			]));
+};
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $author$project$Common$Character$encodeSpell = function (spell) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'level',
+				$elm$json$Json$Encode$int(spell.level)),
+				_Utils_Tuple2(
+				'name',
+				$elm$json$Json$Encode$string(spell.name))
+			]));
+};
+var $author$project$Common$Character$encodeSpellSlot = function (spellSlot) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'level',
+				$elm$json$Json$Encode$int(spellSlot.level)),
+				_Utils_Tuple2(
+				'remainingUses',
+				$elm$json$Json$Encode$int(spellSlot.remainingUses)),
+				_Utils_Tuple2(
+				'maxUses',
+				$elm$json$Json$Encode$int(spellSlot.maxUses))
+			]));
+};
+var $author$project$Common$Character$encoderAbility = function (ability) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'maxUses',
+				$elm$json$Json$Encode$int(ability.maxUses)),
+				_Utils_Tuple2(
+				'remainingUses',
+				$elm$json$Json$Encode$int(ability.remainingUses)),
+				_Utils_Tuple2(
+				'name',
+				$elm$json$Json$Encode$string(ability.name)),
+				_Utils_Tuple2(
+				'description',
+				$elm$json$Json$Encode$string(ability.description))
+			]));
+};
+var $author$project$Common$Character$encoderCharacterClass = function (characterClass) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'name',
+				$elm$json$Json$Encode$string(characterClass.name)),
+				_Utils_Tuple2(
+				'level',
+				$elm$json$Json$Encode$int(characterClass.level))
+			]));
+};
+var $author$project$Common$Character$encoderInventoryItem = function (inventoryItem) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'name',
+				$elm$json$Json$Encode$string(inventoryItem.name))
+			]));
+};
+var $author$project$Common$Character$encodeCharacter = function (character) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				$elm$json$Json$Encode$int(character.id)),
+				_Utils_Tuple2(
+				'userId',
+				$elm$json$Json$Encode$string(character.userId)),
+				_Utils_Tuple2(
+				'level',
+				$elm$json$Json$Encode$int(character.level)),
+				_Utils_Tuple2(
+				'health',
+				$elm$json$Json$Encode$int(character.health)),
+				_Utils_Tuple2(
+				'maxHealth',
+				$elm$json$Json$Encode$int(character.maxHealth)),
+				_Utils_Tuple2(
+				'tempHealth',
+				$elm$json$Json$Encode$int(character.tempHealth)),
+				_Utils_Tuple2(
+				'gold',
+				$elm$json$Json$Encode$int(character.gold)),
+				_Utils_Tuple2(
+				'silver',
+				$elm$json$Json$Encode$int(character.silver)),
+				_Utils_Tuple2(
+				'copper',
+				$elm$json$Json$Encode$int(character.copper)),
+				_Utils_Tuple2(
+				'electrum',
+				$elm$json$Json$Encode$int(character.electrum)),
+				_Utils_Tuple2(
+				'platinum',
+				$elm$json$Json$Encode$int(character.platinum)),
+				_Utils_Tuple2(
+				'name',
+				$elm$json$Json$Encode$string(character.name)),
+				_Utils_Tuple2(
+				'race',
+				$elm$json$Json$Encode$string(character.race)),
+				_Utils_Tuple2(
+				'alignment',
+				$elm$json$Json$Encode$string(character.alignment)),
+				_Utils_Tuple2(
+				'experiencePoints',
+				$elm$json$Json$Encode$int(character.experiencePoints)),
+				_Utils_Tuple2(
+				'proficiencyBonus',
+				$elm$json$Json$Encode$int(character.proficiencyBonus)),
+				_Utils_Tuple2(
+				'speed',
+				$elm$json$Json$Encode$int(character.speed)),
+				_Utils_Tuple2(
+				'hitDice',
+				$elm$json$Json$Encode$string(character.hitDice)),
+				_Utils_Tuple2(
+				'hasInspiration',
+				$elm$json$Json$Encode$bool(character.hasInspiration)),
+				_Utils_Tuple2(
+				'characterClasses',
+				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encoderCharacterClass, character.characterClasses)),
+				_Utils_Tuple2(
+				'abilities',
+				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encoderAbility, character.abilities)),
+				_Utils_Tuple2(
+				'inventoryItems',
+				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encoderInventoryItem, character.inventoryItems)),
+				_Utils_Tuple2(
+				'proficiencyBonuses',
+				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encodeProficiencyBonus, character.proficiencyBonuses)),
+				_Utils_Tuple2(
+				'spells',
+				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encodeSpell, character.spells)),
+				_Utils_Tuple2(
+				'spellSlots',
+				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encodeSpellSlot, character.spellSlots))
+			]));
+};
+var $elm$http$Http$BadStatus_ = F2(
+	function (a, b) {
+		return {$: 'BadStatus_', a: a, b: b};
+	});
+var $elm$http$Http$BadUrl_ = function (a) {
+	return {$: 'BadUrl_', a: a};
+};
+var $elm$http$Http$GoodStatus_ = F2(
+	function (a, b) {
+		return {$: 'GoodStatus_', a: a, b: b};
+	});
+var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
+var $elm$http$Http$Receiving = function (a) {
+	return {$: 'Receiving', a: a};
+};
+var $elm$http$Http$Sending = function (a) {
+	return {$: 'Sending', a: a};
+};
+var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
+var $elm$core$Maybe$isJust = function (maybe) {
+	if (maybe.$ === 'Just') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$http$Http$expectStringResponse = F2(
+	function (toMsg, toResult) {
+		return A3(
+			_Http_expect,
+			'',
+			$elm$core$Basics$identity,
+			A2($elm$core$Basics$composeR, toResult, toMsg));
+	});
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
+var $elm$http$Http$BadBody = function (a) {
+	return {$: 'BadBody', a: a};
+};
+var $elm$http$Http$BadStatus = function (a) {
+	return {$: 'BadStatus', a: a};
+};
+var $elm$http$Http$BadUrl = function (a) {
+	return {$: 'BadUrl', a: a};
+};
+var $elm$http$Http$NetworkError = {$: 'NetworkError'};
+var $elm$http$Http$Timeout = {$: 'Timeout'};
+var $elm$http$Http$resolve = F2(
+	function (toResult, response) {
+		switch (response.$) {
+			case 'BadUrl_':
+				var url = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadUrl(url));
+			case 'Timeout_':
+				return $elm$core$Result$Err($elm$http$Http$Timeout);
+			case 'NetworkError_':
+				return $elm$core$Result$Err($elm$http$Http$NetworkError);
+			case 'BadStatus_':
+				var metadata = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadStatus(metadata.statusCode));
+			default:
+				var body = response.b;
+				return A2(
+					$elm$core$Result$mapError,
+					$elm$http$Http$BadBody,
+					toResult(body));
+		}
+	});
+var $elm$http$Http$expectJson = F2(
+	function (toMsg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			toMsg,
+			$elm$http$Http$resolve(
+				function (string) {
+					return A2(
+						$elm$core$Result$mapError,
+						$elm$json$Json$Decode$errorToString,
+						A2($elm$json$Json$Decode$decodeString, decoder, string));
+				}));
+	});
+var $elm$http$Http$jsonBody = function (value) {
+	return A2(
+		_Http_pair,
+		'application/json',
+		A2($elm$json$Json$Encode$encode, 0, value));
+};
+var $elm$http$Http$Request = function (a) {
+	return {$: 'Request', a: a};
+};
+var $elm$http$Http$State = F2(
+	function (reqs, subs) {
+		return {reqs: reqs, subs: subs};
+	});
+var $elm$http$Http$init = $elm$core$Task$succeed(
+	A2($elm$http$Http$State, $elm$core$Dict$empty, _List_Nil));
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$core$Process$spawn = _Scheduler_spawn;
+var $elm$http$Http$updateReqs = F3(
+	function (router, cmds, reqs) {
+		updateReqs:
+		while (true) {
+			if (!cmds.b) {
+				return $elm$core$Task$succeed(reqs);
+			} else {
+				var cmd = cmds.a;
+				var otherCmds = cmds.b;
+				if (cmd.$ === 'Cancel') {
+					var tracker = cmd.a;
+					var _v2 = A2($elm$core$Dict$get, tracker, reqs);
+					if (_v2.$ === 'Nothing') {
+						var $temp$router = router,
+							$temp$cmds = otherCmds,
+							$temp$reqs = reqs;
+						router = $temp$router;
+						cmds = $temp$cmds;
+						reqs = $temp$reqs;
+						continue updateReqs;
+					} else {
+						var pid = _v2.a;
+						return A2(
+							$elm$core$Task$andThen,
+							function (_v3) {
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A2($elm$core$Dict$remove, tracker, reqs));
+							},
+							$elm$core$Process$kill(pid));
+					}
+				} else {
+					var req = cmd.a;
+					return A2(
+						$elm$core$Task$andThen,
+						function (pid) {
+							var _v4 = req.tracker;
+							if (_v4.$ === 'Nothing') {
+								return A3($elm$http$Http$updateReqs, router, otherCmds, reqs);
+							} else {
+								var tracker = _v4.a;
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A3($elm$core$Dict$insert, tracker, pid, reqs));
+							}
+						},
+						$elm$core$Process$spawn(
+							A3(
+								_Http_toTask,
+								router,
+								$elm$core$Platform$sendToApp(router),
+								req)));
+				}
+			}
+		}
+	});
+var $elm$http$Http$onEffects = F4(
+	function (router, cmds, subs, state) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (reqs) {
+				return $elm$core$Task$succeed(
+					A2($elm$http$Http$State, reqs, subs));
+			},
+			A3($elm$http$Http$updateReqs, router, cmds, state.reqs));
+	});
+var $elm$http$Http$maybeSend = F4(
+	function (router, desiredTracker, progress, _v0) {
+		var actualTracker = _v0.a;
+		var toMsg = _v0.b;
+		return _Utils_eq(desiredTracker, actualTracker) ? $elm$core$Maybe$Just(
+			A2(
+				$elm$core$Platform$sendToApp,
+				router,
+				toMsg(progress))) : $elm$core$Maybe$Nothing;
+	});
+var $elm$http$Http$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var tracker = _v0.a;
+		var progress = _v0.b;
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$filterMap,
+					A3($elm$http$Http$maybeSend, router, tracker, progress),
+					state.subs)));
+	});
+var $elm$http$Http$Cancel = function (a) {
+	return {$: 'Cancel', a: a};
+};
+var $elm$http$Http$cmdMap = F2(
+	function (func, cmd) {
+		if (cmd.$ === 'Cancel') {
+			var tracker = cmd.a;
+			return $elm$http$Http$Cancel(tracker);
+		} else {
+			var r = cmd.a;
+			return $elm$http$Http$Request(
+				{
+					allowCookiesFromOtherDomains: r.allowCookiesFromOtherDomains,
+					body: r.body,
+					expect: A2(_Http_mapExpect, func, r.expect),
+					headers: r.headers,
+					method: r.method,
+					timeout: r.timeout,
+					tracker: r.tracker,
+					url: r.url
+				});
+		}
+	});
+var $elm$http$Http$MySub = F2(
+	function (a, b) {
+		return {$: 'MySub', a: a, b: b};
+	});
+var $elm$http$Http$subMap = F2(
+	function (func, _v0) {
+		var tracker = _v0.a;
+		var toMsg = _v0.b;
+		return A2(
+			$elm$http$Http$MySub,
+			tracker,
+			A2($elm$core$Basics$composeR, toMsg, func));
+	});
+_Platform_effectManagers['Http'] = _Platform_createManager($elm$http$Http$init, $elm$http$Http$onEffects, $elm$http$Http$onSelfMsg, $elm$http$Http$cmdMap, $elm$http$Http$subMap);
+var $elm$http$Http$command = _Platform_leaf('Http');
+var $elm$http$Http$subscription = _Platform_leaf('Http');
+var $elm$http$Http$request = function (r) {
+	return $elm$http$Http$command(
+		$elm$http$Http$Request(
+			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
+};
+var $author$project$CharacterSheet$Main$updateCharacter = F2(
+	function (character, config) {
+		var body = $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'character',
+					$author$project$Common$Character$encodeCharacter(character))
+				]));
+		return $elm$http$Http$request(
+			{
+				body: $elm$http$Http$jsonBody(body),
+				expect: A2($elm$http$Http$expectJson, $author$project$CharacterSheet$Main$CharacterUpdated, $author$project$Common$Character$characterDecoder),
+				headers: config.headers,
+				method: 'POST',
+				timeout: $elm$core$Maybe$Nothing,
+				tracker: $elm$core$Maybe$Nothing,
+				url: config.baseUrl + '/CharacterSheet/Update'
+			});
+	});
 var $author$project$CharacterSheet$Main$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'Init') {
-			var flagsJson = msg.a;
-			var _v1 = A2($elm$json$Json$Decode$decodeValue, $author$project$CharacterSheet$Main$flagsDecoder, flagsJson);
-			if (_v1.$ === 'Ok') {
-				var flags = _v1.a;
+		switch (msg.$) {
+			case 'Init':
+				var flagsJson = msg.a;
+				var _v1 = A2($elm$json$Json$Decode$decodeValue, $author$project$CharacterSheet$Main$flagsDecoder, flagsJson);
+				if (_v1.$ === 'Ok') {
+					var flags = _v1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{character: flags.character, httpConfig: flags.httpConfig}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var error = _v1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								errorMessage: $elm$core$Maybe$Just(
+									$elm$json$Json$Decode$errorToString(error))
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'UpdateCharacter':
 				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{httpConfig: flags.httpConfig}),
-					$elm$core$Platform$Cmd$none);
-			} else {
-				var error = _v1.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							errorMessage: $elm$core$Maybe$Just(
-								$elm$json$Json$Decode$errorToString(error))
-						}),
-					$elm$core$Platform$Cmd$none);
-			}
-		} else {
-			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					model,
+					A2($author$project$CharacterSheet$Main$updateCharacter, model.character, model.httpConfig));
+			case 'CharacterUpdated':
+				var characterResult = msg.a;
+				if (characterResult.$ === 'Ok') {
+					var character = characterResult.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{character: character}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var err = characterResult.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								errorMessage: $elm$core$Maybe$Just('Failed to update character')
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$CharacterSheet$Main$init = function (flags) {
@@ -11362,6 +12056,7 @@ var $author$project$CharacterSheet$Main$init = function (flags) {
 		$author$project$CharacterSheet$Main$Init(flags),
 		$author$project$CharacterSheet$Main$initialModel);
 };
+var $author$project$CharacterSheet$Main$UpdateCharacter = {$: 'UpdateCharacter'};
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $elm$html$Html$br = _VirtualDom_node('br');
 var $tesk9$accessible_html$Accessibility$br = function (attributes) {
@@ -18526,6 +19221,22 @@ var $author$project$CharacterSheet$Main$view = function (model) {
 											]))
 									]))
 							]))
+					])),
+				A2(
+				$tesk9$accessible_html$Accessibility$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$tesk9$accessible_html$Accessibility$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$CharacterSheet$Main$UpdateCharacter)
+							]),
+						_List_fromArray(
+							[
+								$tesk9$accessible_html$Accessibility$text('Save Changes')
+							]))
 					]))
 			]));
 };
@@ -18538,4 +19249,4 @@ var $author$project$CharacterSheet$Main$main = $elm$browser$Browser$element(
 		update: $author$project$CharacterSheet$Main$update,
 		view: $author$project$CharacterSheet$Main$view
 	});
-_Platform_export({'CharacterSheet':{'Main':{'init':$author$project$CharacterSheet$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"CharacterSheet.Main.Msg","aliases":{},"unions":{"CharacterSheet.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}},'MasterTools':{'Main':{'init':$author$project$MasterTools$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"MasterTools.Main.Msg","aliases":{},"unions":{"MasterTools.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}},'Home':{'Main':{'init':$author$project$Home$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Home.Main.Msg","aliases":{},"unions":{"Home.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"OnCreateClicked":[],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}}});}(this));
+_Platform_export({'CharacterSheet':{'Main':{'init':$author$project$CharacterSheet$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"CharacterSheet.Main.Msg","aliases":{"Common.Character.Ability":{"args":[],"type":"{ maxUses : Basics.Int, remainingUses : Basics.Int, name : String.String, description : String.String }"},"Common.Character.Character":{"args":[],"type":"{ id : Basics.Int, userId : String.String, level : Basics.Int, health : Basics.Int, maxHealth : Basics.Int, tempHealth : Basics.Int, gold : Basics.Int, silver : Basics.Int, copper : Basics.Int, electrum : Basics.Int, platinum : Basics.Int, name : String.String, description : String.String, race : String.String, alignment : String.String, experiencePoints : Basics.Int, proficiencyBonus : Basics.Int, speed : Basics.Int, hitDice : String.String, hasInspiration : Basics.Bool, characterClasses : List.List Common.Character.CharacterClass, abilities : List.List Common.Character.Ability, inventoryItems : List.List Common.Character.InventoryItem, proficiencyBonuses : List.List Common.Character.ProficiencyBonus, spells : List.List Common.Character.Spell, spellSlots : List.List Common.Character.SpellSlot }"},"Common.Character.CharacterClass":{"args":[],"type":"{ name : String.String, level : Basics.Int }"},"Common.Character.InventoryItem":{"args":[],"type":"{ name : String.String }"},"Common.Character.ProficiencyBonus":{"args":[],"type":"{ skillType : Common.Character.SkillType, statType : Common.Character.StatType }"},"Common.Character.Spell":{"args":[],"type":"{ level : Basics.Int, name : String.String }"},"Common.Character.SpellSlot":{"args":[],"type":"{ level : Basics.Int, remainingUses : Basics.Int, maxUses : Basics.Int }"}},"unions":{"CharacterSheet.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"UpdateCharacter":[],"CharacterUpdated":["Result.Result Http.Error Common.Character.Character"],"NoOp":[]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"Common.Character.SkillType":{"args":[],"tags":{"Acrobatics":[],"AnimalHandling":[],"Arcana":[],"Athletics":[],"Deception":[],"History":[],"Insight":[],"Intimidation":[],"Investigation":[],"Medicine":[],"Nature":[],"Perception":[],"Performance":[],"Persuasion":[],"Religion":[],"SleightOfHand":[],"Stealth":[],"Survival":[]}},"Common.Character.StatType":{"args":[],"tags":{"Strength":[],"Dexterity":[],"Constitution":[],"Intelligence":[],"Wisdom":[],"Charisma":[]}},"String.String":{"args":[],"tags":{"String":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}},'MasterTools':{'Main':{'init':$author$project$MasterTools$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"MasterTools.Main.Msg","aliases":{},"unions":{"MasterTools.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}},'Home':{'Main':{'init':$author$project$Home$Main$main($elm$json$Json$Decode$value)({"versions":{"elm":"0.19.1"},"types":{"message":"Home.Main.Msg","aliases":{},"unions":{"Home.Main.Msg":{"args":[],"tags":{"Init":["Json.Encode.Value"],"OnCreateClicked":[],"NoOp":[]}},"Json.Encode.Value":{"args":[],"tags":{"Value":[]}}}}})}}});}(this));

@@ -5,6 +5,7 @@ import Browser
 import Common.Character as Character exposing (Character, characterDecoder)
 import Html as ElmHtml
 import Html.Attributes as Attr
+import Html.Events exposing (onClick)
 import Html.Extra
 import Http
 import Json.Decode as Decode exposing (Decoder)
@@ -56,6 +57,8 @@ type alias Flags =
 
 type Msg
     = Init Encode.Value
+    | UpdateCharacter
+    | CharacterUpdated (Result Http.Error Character)
     | NoOp
 
 
@@ -67,12 +70,24 @@ update msg model =
                 Ok flags ->
                     ( { model
                         | httpConfig = flags.httpConfig
+                        , character = flags.character
                       }
                     , Cmd.none
                     )
 
                 Err error ->
                     ( { model | errorMessage = Just (Decode.errorToString error) }, Cmd.none )
+
+        UpdateCharacter ->
+            ( model, updateCharacter model.character model.httpConfig )
+
+        CharacterUpdated characterResult ->
+            case characterResult of
+                Ok character ->
+                    ( { model | character = character }, Cmd.none )
+
+                Err err ->
+                    ( { model | errorMessage = Just "Failed to update character" }, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -1884,6 +1899,7 @@ view model =
                     ]
                 ]
             ]
+        , Html.div [] [ Html.button [ onClick UpdateCharacter ] [ Html.text "Save Changes" ] ]
         ]
 
 
@@ -1911,3 +1927,22 @@ httpHeaderDecoder =
     in
     Decode.keyValuePairs Decode.string
         |> Decode.map decoder
+
+
+updateCharacter : Character -> HttpConfig -> Cmd Msg
+updateCharacter character config =
+    let
+        body =
+            Encode.object
+                [ ( "character", Character.encodeCharacter character )
+                ]
+    in
+    Http.request
+        { method = "POST"
+        , headers = config.headers
+        , url = config.baseUrl ++ "/CharacterSheet/Update"
+        , body = Http.jsonBody body
+        , expect = Http.expectJson CharacterUpdated characterDecoder
+        , timeout = Nothing
+        , tracker = Nothing
+        }

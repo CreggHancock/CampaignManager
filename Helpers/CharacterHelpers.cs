@@ -4,6 +4,8 @@ namespace DndManager.Helpers;
 
 public class CharacterHelpers
 {
+    public const int EmptyId = 0;
+
     public static Character BuildEmptyCharacter(string? userId)
     {
         if (userId == null)
@@ -13,7 +15,7 @@ public class CharacterHelpers
 
         return new Character()
         {
-            Id = -1,
+            Id = EmptyId,
             UserId = userId,
             Name = string.Empty,
             Description = string.Empty,

@@ -12,7 +12,7 @@
             flags: {
                 baseUrl: "https://localhost:7068",
                 headers: {},
-                character: @Html.Raw(Json.Serialize(Model.Character)),
+                character: @Json.Serialize(Model.Character),
             }
         });
     });

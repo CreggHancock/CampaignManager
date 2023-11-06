@@ -20,6 +20,7 @@ public class HomeController : Controller
         this.unitOfWork = unitOfWork;
     }
 
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
         var userAuthenticated = User.Identity?.IsAuthenticated ?? false;
@@ -47,11 +48,13 @@ public class HomeController : Controller
         return View(homeModel);
     }
 
+    [HttpGet]
     public IActionResult Privacy()
     {
         return View();
     }
 
+    [HttpGet]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

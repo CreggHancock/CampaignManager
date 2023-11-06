@@ -94,6 +94,7 @@ footer.footer button {
 .main-wrap h3,
 .main-wrap h4 {
   color: var(--header-blue);
+  font-family: var(--default-font);
 }
 .main-wrap a {
   color: var(--link-color);

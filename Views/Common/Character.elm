@@ -1,7 +1,8 @@
-module Common.Character exposing (Ability, Character, CharacterClass, InventoryItem, ProficiencyBonus, SkillType, Spell, SpellSlot, StatType, characterDecoder, empty, isEmpty)
+module Common.Character exposing (Ability, Character, CharacterClass, InventoryItem, ProficiencyBonus, SkillType, Spell, SpellSlot, StatType, encodeCharacter, characterDecoder, empty, isEmpty)
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (required)
+import Json.Encode as Encode
 
 
 type alias Character =
@@ -104,13 +105,172 @@ type SkillType
 
 isEmpty : Character -> Bool
 isEmpty character =
-    character.id == -1
+    character.id == 0
 
 
 empty : Character
 empty =
-    Character -1 "" 0 0 0 0 0 0 0 0 0 "" "" "" "" 0 0 0 "" False [] [] [] [] [] []
+    Character 0 "" 0 0 0 0 0 0 0 0 0 "" "" "" "" 0 0 0 "" False [] [] [] [] [] []
 
+
+encodeCharacter : Character -> Encode.Value
+encodeCharacter character =
+    Encode.object
+        [ ("id", Encode.int character.id )
+        , ("userId", Encode.string character.userId )
+        , ( "level", Encode.int character.level )
+        , ( "health", Encode.int character.health )
+        , ( "maxHealth", Encode.int character.maxHealth )
+        , ( "tempHealth", Encode.int character.tempHealth )
+        , ( "gold", Encode.int character.gold )
+        , ( "silver", Encode.int character.silver )
+        , ( "copper", Encode.int character.copper )
+        , ( "electrum", Encode.int character.electrum )
+        , ( "platinum", Encode.int character.platinum )
+        , ( "name", Encode.string character.name )
+        , ( "race", Encode.string character.race )
+        , ( "alignment", Encode.string character.alignment )
+        , ( "experiencePoints", Encode.int character.experiencePoints )
+        , ( "proficiencyBonus", Encode.int character.proficiencyBonus )
+        , ( "speed", Encode.int character.speed )
+        , ( "hitDice", Encode.string character.hitDice )
+        , ( "hasInspiration", Encode.bool character.hasInspiration )
+        , ( "characterClasses", Encode.list encoderCharacterClass character.characterClasses)
+        , ( "abilities", Encode.list encoderAbility character.abilities )
+        , ( "inventoryItems", Encode.list encoderInventoryItem character.inventoryItems )
+        , ( "proficiencyBonuses", Encode.list encodeProficiencyBonus character.proficiencyBonuses)
+        , ( "spells", Encode.list encodeSpell character.spells)
+        , ( "spellSlots", Encode.list encodeSpellSlot character.spellSlots)
+        ]
+
+encoderCharacterClass : CharacterClass -> Encode.Value
+encoderCharacterClass characterClass =
+    Encode.object
+        [ ( "name", Encode.string characterClass.name )
+        , ( "level", Encode.int characterClass.level )
+        ]
+
+encoderAbility : Ability -> Encode.Value
+encoderAbility ability =
+    Encode.object
+        [ ( "maxUses", Encode.int ability.maxUses )
+        , ( "remainingUses", Encode.int ability.remainingUses )
+        , ( "name", Encode.string ability.name )
+        , ( "description", Encode.string ability.description )
+        ]
+
+encoderInventoryItem : InventoryItem -> Encode.Value
+encoderInventoryItem inventoryItem =
+    Encode.object
+        [ ( "name", Encode.string inventoryItem.name )
+        ]
+
+encodeProficiencyBonus : ProficiencyBonus -> Encode.Value
+encodeProficiencyBonus proficiencyBonus =
+    Encode.object
+        [ ( "skillType", encodeSkillType proficiencyBonus.skillType )
+        , ( "statType", encodeStatType proficiencyBonus.statType )
+        ]
+
+encodeSpell : Spell -> Encode.Value
+encodeSpell spell =
+    Encode.object
+        [ ("level", Encode.int spell.level)
+        , ( "name", Encode.string spell.name)
+        ]
+
+encodeSpellSlot : SpellSlot -> Encode.Value
+encodeSpellSlot spellSlot =
+    Encode.object
+        [ ( "level", Encode.int spellSlot.level )
+        , ( "remainingUses", Encode.int spellSlot.remainingUses )
+        , ( "maxUses", Encode.int spellSlot.maxUses )
+        ]
+
+encodeStatType : StatType -> Encode.Value
+encodeStatType statType =
+    Encode.string
+        <| 
+            (case statType of
+                Strength ->
+                    "Strength"
+
+                Dexterity ->
+                    "Dexterity"
+
+                Constitution ->
+                    "Constitution"
+
+                Intelligence ->
+                    "Intelligence"
+
+                Wisdom ->
+                    "Wisdom"
+
+                Charisma ->
+                    "Charisma"
+            )
+
+encodeSkillType : SkillType -> Encode.Value
+encodeSkillType skillType =
+    Encode.string
+        <|
+            (
+                case skillType of
+                    Acrobatics ->
+                        "Acrobatics"
+
+                    AnimalHandling ->
+                        "AnimalHandling"
+
+                    Arcana ->
+                        "Arcana"
+
+                    Athletics ->
+                        "Athletics"
+
+                    Deception ->
+                        "Deception"
+
+                    History ->
+                        "History"
+
+                    Insight ->
+                        "Insight"
+
+                    Intimidation ->
+                        "Intimidation"
+
+                    Investigation ->
+                        "Investigation"
+
+                    Medicine ->
+                        "Medicine"
+
+                    Nature ->
+                        "Nature"
+
+                    Perception ->
+                        "Perception"
+
+                    Performance ->
+                        "Performance"
+
+                    Persuasion ->
+                        "Persuasion"
+
+                    Religion ->
+                        "Religion"
+
+                    SleightOfHand ->
+                        "SleightOfHand"
+
+                    Stealth ->
+                        "Stealth"
+
+                    Survival ->
+                        "Survival"
+            )
 
 characterDecoder : Decoder Character
 characterDecoder =
