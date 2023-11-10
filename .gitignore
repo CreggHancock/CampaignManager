@@ -476,6 +476,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-/appsettings.json
-/elm-stuff/*
-/wwwroot/js/elm.js
+/DndManager/elm-stuff/*
+/DndManager/wwwroot/js/elm.js
