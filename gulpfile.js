@@ -25,4 +25,6 @@ gulp.task("watch", function () {
   gulp.watch("wwwroot/css/base.less", gulp.series("less"));
 });
 
-gulp.task("default", gulp.series("elm-bundle", "less", "watch"));
+gulp.task("default", gulp.series("elm-bundle", "less"));
+
+gulp.task("live", gulp.series("elm-bundle", "less", "watch"));
