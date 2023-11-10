@@ -110,7 +110,7 @@ isEmpty character =
 
 empty : Character
 empty =
-    Character 0 "" 0 0 0 0 0 0 0 0 0 "" "" "" "" 0 0 0 "" False [] [] [] [] [] []
+    Character 0 "" 0 0 0 0 0 0 0 0 0 "" "" "" "" 0 0 0 0 "" False [] [] [] [] [] []
 
 
 encodeCharacter : Character -> Encode.Value
