@@ -1933,9 +1933,7 @@ updateCharacter : Character -> HttpConfig -> Cmd Msg
 updateCharacter character config =
     let
         body =
-            Encode.object
-                [ ( "character", Character.encodeCharacter character )
-                ]
+            Character.encodeCharacter character
     in
     Http.request
         { method = "POST"

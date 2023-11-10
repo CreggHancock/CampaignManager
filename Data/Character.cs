@@ -51,15 +51,17 @@ public class Character
 
     public bool HasInspiration { get; set; }
 
-    public required ICollection<CharacterClass> CharacterClasses { get; set; }
+    public ICollection<CharacterClass> CharacterClasses { get; set; } = Array.Empty<CharacterClass>();
 
-    public required ICollection<Ability> Abilities { get; set; }
+    public ICollection<Ability> Abilities { get; set; } = Array.Empty<Ability>();
 
-    public required ICollection<InventoryItem> InventoryItems { get; set; }
+    public ICollection<InventoryItem> InventoryItems { get; set; } = Array.Empty<InventoryItem>();
 
-    public required ICollection<ProficiencyBonus> ProficiencyBonuses { get; set; }
+    public ICollection<ProficiencyBonus> ProficiencyBonuses { get; set; } = Array.Empty<ProficiencyBonus>();
 
-    public required ICollection<Spell> Spells { get; set; }
+    public ICollection<Spell> Spells { get; set; } = Array.Empty<Spell>();
 
-    public required ICollection<SpellSlot> SpellSlots { get; set; }
+    public ICollection<SpellSlot> SpellSlots { get; set; } = Array.Empty<SpellSlot>();
+
+    public ICollection<Stats> Stats { get; set; } = Array.Empty<Stats>();
 }

@@ -8,15 +8,15 @@ public interface IRepository<T> where T : class
 
     Task<bool> ExistsAsync(object id);
 
-    Task<IList<T>> GetAll();
+    Task<IList<T>> GetAllAsync();
 
-    Task<IList<T>> Get(Func<DbSet<T>, Task<IList<T>>> func);
+    Task<IList<T>> GetAsync(Func<DbSet<T>, Task<IList<T>>> func);
 
-    Task<T> Get(Func<DbSet<T>, Task<T>> func);
+    Task<T> GetAsync(Func<DbSet<T>, Task<T>> func);
 
     Task<T> AddAsync(T entity);
 
-    Task Delete(object id);
+    Task DeleteAsync(object id);
 
     void Delete(T entityToDelete);
 

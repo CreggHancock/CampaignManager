@@ -22,6 +22,7 @@ type alias Character =
     , race : String
     , alignment : String
     , experiencePoints : Int
+    , initiativeBonus : Int
     , proficiencyBonus : Int
     , speed : Int
     , hitDice : String
@@ -33,7 +34,6 @@ type alias Character =
     , spells : List Spell
     , spellSlots : List SpellSlot
     }
-
 
 type alias CharacterClass =
     { name : String
@@ -128,19 +128,15 @@ encodeCharacter character =
         , ( "electrum", Encode.int character.electrum )
         , ( "platinum", Encode.int character.platinum )
         , ( "name", Encode.string character.name )
+        , ( "description", Encode.string character.description )
         , ( "race", Encode.string character.race )
         , ( "alignment", Encode.string character.alignment )
         , ( "experiencePoints", Encode.int character.experiencePoints )
+        , ( "initiativeBonus", Encode.int character.initiativeBonus )
         , ( "proficiencyBonus", Encode.int character.proficiencyBonus )
         , ( "speed", Encode.int character.speed )
         , ( "hitDice", Encode.string character.hitDice )
         , ( "hasInspiration", Encode.bool character.hasInspiration )
-        , ( "characterClasses", Encode.list encoderCharacterClass character.characterClasses)
-        , ( "abilities", Encode.list encoderAbility character.abilities )
-        , ( "inventoryItems", Encode.list encoderInventoryItem character.inventoryItems )
-        , ( "proficiencyBonuses", Encode.list encodeProficiencyBonus character.proficiencyBonuses)
-        , ( "spells", Encode.list encodeSpell character.spells)
-        , ( "spellSlots", Encode.list encodeSpellSlot character.spellSlots)
         ]
 
 encoderCharacterClass : CharacterClass -> Encode.Value
@@ -291,6 +287,7 @@ characterDecoder =
         |> required "race" Decode.string
         |> required "alignment" Decode.string
         |> required "experiencePoints" Decode.int
+        |> required "initiativeBonus" Decode.int
         |> required "proficiencyBonus" Decode.int
         |> required "speed" Decode.int
         |> required "hitDice" Decode.string

@@ -2,10 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using DndManager.Models;
 using DndManager.Data;
+using DndManager.DataContracts;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using DndManager.Helpers;
+
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 
 namespace DndManager.Controllers;
 
@@ -13,11 +17,13 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly IUnitOfWork unitOfWork;
+	private readonly IMapper mapper;
 
-    public HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork)
+    public HomeController(ILogger<HomeController> logger, IMapper mapper, IUnitOfWork unitOfWork)
     {
         this._logger = logger;
         this.unitOfWork = unitOfWork;
+		this.mapper = mapper;
     }
 
     [HttpGet]
@@ -30,7 +36,7 @@ public class HomeController : Controller
         {
             userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var characterRepository = unitOfWork.Repository<Character>();
-            characters = await characterRepository.Get(async dbSet =>
+            characters = await characterRepository.GetAsync(async dbSet =>
             {
                 return await dbSet.Where(c => c.UserId == userId).ToListAsync();
             });

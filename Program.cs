@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using DndManager.Data;
 using DndManager.Services;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using AutoMapper;
+using DndManager.Helpers;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,8 @@ builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 var app = builder.Build();
 

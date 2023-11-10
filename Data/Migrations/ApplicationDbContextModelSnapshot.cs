@@ -378,7 +378,7 @@ namespace DndManager.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -573,7 +573,7 @@ namespace DndManager.Data.Migrations
             modelBuilder.Entity("DndManager.Data.Stats", b =>
                 {
                     b.HasOne("DndManager.Data.Character", "Character")
-                        .WithMany()
+                        .WithMany("Stats")
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -645,6 +645,8 @@ namespace DndManager.Data.Migrations
                     b.Navigation("SpellSlots");
 
                     b.Navigation("Spells");
+
+                    b.Navigation("Stats");
                 });
 #pragma warning restore 612, 618
         }

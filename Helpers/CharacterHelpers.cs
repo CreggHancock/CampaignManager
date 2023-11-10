@@ -28,6 +28,7 @@ public class CharacterHelpers
             Spells = Array.Empty<Spell>(),
             SpellSlots = Array.Empty<SpellSlot>(),
             Abilities = Array.Empty<Ability>(),
+			Stats = Array.Empty<Stats>(),
         };
     }
 }

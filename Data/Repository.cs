@@ -35,17 +35,17 @@ public class Repository<T> : IRepository<T> where T : class
         return obj != null;
     }
 
-    public async Task<IList<T>> GetAll()
+    public async Task<IList<T>> GetAllAsync()
     {
         return await _dbSet.ToListAsync();
     }
 
-    public async Task<IList<T>> Get(Func<DbSet<T>, Task<IList<T>>> func)
+    public async Task<IList<T>> GetAsync(Func<DbSet<T>, Task<IList<T>>> func)
     {
         return await func(_dbSet);
     }
 
-    public async Task<T> Get(Func<DbSet<T>, Task<T>> func)
+    public async Task<T> GetAsync(Func<DbSet<T>, Task<T>> func)
     {
         return await func(_dbSet);
     }
@@ -56,7 +56,7 @@ public class Repository<T> : IRepository<T> where T : class
         return addedEntity.Entity;
     }
 
-    public virtual async Task Delete(object id)
+    public virtual async Task DeleteAsync(object id)
     {
         var obj = await _dbSet.FindAsync(id);
 

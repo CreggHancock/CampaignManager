@@ -11508,147 +11508,7 @@ var $author$project$CharacterSheet$Main$CharacterUpdated = function (a) {
 	return {$: 'CharacterUpdated', a: a};
 };
 var $elm$json$Json$Encode$bool = _Json_wrap;
-var $author$project$Common$Character$encodeSkillType = function (skillType) {
-	return $elm$json$Json$Encode$string(
-		function () {
-			switch (skillType.$) {
-				case 'Acrobatics':
-					return 'Acrobatics';
-				case 'AnimalHandling':
-					return 'AnimalHandling';
-				case 'Arcana':
-					return 'Arcana';
-				case 'Athletics':
-					return 'Athletics';
-				case 'Deception':
-					return 'Deception';
-				case 'History':
-					return 'History';
-				case 'Insight':
-					return 'Insight';
-				case 'Intimidation':
-					return 'Intimidation';
-				case 'Investigation':
-					return 'Investigation';
-				case 'Medicine':
-					return 'Medicine';
-				case 'Nature':
-					return 'Nature';
-				case 'Perception':
-					return 'Perception';
-				case 'Performance':
-					return 'Performance';
-				case 'Persuasion':
-					return 'Persuasion';
-				case 'Religion':
-					return 'Religion';
-				case 'SleightOfHand':
-					return 'SleightOfHand';
-				case 'Stealth':
-					return 'Stealth';
-				default:
-					return 'Survival';
-			}
-		}());
-};
-var $author$project$Common$Character$encodeStatType = function (statType) {
-	return $elm$json$Json$Encode$string(
-		function () {
-			switch (statType.$) {
-				case 'Strength':
-					return 'Strength';
-				case 'Dexterity':
-					return 'Dexterity';
-				case 'Constitution':
-					return 'Constitution';
-				case 'Intelligence':
-					return 'Intelligence';
-				case 'Wisdom':
-					return 'Wisdom';
-				default:
-					return 'Charisma';
-			}
-		}());
-};
-var $author$project$Common$Character$encodeProficiencyBonus = function (proficiencyBonus) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'skillType',
-				$author$project$Common$Character$encodeSkillType(proficiencyBonus.skillType)),
-				_Utils_Tuple2(
-				'statType',
-				$author$project$Common$Character$encodeStatType(proficiencyBonus.statType))
-			]));
-};
 var $elm$json$Json$Encode$int = _Json_wrap;
-var $author$project$Common$Character$encodeSpell = function (spell) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'level',
-				$elm$json$Json$Encode$int(spell.level)),
-				_Utils_Tuple2(
-				'name',
-				$elm$json$Json$Encode$string(spell.name))
-			]));
-};
-var $author$project$Common$Character$encodeSpellSlot = function (spellSlot) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'level',
-				$elm$json$Json$Encode$int(spellSlot.level)),
-				_Utils_Tuple2(
-				'remainingUses',
-				$elm$json$Json$Encode$int(spellSlot.remainingUses)),
-				_Utils_Tuple2(
-				'maxUses',
-				$elm$json$Json$Encode$int(spellSlot.maxUses))
-			]));
-};
-var $author$project$Common$Character$encoderAbility = function (ability) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'maxUses',
-				$elm$json$Json$Encode$int(ability.maxUses)),
-				_Utils_Tuple2(
-				'remainingUses',
-				$elm$json$Json$Encode$int(ability.remainingUses)),
-				_Utils_Tuple2(
-				'name',
-				$elm$json$Json$Encode$string(ability.name)),
-				_Utils_Tuple2(
-				'description',
-				$elm$json$Json$Encode$string(ability.description))
-			]));
-};
-var $author$project$Common$Character$encoderCharacterClass = function (characterClass) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'name',
-				$elm$json$Json$Encode$string(characterClass.name)),
-				_Utils_Tuple2(
-				'level',
-				$elm$json$Json$Encode$int(characterClass.level))
-			]));
-};
-var $author$project$Common$Character$encoderInventoryItem = function (inventoryItem) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'name',
-				$elm$json$Json$Encode$string(inventoryItem.name))
-			]));
-};
 var $author$project$Common$Character$encodeCharacter = function (character) {
 	return $elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -11709,25 +11569,7 @@ var $author$project$Common$Character$encodeCharacter = function (character) {
 				$elm$json$Json$Encode$string(character.hitDice)),
 				_Utils_Tuple2(
 				'hasInspiration',
-				$elm$json$Json$Encode$bool(character.hasInspiration)),
-				_Utils_Tuple2(
-				'characterClasses',
-				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encoderCharacterClass, character.characterClasses)),
-				_Utils_Tuple2(
-				'abilities',
-				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encoderAbility, character.abilities)),
-				_Utils_Tuple2(
-				'inventoryItems',
-				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encoderInventoryItem, character.inventoryItems)),
-				_Utils_Tuple2(
-				'proficiencyBonuses',
-				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encodeProficiencyBonus, character.proficiencyBonuses)),
-				_Utils_Tuple2(
-				'spells',
-				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encodeSpell, character.spells)),
-				_Utils_Tuple2(
-				'spellSlots',
-				A2($elm$json$Json$Encode$list, $author$project$Common$Character$encodeSpellSlot, character.spellSlots))
+				$elm$json$Json$Encode$bool(character.hasInspiration))
 			]));
 };
 var $elm$http$Http$BadStatus_ = F2(
@@ -11981,13 +11823,7 @@ var $elm$http$Http$request = function (r) {
 };
 var $author$project$CharacterSheet$Main$updateCharacter = F2(
 	function (character, config) {
-		var body = $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'character',
-					$author$project$Common$Character$encodeCharacter(character))
-				]));
+		var body = $author$project$Common$Character$encodeCharacter(character);
 		return $elm$http$Http$request(
 			{
 				body: $elm$http$Http$jsonBody(body),

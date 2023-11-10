@@ -4,6 +4,10 @@ using DndManager.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using AutoMapper;
+
+using UpdateCharacterDto = DndManager.DataContracts.UpdateCharacterDto;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace DndManager.Controllers;
 
@@ -11,10 +15,12 @@ namespace DndManager.Controllers;
 public class CharacterSheetController : Controller
 {
     private readonly IUnitOfWork unitOfWork;
+	private readonly IMapper mapper;
 
-    public CharacterSheetController(IUnitOfWork unitOfWork)
+    public CharacterSheetController(IUnitOfWork unitOfWork, IMapper mapper)
     {
         this.unitOfWork = unitOfWork;
+		this.mapper = mapper;
     }
 
     [HttpGet]
@@ -38,33 +44,33 @@ public class CharacterSheetController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Update(UpdateCharacterDto dto)
+    public async Task<IActionResult> Update([FromBody]UpdateCharacterDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto, nameof(dto));
 
         var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (dto.Character.UserId != userIdentifier)
+        if (dto.UserId != userIdentifier)
         {
             throw new InvalidOperationException("Can't update a character that isn't owned by the user");
         }
 
-        var repository = this.unitOfWork.Repository<Character>();
-        Character? character = null;
-        if (dto.Character.Id != CharacterHelpers.EmptyId)
+        var repository = this.unitOfWork.Repository<Data.Character>();
+        var character = this.mapper.Map<Character>(dto);
+        if (dto.Id != CharacterHelpers.EmptyId)
         {
             
-            var characterExists = await repository.ExistsAsync(dto.Character.Id);
-            character = characterExists ? await repository.GetByIdAsync(dto.Character.Id) : character;
-            if (characterExists && character?.UserId != userIdentifier) 
+            var characterExists = await repository.ExistsAsync(dto.Id);
+            var characterForCheck = characterExists ? await repository.GetByIdAsync(dto.Id) : character;
+            if (characterExists && characterForCheck?.UserId != userIdentifier) 
             {
                 throw new InvalidOperationException("Can't update a character that isn't owned by the user");
             }
 
-            repository.Update(dto.Character);
+            repository.Update(character);
         }
         else
         {
-            await repository.AddAsync(dto.Character);
+            await repository.AddAsync(character);
         }
 
         await this.unitOfWork.SaveChangesAsync();
