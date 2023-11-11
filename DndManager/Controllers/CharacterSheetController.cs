@@ -8,37 +8,30 @@ using AutoMapper;
 
 using UpdateCharacterDto = DndManager.DataContracts.UpdateCharacterDto;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using DndManager.Services;
 
 namespace DndManager.Controllers;
 
 [Authorize]
 public class CharacterSheetController : Controller
 {
-    private readonly IUnitOfWork unitOfWork;
-	private readonly IMapper mapper;
+    private readonly CharacterService characterService;
 
-    public CharacterSheetController(IUnitOfWork unitOfWork, IMapper mapper)
+    public CharacterSheetController(CharacterService characterService)
     {
-        this.unitOfWork = unitOfWork;
-		this.mapper = mapper;
+        this.characterService = characterService;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index(int? id)
     {
         var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var character = CharacterHelpers.BuildEmptyCharacter(userIdentifier);
-        if (id != null)
+        if (userIdentifier == null) 
         {
-            var repository = this.unitOfWork.Repository<Character>();
-            var characterExists = await repository.ExistsAsync(id);
-            character = characterExists ? await repository.GetByIdAsync(id) : character;
-            if (character?.UserId != userIdentifier)
-            {
-                throw new InvalidOperationException("You don't have permission to view this character");
-            }
+            throw new InvalidOperationException("User must be logged in to access this content");
         }
-        
+
+        var character = await characterService.GetCharacter(userIdentifier, id);
         var model = new CharacterSheetViewModel()
         {
             Character = character!,
@@ -53,31 +46,18 @@ public class CharacterSheetController : Controller
         ArgumentNullException.ThrowIfNull(dto, nameof(dto));
 
         var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userIdentifier == null)
+        {
+            throw new InvalidOperationException("User must be logged in to access this content");
+        }
+        
         if (dto.UserId != userIdentifier)
         {
             throw new InvalidOperationException("Can't update a character that isn't owned by the user");
         }
 
-        var repository = this.unitOfWork.Repository<Data.Character>();
-        var character = this.mapper.Map<Character>(dto);
-        if (dto.Id != CharacterHelpers.EmptyId)
-        {
-            
-            var characterExists = await repository.ExistsAsync(dto.Id);
-            var characterForCheck = characterExists ? await repository.GetByIdAsync(dto.Id) : character;
-            if (characterExists && characterForCheck?.UserId != userIdentifier) 
-            {
-                throw new InvalidOperationException("Can't update a character that isn't owned by the user");
-            }
-
-            repository.Update(character);
-        }
-        else
-        {
-            await repository.AddAsync(character);
-        }
-
-        await this.unitOfWork.SaveChangesAsync();
+        var character = await this.characterService.UpdateOrCreateCharacter(userIdentifier, dto);
 
         return Json(character);
     }
@@ -86,27 +66,12 @@ public class CharacterSheetController : Controller
     public async Task<IActionResult> Delete([FromBody] int characterId)
     {
         var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        var repository = this.unitOfWork.Repository<Data.Character>();
-        if (characterId != CharacterHelpers.EmptyId)
+        if (userIdentifier == null)
         {
-
-            var characterExists = await repository.ExistsAsync(characterId);
-            if (!characterExists)
-            {
-                throw new InvalidOperationException("Can't delete character with this id");
-            }
-
-            var character = await repository.GetByIdAsync(characterId);
-            if (character != null && character?.UserId != userIdentifier)
-            {
-                throw new InvalidOperationException("Can't update a character that isn't owned by the user");
-            }
-
-            repository.Delete(character!);
+            throw new InvalidOperationException("User must be logged in to access this content");
         }
 
-        await this.unitOfWork.SaveChangesAsync();
+        await this.characterService.DeleteCharacter(userIdentifier, characterId);
 
         return Ok();
     }
