@@ -22,13 +22,6 @@ public class CharacterHelpers
             Alignment = string.Empty,
             Race = string.Empty,
             HitDice = string.Empty,
-            CharacterClasses = Array.Empty<CharacterClass>(),
-            InventoryItems = Array.Empty<InventoryItem>(),
-            ProficiencyBonuses = Array.Empty<ProficiencyBonus>(),
-            Spells = Array.Empty<Spell>(),
-            SpellSlots = Array.Empty<SpellSlot>(),
-            Abilities = Array.Empty<Ability>(),
-			Stats = Array.Empty<Stats>(),
         };
     }
 }

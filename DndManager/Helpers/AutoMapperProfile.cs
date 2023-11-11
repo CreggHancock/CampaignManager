@@ -14,7 +14,6 @@ public class AutoMapperProfile : Profile
 			.ForMember(c => c.Spells, opt => opt.Ignore())
 			.ForMember(c => c.SpellSlots, opt => opt.Ignore())
 			.ForMember(c => c.ProficiencyBonuses, opt => opt.Ignore())
-			.ForMember(c => c.Stats, opt => opt.Ignore())
 			.ForMember(c => c.CharacterClasses, opt => opt.Ignore());
 		CreateMap<DataContracts.UpdateAbilityDto, Data.Ability>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
@@ -25,8 +24,6 @@ public class AutoMapperProfile : Profile
 		CreateMap<DataContracts.UpdateSpellDto, Data.Spell>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
 		CreateMap<DataContracts.UpdateSpellSlotDto, Data.SpellSlot>()
-			.ForMember(a => a.Character, opt => opt.Ignore());
-		CreateMap<DataContracts.UpdateStatsDto, Data.Stats>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
 		CreateMap<DataContracts.UpdateCharacterClassDto, Data.CharacterClass>()
 			.ForMember(a => a.Character, opt => opt.Ignore());

@@ -11,6 +11,7 @@ import Http
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (required, requiredAt)
 import Json.Encode as Encode
+import Browser.Navigation exposing (load)
 
 
 main : Program Encode.Value Model Msg
@@ -59,6 +60,8 @@ type Msg
     = Init Encode.Value
     | UpdateCharacter
     | CharacterUpdated (Result Http.Error Character)
+    | DeleteCharacter
+    | CharacterDeleted (Result Http.Error ())
     | NoOp
 
 
@@ -88,6 +91,17 @@ update msg model =
 
                 Err err ->
                     ( { model | errorMessage = Just "Failed to update character" }, Cmd.none )
+
+        DeleteCharacter ->
+            ( model, deleteCharacter model.character.id model.httpConfig )
+
+        CharacterDeleted deleteResult ->
+            case deleteResult of
+                Ok _ ->
+                    ( model, load "/" )
+
+                Err err ->
+                    ( { model | errorMessage = Just "Failed to delete character" }, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -1900,6 +1914,11 @@ view model =
                 ]
             ]
         , Html.div [] [ Html.button [ onClick UpdateCharacter ] [ Html.text "Save Changes" ] ]
+        , if not <| Character.isEmpty model.character then
+            Html.div [] [ Html.button [ onClick DeleteCharacter ] [ Html.text "Delete" ] ]
+
+          else
+            Html.Extra.nothing
         ]
 
 
@@ -1941,6 +1960,23 @@ updateCharacter character config =
         , url = config.baseUrl ++ "/CharacterSheet/Update"
         , body = Http.jsonBody body
         , expect = Http.expectJson CharacterUpdated characterDecoder
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+deleteCharacter : Int -> HttpConfig -> Cmd Msg
+deleteCharacter characterId config =
+    let
+        body =
+            Encode.int characterId
+    in
+    Http.request
+        { method = "DELETE"
+        , headers = config.headers
+        , url = config.baseUrl ++ "/CharacterSheet/Delete"
+        , body = Http.jsonBody body
+        , expect = Http.expectWhatever CharacterDeleted
         , timeout = Nothing
         , tracker = Nothing
         }

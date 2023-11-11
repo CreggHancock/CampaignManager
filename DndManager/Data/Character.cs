@@ -51,6 +51,18 @@ public class Character
 
     public bool HasInspiration { get; set; }
 
+    public int Strength { get; set; }
+
+    public int Dexterity { get; set; }
+
+    public int Constitution { get; set; }
+
+    public int Intelligence { get; set; }
+
+    public int Wisdom { get; set; }
+
+    public int Charisma { get; set; }
+
     public ICollection<CharacterClass> CharacterClasses { get; set; } = Array.Empty<CharacterClass>();
 
     public ICollection<Ability> Abilities { get; set; } = Array.Empty<Ability>();
@@ -62,6 +74,4 @@ public class Character
     public ICollection<Spell> Spells { get; set; } = Array.Empty<Spell>();
 
     public ICollection<SpellSlot> SpellSlots { get; set; } = Array.Empty<SpellSlot>();
-
-    public ICollection<Stats> Stats { get; set; } = Array.Empty<Stats>();
 }

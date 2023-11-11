@@ -33,11 +33,15 @@ public class CharacterSheetController : Controller
             var repository = this.unitOfWork.Repository<Character>();
             var characterExists = await repository.ExistsAsync(id);
             character = characterExists ? await repository.GetByIdAsync(id) : character;
+            if (character?.UserId != userIdentifier)
+            {
+                throw new InvalidOperationException("You don't have permission to view this character");
+            }
         }
         
         var model = new CharacterSheetViewModel()
         {
-            Character = character,
+            Character = character!,
         };
 
         return View(model);
@@ -76,5 +80,34 @@ public class CharacterSheetController : Controller
         await this.unitOfWork.SaveChangesAsync();
 
         return Json(character);
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> Delete([FromBody] int characterId)
+    {
+        var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var repository = this.unitOfWork.Repository<Data.Character>();
+        if (characterId != CharacterHelpers.EmptyId)
+        {
+
+            var characterExists = await repository.ExistsAsync(characterId);
+            if (!characterExists)
+            {
+                throw new InvalidOperationException("Can't delete character with this id");
+            }
+
+            var character = await repository.GetByIdAsync(characterId);
+            if (character != null && character?.UserId != userIdentifier)
+            {
+                throw new InvalidOperationException("Can't update a character that isn't owned by the user");
+            }
+
+            repository.Delete(character!);
+        }
+
+        await this.unitOfWork.SaveChangesAsync();
+
+        return Ok();
     }
 }

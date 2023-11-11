@@ -24,8 +24,6 @@ public class ApplicationDbContext : IdentityDbContext
 
     public DbSet<Ability> Abilities => this.Set<Ability>();
 
-    public DbSet<Stats> AbilityModifiers => this.Set<Stats>();
-
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

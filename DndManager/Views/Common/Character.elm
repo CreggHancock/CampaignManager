@@ -27,6 +27,12 @@ type alias Character =
     , speed : Int
     , hitDice : String
     , hasInspiration : Bool
+    , strength : Int
+    , dexterity : Int
+    , constitution : Int
+    , intelligence : Int
+    , wisdom : Int
+    , charisma : Int
     , characterClasses : List CharacterClass
     , abilities : List Ability
     , inventoryItems : List InventoryItem
@@ -110,7 +116,7 @@ isEmpty character =
 
 empty : Character
 empty =
-    Character 0 "" 0 0 0 0 0 0 0 0 0 "" "" "" "" 0 0 0 0 "" False [] [] [] [] [] []
+    Character 0 "" 0 0 0 0 0 0 0 0 0 "" "" "" "" 0 0 0 0 "" False 0 0 0 0 0 0 [] [] [] [] [] []
 
 
 encodeCharacter : Character -> Encode.Value
@@ -292,6 +298,12 @@ characterDecoder =
         |> required "speed" Decode.int
         |> required "hitDice" Decode.string
         |> required "hasInspiration" Decode.bool
+        |> required "strength" Decode.int
+        |> required "dexterity" Decode.int
+        |> required "constitution" Decode.int
+        |> required "intelligence" Decode.int
+        |> required "wisdom" Decode.int
+        |> required "charisma" Decode.int
         |> required "characterClasses" (Decode.list characterClassDecoder)
         |> required "abilities" (Decode.list abilityDecoder)
         |> required "inventoryItems" (Decode.list inventoryItemDecoder)

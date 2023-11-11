@@ -117,7 +117,7 @@ viewCharacters model =
                                 Html.li [] [ Html.a [ href <| model.httpConfig.baseUrl ++ "/CharacterSheet" ] [ Html.text "Create Character" ] ]
 
                             else
-                                Html.li [] [ Html.a [ href <| model.httpConfig.baseUrl ++ "/CharacterSheet/" ++ String.fromInt c.id ] [ Html.text c.name ] ]
+                                Html.li [] [ Html.a [ href <| model.httpConfig.baseUrl ++ "/CharacterSheet?id=" ++ String.fromInt c.id ] [ Html.text c.name ] ]
                         )
                 )
         ]
