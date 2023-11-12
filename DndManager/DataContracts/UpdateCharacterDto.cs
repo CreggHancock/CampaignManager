@@ -31,6 +31,8 @@ public record UpdateCharacterDto
 
     public string Description { get; set; } = string.Empty;
 
+    public string Background { get; set; } = string.Empty;
+
     public string Race { get; set; } = string.Empty;
 
 	public string Alignment { get; set; } = string.Empty;

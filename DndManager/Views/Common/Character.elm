@@ -19,6 +19,7 @@ type alias Character =
     , platinum : Int
     , name : String
     , description : String
+    , background : String
     , race : String
     , alignment : String
     , experiencePoints : Int
@@ -39,6 +40,7 @@ type alias Character =
     , proficiencyBonuses : List ProficiencyBonus
     , spells : List Spell
     , spellSlots : List SpellSlot
+    , languages : List Language
     }
 
 type alias CharacterClass =
@@ -79,6 +81,11 @@ type alias SpellSlot =
     }
 
 
+type alias Language =
+    { name : String
+    }
+
+
 type StatType
     = Strength
     | Dexterity
@@ -116,7 +123,7 @@ isEmpty character =
 
 empty : Character
 empty =
-    Character 0 "" 0 0 0 0 0 0 0 0 0 "" "" "" "" 0 0 0 0 "" False 0 0 0 0 0 0 [] [] [] [] [] []
+    Character 0 "" 0 0 0 0 0 0 0 0 0 "" "" "" "" "" 0 0 0 0 "" False 0 0 0 0 0 0 [] [] [] [] [] [] []
 
 
 encodeCharacter : Character -> Encode.Value
@@ -187,6 +194,12 @@ encodeSpellSlot spellSlot =
         [ ( "level", Encode.int spellSlot.level )
         , ( "remainingUses", Encode.int spellSlot.remainingUses )
         , ( "maxUses", Encode.int spellSlot.maxUses )
+        ]
+
+encodeLanguage : Language -> Encode.Value
+encodeLanguage language =
+    Encode.object
+        [ ("name", Encode.string language.name )
         ]
 
 encodeStatType : StatType -> Encode.Value
@@ -290,6 +303,7 @@ characterDecoder =
         |> required "platinum" Decode.int
         |> required "name" Decode.string
         |> required "description" Decode.string
+        |> required "background" Decode.string
         |> required "race" Decode.string
         |> required "alignment" Decode.string
         |> required "experiencePoints" Decode.int
@@ -310,6 +324,7 @@ characterDecoder =
         |> required "proficiencyBonuses" (Decode.list proficiencyBonusDecoder)
         |> required "spells" (Decode.list spellDecoder)
         |> required "spellSlots" (Decode.list spellSlotDecoder)
+        |> required "languages" (Decode.list lanugageDecoder)
 
 
 characterClassDecoder : Decoder CharacterClass
@@ -353,6 +368,12 @@ spellDecoder : Decoder Spell
 spellDecoder =
     Decode.succeed Spell
         |> required "level" Decode.int
+        |> required "name" Decode.string
+
+
+lanugageDecoder : Decoder Language
+lanugageDecoder =
+    Decode.succeed Language
         |> required "name" Decode.string
 
 

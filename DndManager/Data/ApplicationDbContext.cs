@@ -24,6 +24,8 @@ public class ApplicationDbContext : IdentityDbContext
 
     public DbSet<Ability> Abilities => this.Set<Ability>();
 
+    public DbSet<Language> Languages => this.Set<Language>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

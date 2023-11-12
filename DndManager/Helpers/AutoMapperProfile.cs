@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Data = DndManager.Data;
-using DataContracts = DndManager.DataContracts;
+using DndManager.Data;
+using DndManager.DataContracts;
 
 namespace DndManager.Helpers;
 
@@ -8,24 +8,27 @@ public class AutoMapperProfile : Profile
 {
 	public AutoMapperProfile()
 	{
-		CreateMap<DataContracts.UpdateCharacterDto, Data.Character>()
-			.ForMember(c => c.Abilities, opt => opt.Ignore())
-			.ForMember(c => c.InventoryItems, opt => opt.Ignore())
-			.ForMember(c => c.Spells, opt => opt.Ignore())
-			.ForMember(c => c.SpellSlots, opt => opt.Ignore())
-			.ForMember(c => c.ProficiencyBonuses, opt => opt.Ignore())
-			.ForMember(c => c.CharacterClasses, opt => opt.Ignore());
-		CreateMap<DataContracts.UpdateAbilityDto, Data.Ability>()
+        CreateMap<UpdateCharacterDto, Character>()
+            .ForMember(c => c.Abilities, opt => opt.Ignore())
+            .ForMember(c => c.InventoryItems, opt => opt.Ignore())
+            .ForMember(c => c.Spells, opt => opt.Ignore())
+            .ForMember(c => c.SpellSlots, opt => opt.Ignore())
+            .ForMember(c => c.ProficiencyBonuses, opt => opt.Ignore())
+            .ForMember(c => c.CharacterClasses, opt => opt.Ignore())
+            .ForMember(c => c.Languages, opt => opt.Ignore());
+		CreateMap<UpdateAbilityDto, Ability>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
-		CreateMap<DataContracts.UpdateInventoryItemDto, Data.InventoryItem>()
+		CreateMap<UpdateInventoryItemDto, InventoryItem>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
-		CreateMap<DataContracts.UpdateProficiencyBonusDto, Data.ProficiencyBonus>()
+		CreateMap<UpdateProficiencyBonusDto, ProficiencyBonus>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
-		CreateMap<DataContracts.UpdateSpellDto, Data.Spell>()
+		CreateMap<UpdateSpellDto, Spell>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
-		CreateMap<DataContracts.UpdateSpellSlotDto, Data.SpellSlot>()
+		CreateMap<UpdateSpellSlotDto, SpellSlot>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
-		CreateMap<DataContracts.UpdateCharacterClassDto, Data.CharacterClass>()
+		CreateMap<UpdateCharacterClassDto, CharacterClass>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
+        CreateMap<UpdateLanguageDto, Language>()
+            .ForMember(l => l.Character, opt => opt.Ignore());
 	}
 }

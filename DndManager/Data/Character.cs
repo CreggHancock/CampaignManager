@@ -35,6 +35,8 @@ public class Character
 
     public required string Description { get; set; }
 
+    public required string Background { get; set; }
+
     public required string Race { get; set; }
 
     public required string Alignment { get; set; }
@@ -74,4 +76,6 @@ public class Character
     public ICollection<Spell> Spells { get; set; } = Array.Empty<Spell>();
 
     public ICollection<SpellSlot> SpellSlots { get; set; } = Array.Empty<SpellSlot>();
+
+    public ICollection<Language> Languages { get; set; } = Array.Empty<Language>();
 }

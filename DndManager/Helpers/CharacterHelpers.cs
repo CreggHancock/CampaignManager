@@ -19,6 +19,7 @@ public class CharacterHelpers
             UserId = userId,
             Name = string.Empty,
             Description = string.Empty,
+            Background = string.Empty,
             Alignment = string.Empty,
             Race = string.Empty,
             HitDice = string.Empty,
