@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using DndManager.Helpers;
+using DndManager.Data.Characters;
 
 namespace DndManager.Controllers;
 

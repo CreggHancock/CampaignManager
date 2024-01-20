@@ -2,6 +2,7 @@ module CharacterSheet.Main exposing (Flags, Model, Msg(..), init, initialModel, 
 
 import Accessibility as Html exposing (Html)
 import Browser
+import Browser.Navigation exposing (load)
 import Common.Character as Character exposing (Character, characterDecoder)
 import Html as ElmHtml
 import Html.Attributes as Attr
@@ -11,7 +12,6 @@ import Http
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (required, requiredAt)
 import Json.Encode as Encode
-import Browser.Navigation exposing (load)
 
 
 main : Program Encode.Value Model Msg
@@ -109,6 +109,10 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
+    let
+        character =
+            model.character
+    in
     Html.div [ Attr.class "main-wrap" ]
         [ case model.errorMessage of
             Just errorMessage ->
@@ -192,46 +196,52 @@ view model =
                     ]
                 ]
             , Html.div [ Attr.class "spell-slots" ]
-                [ Html.div [ Attr.id "slotsLevel1" ]
-                    [ Html.text "3" ]
-                , Html.div [ Attr.id "slotsLevel2" ]
-                    [ Html.text "5" ]
-                , Html.div [ Attr.id "slotsLevel3" ]
-                    [ Html.text "5" ]
-                , Html.div [ Attr.id "slotsLevel4" ]
-                    [ Html.text "5" ]
-                , Html.div [ Attr.id "slotsLevel5" ]
-                    [ Html.text "5" ]
-                , Html.div [ Attr.id "slotsLevel6" ]
-                    [ Html.text "4" ]
-                , Html.div [ Attr.id "slotsLevel7" ]
-                    [ Html.text "3" ]
-                , Html.div [ Attr.id "slotsLevel8" ]
-                    [ Html.text "2" ]
-                , Html.div [ Attr.id "slotsLevel9" ]
-                    [ Html.text "1" ]
-                ]
+                (character.spellSlots
+                    |> List.map
+                        (\slot ->
+                            Html.div [ Attr.id ("slotsLevel" ++ String.fromInt slot.level) ] [ Html.text <| String.fromInt slot.remainingUses ]
+                        )
+                )
             , Html.div [ Attr.class "header" ]
                 [ Html.details [ Attr.class "charname" ]
                     [ Html.summary []
                         [ Html.span [ Attr.class "name-image", Attr.name "charname" ]
-                            [ Html.img "" [ Attr.class "char-image", Attr.src "/Portals/0/OpenContent/Cropped/480/64fcd7acc937df03e8e0c973/moon-crop.png" ]
+                            [ Html.img "" [ Attr.class "char-image" ]
                             , Html.span [ Attr.class "char-name" ]
-                                [ Html.text "Tsukuyomi" ]
+                                [ Html.text character.name ]
                             ]
                         ]
                     ]
                 , Html.section [ Attr.class "misc" ]
                     [ Html.ul []
-                        [ Html.li []
+                        [ let
+                            characterClassName =
+                                character.characterClasses
+                                    |> List.head
+                                    |> Maybe.map (\c -> c.name)
+                                    |> Maybe.withDefault ""
+
+                            characterClassLevel =
+                                character.characterClasses
+                                    |> List.head
+                                    |> Maybe.map (\c -> String.fromInt c.level)
+                                    |> Maybe.withDefault ""
+                          in
+                          Html.li []
                             [ Html.label [ Attr.for "classlevel" ]
                                 [ Html.text "Class & Level" ]
-                            , ElmHtml.input [ Attr.id "classlevel", Attr.name "classlevel", Attr.placeholder "Artificer 7", Attr.attribute "style" "display: none;", Attr.value "Demon Slayer 4" ]
+                            , ElmHtml.input
+                                [ Attr.id "classlevel"
+                                , Attr.name "classlevel"
+                                , Attr.placeholder "Artificer 7"
+                                , Attr.attribute "style" "display: none;"
+                                , Attr.value <| characterClassName ++ " " ++ characterClassLevel
+                                ]
                                 []
                             , Html.div [ Attr.class "level-name" ]
-                                [ Html.text "Demon Slayer "
-                                , Html.span [ Attr.class "level-number", Attr.attribute "data-value" "4", Attr.title "Level 4 Demon Slayer" ]
-                                    [ Html.text "4" ]
+                                [ Html.text (characterClassName ++ " ")
+                                , Html.span [ Attr.class "level-number", Attr.attribute "data-value" "4", Attr.title <| "Level " ++ characterClassLevel ++ " " ++ characterClassName ]
+                                    [ Html.text characterClassLevel ]
                                 ]
                             ]
                         , Html.li []
@@ -1913,6 +1923,7 @@ view model =
                     ]
                 ]
             ]
+        , Html.div [] [ Html.iframe [ Attr.src "https://itch.io/embed-upload/9137372?color=333333", Attr.height 820, Attr.width 800 ] []]
         , Html.div [] [ Html.button [ onClick UpdateCharacter ] [ Html.text "Save Changes" ] ]
         , if not <| Character.isEmpty model.character then
             Html.div [] [ Html.button [ onClick DeleteCharacter ] [ Html.text "Delete" ] ]

@@ -1,4 +1,4 @@
-﻿using DndManager.Data;
+﻿using DndManager.Data.Characters;
 
 namespace DndManager.Models;
 

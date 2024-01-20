@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using AutoMapper;
 
-using UpdateCharacterDto = DndManager.DataContracts.UpdateCharacterDto;
+using UpdateCharacterDto = DndManager.DataContracts.Characters.UpdateCharacterDto;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using DndManager.Services;
 

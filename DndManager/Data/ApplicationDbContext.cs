@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using DndManager.Data.Characters;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace DndManager.Data;
@@ -22,7 +23,7 @@ public class ApplicationDbContext : IdentityDbContext
 
     public DbSet<SpellSlot> SpellSlots => this.Set<SpellSlot>();
 
-    public DbSet<Ability> Abilities => this.Set<Ability>();
+    public DbSet<CharacterAbility> Abilities => this.Set<CharacterAbility>();
 
     public DbSet<Language> Languages => this.Set<Language>();
 

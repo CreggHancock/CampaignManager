@@ -1,0 +1,23 @@
+﻿@{
+    ViewData["Title"] = "Index";
+}
+
+@model InitiativeViewModel
+
+<div id="app-container-character-sheet"></div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        var app = Elm.Initiative.Main.init({
+            node: document.getElementById("app-container-initiative"),
+            flags: {
+                baseUrl: "https://localhost:7068",
+                headers: { "Content-type": "application/json", "Accept" : "application/json" },
+                scene: @Json.Serialize(Model.Scene),
+            }
+        });
+    });
+    console.log("scene loaded");
+</script>
+
+
+<script type="text/javascript" src="~/js/elm.js"></script>

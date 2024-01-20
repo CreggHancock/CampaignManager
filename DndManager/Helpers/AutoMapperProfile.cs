@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using DndManager.Data;
-using DndManager.DataContracts;
+using DndManager.Data.Characters;
+using DndManager.DataContracts.Characters;
 
 namespace DndManager.Helpers;
 
@@ -16,7 +16,7 @@ public class AutoMapperProfile : Profile
             .ForMember(c => c.ProficiencyBonuses, opt => opt.Ignore())
             .ForMember(c => c.CharacterClasses, opt => opt.Ignore())
             .ForMember(c => c.Languages, opt => opt.Ignore());
-		CreateMap<UpdateAbilityDto, Ability>()
+		CreateMap<UpdateAbilityDto, CharacterAbility>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
 		CreateMap<UpdateInventoryItemDto, InventoryItem>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
@@ -28,7 +28,5 @@ public class AutoMapperProfile : Profile
 			.ForMember(a => a.Character, opt => opt.Ignore());
 		CreateMap<UpdateCharacterClassDto, CharacterClass>()
 			.ForMember(a => a.Character, opt => opt.Ignore());
-        CreateMap<UpdateLanguageDto, Language>()
-            .ForMember(l => l.Character, opt => opt.Ignore());
 	}
 }

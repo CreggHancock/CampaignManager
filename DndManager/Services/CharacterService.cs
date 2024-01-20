@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DndManager.Data;
-using DndManager.DataContracts;
+using DndManager.Data.Characters;
+using DndManager.DataContracts.Characters;
 using DndManager.Helpers;
 
 namespace DndManager.Services;
