@@ -4,6 +4,8 @@ using DndManager.Data;
 using DndManager.Services;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Reflection;
+using DndManager.Helpers;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,15 +15,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddTransient<IEmailSender, EmailSender>();
-builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
-builder.Services.AddTransient<CharacterService>();
-
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>();
-builder.Services.AddControllersWithViews();
-
-builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+ConfigureServices(builder.Services, builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 
@@ -29,6 +23,9 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.MapSwagger().RequireAuthorization();
 }
 else
 {
@@ -42,11 +39,49 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseCors("AllowAppCommunication");
+
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapRazorPages();
+app.MapControllers();
+app.MapIdentityApi<IdentityUser>();
 
 app.Run();
+
+static void ConfigureServices(
+    IServiceCollection services,
+    ConfigurationManager configuration,
+    IWebHostEnvironment environment)
+{
+    services.AddTransient<IEmailSender, EmailSender>();
+    services.AddTransient<IUnitOfWork, UnitOfWork>();
+    services.AddTransient<CharacterService>();
+
+    services.AddIdentityApiEndpoints<IdentityUser>()
+        .AddEntityFrameworkStores<ApplicationDbContext>();
+
+    services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+    services.AddControllers(static mvcOptions => mvcOptions.OutputFormatters.RemoveType<HttpNoContentOutputFormatter>());
+    services.AddAutoMapper(mapperConfig => mapperConfig.AddProfile<AutoMapperProfile>());
+
+    services.AddCors(options =>
+    {
+        options.AddPolicy(
+            "AllowAppCommunication",
+            builder => builder.WithOrigins("http://localhost:5173")
+                              .AllowAnyMethod()
+                              .AllowCredentials()
+                              .AllowAnyHeader());
+    });
+
+    if (environment.IsDevelopment())
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(
+            options =>
+            {
+                options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
+            });
+    }
+}

@@ -1,4 +1,5 @@
-﻿using DndManager.DataContracts.Initiatives;
+﻿using DndManager.Data.Initiatives;
+using DndManager.DataContracts.Initiatives;
 using DndManager.Models;
 using DndManager.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -6,16 +7,16 @@ using System.Security.Claims;
 
 namespace DndManager.Controllers
 {
-    public class InitiativeController : Controller
+    /// <summary>The controller used to manage initiative tracking.</summary>
+    /// <param name="initiativeService">The <see cref="InitiativeService"/></param>
+    public class InitiativeController(InitiativeService initiativeService) : Controller
     {
-        private readonly InitiativeService initiativeService;
+        private readonly InitiativeService initiativeService = initiativeService;
 
-        public InitiativeController(InitiativeService initiativeService)
-        {
-            this.initiativeService = initiativeService;
-        }
-
-        public async Task<IActionResult> Index(int? id)
+        /// <summary>Gets a model containing the scene used for initiative tracking.</summary>
+        /// <param name="id">The scene ID.</param>
+        /// <returns>The model containing the scene.</returns>
+        public async Task<InitiativeViewModel> Get(int? id)
         {
             var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userIdentifier == null)
@@ -24,17 +25,18 @@ namespace DndManager.Controllers
             }
 
             var scene = await initiativeService.GetScene(userIdentifier, id);
-            var model = new InitiativeViewModel()
+            return new InitiativeViewModel()
             {
                 Scene = scene!,
             };
-
-            return View(model);
         }
 
+        /// <summary>Updates an initiative scene.</summary>
+        /// <param name="dto">The <see cref="UpdateSceneDto"/></param>
+        /// <returns>The updated scene.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Update([FromBody] UpdateSceneDto dto)
+        public async Task<Scene> Update([FromBody] UpdateSceneDto dto)
         {
             ArgumentNullException.ThrowIfNull(dto, nameof(dto));
 
@@ -50,14 +52,15 @@ namespace DndManager.Controllers
                 throw new InvalidOperationException("Can't update a character that isn't owned by the user");
             }
 
-            var scene = await this.initiativeService.UpdateOrCreateScene(userIdentifier, dto);
-
-            return Json(scene);
+           return await this.initiativeService.UpdateOrCreateScene(userIdentifier, dto);
         }
 
+        /// <summary>Deletes an initiative scene.</summary>
+        /// <param name="id">The scene ID.</param>
+        /// <returns>A Task.</returns>
         [HttpDelete]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete([FromBody] int sceneId)
+        public async Task Delete([FromBody] int id)
         {
             var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userIdentifier == null)
@@ -65,9 +68,7 @@ namespace DndManager.Controllers
                 throw new InvalidOperationException("User must be logged in to access this content");
             }
 
-            await this.initiativeService.DeleteScene(userIdentifier, sceneId);
-
-            return Ok();
+            await this.initiativeService.DeleteScene(userIdentifier, id);
         }
     }
 }

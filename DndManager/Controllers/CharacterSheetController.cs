@@ -9,21 +9,23 @@ using AutoMapper;
 using UpdateCharacterDto = DndManager.DataContracts.Characters.UpdateCharacterDto;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using DndManager.Services;
+using DndManager.Data.Characters;
 
 namespace DndManager.Controllers;
 
+/// <summary>The controller used for character management.</summary>
+/// <param name="characterService">The character service.</param>
 [Authorize]
-public class CharacterSheetController : Controller
+[Route("[Controller]/[Action]")]
+public class CharacterSheetController(CharacterService characterService) : Controller
 {
-    private readonly CharacterService characterService;
+    private readonly CharacterService characterService = characterService;
 
-    public CharacterSheetController(CharacterService characterService)
-    {
-        this.characterService = characterService;
-    }
-
+    /// <summary>Gets a character.</summary>
+    /// <param name="id">The character ID.</param>
+    /// <returns>The character.</returns>
     [HttpGet]
-    public async Task<IActionResult> Index(int? id)
+    public async Task<CharacterSheetViewModel> Get(int? id)
     {
         var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdentifier == null) 
@@ -32,16 +34,17 @@ public class CharacterSheetController : Controller
         }
 
         var character = await characterService.GetCharacter(userIdentifier, id);
-        var model = new CharacterSheetViewModel()
+        return new CharacterSheetViewModel()
         {
             Character = character!,
         };
-
-        return View(model);
     }
 
+    /// <summary>Updates a character.</summary>
+    /// <param name="dto">The <see cref="UpdateCharacterDto"/> dto.</param>
+    /// <returns>The updated character.</returns>
     [HttpPost]
-    public async Task<IActionResult> Update([FromBody]UpdateCharacterDto dto)
+    public async Task<Character> Update([FromBody]UpdateCharacterDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto, nameof(dto));
 
@@ -57,13 +60,14 @@ public class CharacterSheetController : Controller
             throw new InvalidOperationException("Can't update a character that isn't owned by the user");
         }
 
-        var character = await this.characterService.UpdateOrCreateCharacter(userIdentifier, dto);
-
-        return Json(character);
+        return await this.characterService.UpdateOrCreateCharacter(userIdentifier, dto);
     }
 
+    /// <summary>Deletes a character.</summary>
+    /// <param name="characterId">The character ID.</param>
+    /// <returns>A Task.</returns>
     [HttpDelete]
-    public async Task<IActionResult> Delete([FromBody] int characterId)
+    public async Task Delete([FromBody] int characterId)
     {
         var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdentifier == null)
@@ -72,7 +76,5 @@ public class CharacterSheetController : Controller
         }
 
         await this.characterService.DeleteCharacter(userIdentifier, characterId);
-
-        return Ok();
     }
 }

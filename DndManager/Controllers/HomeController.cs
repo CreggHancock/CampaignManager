@@ -8,22 +8,24 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using DndManager.Helpers;
 using DndManager.Data.Characters;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DndManager.Controllers;
 
-public class HomeController : Controller
+/// <summary>The controller for the home page.</summary>
+/// <param name="logger"></param>
+/// <param name="unitOfWork"></param>
+[ApiController]
+[Route("[Controller]/[Action]")]
+public class HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork) : ControllerBase
 {
-    private readonly ILogger<HomeController> _logger;
-    private readonly IUnitOfWork unitOfWork;
+    private readonly ILogger<HomeController> _logger = logger;
+    private readonly IUnitOfWork unitOfWork = unitOfWork;
 
-    public HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork)
-    {
-        this._logger = logger;
-        this.unitOfWork = unitOfWork;
-    }
-
+    /// <summary>Gets the data needed for the home page</summary>
+    /// <returns>A <see cref="HomeViewModel"/> containing data needed for the home page.</returns>
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<HomeViewModel> Get()
     {
         var userAuthenticated = User.Identity?.IsAuthenticated ?? false;
         IEnumerable<Character> characters = Array.Empty<Character>();
@@ -41,25 +43,18 @@ public class HomeController : Controller
             characters = characters.Append(emptyCharacter);
         }
 
-        var homeModel = new HomeViewModel
+        return new HomeViewModel
         {
             UserCharacters = characters,
-            IsLoggedIn = userAuthenticated,
         };
-
-        return View(homeModel);
     }
 
+    /// <summary>Gets the data needed for the home page</summary>
+    /// <returns>A <see "/> containing data needed for the home page.</returns>
+    [Authorize]
     [HttpGet]
-    public IActionResult Privacy()
+    public string? Username()
     {
-        return View();
-    }
-
-    [HttpGet]
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        return User.Identity?.Name;
     }
 }
