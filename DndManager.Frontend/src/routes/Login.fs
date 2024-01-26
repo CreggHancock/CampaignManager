@@ -8,16 +8,16 @@ open Feliz.Router
 let route = "Login"
 
 type Model =
-    { userName: string
-      password: string
-      errorMessage: string }
+    { Username: string
+      Password: string
+      ErrorMessage: string }
 
 
 type LoginResponse =
-    { tokenType: string
-      accessToken: string
-      expiresIn: int
-      refreshToken: string }
+    { TokenType: string
+      AccessToken: string
+      ExpiresIn: int
+      RefreshToken: string }
 
 type Msg =
     | RegisterClicked
@@ -26,12 +26,14 @@ type Msg =
     | OnLoginSuccess of LoginResponse
     | OnRegisterError of exn
     | OnRegisterSuccess of LoginResponse
+    | UsernameUpdated of string
+    | PasswordUpdated of string
 
 let init () =
-    { userName = ""
-      password = ""
-      errorMessage = "" },
-    Cmd.none
+    { Username = ""
+      Password = ""
+      ErrorMessage = "" },
+    Cmd.none 
 
 let update (msg: Msg) (model: Model) =
     match msg with
@@ -51,19 +53,29 @@ let update (msg: Msg) (model: Model) =
             OnLoginError
     | OnLoginError error ->
         { model with
-            errorMessage = error.Message },
+            ErrorMessage = error.Message },
         Cmd.none
-    | OnLoginSuccess value -> model, Cmd.navigatePath ("")
+    | OnLoginSuccess value -> model, Cmd.navigatePath (fullPath = "")
     | OnRegisterError error ->
         { model with
-            errorMessage = error.Message },
+            ErrorMessage = error.Message },
         Cmd.none
-    | OnRegisterSuccess value -> model, Cmd.navigatePath ("")
+    | OnRegisterSuccess value -> model, Cmd.navigatePath (fullPath = "")
+    | UsernameUpdated event -> { model with Username = event } , Cmd.none
+    | PasswordUpdated event -> { model with Password = event } , Cmd.none
 
 
 let view model dispatch =
     Html.div
         [ Html.h1 "Login"
+          Html.input [ prop.text "Username"
+                       prop.type'.text
+                       prop.onChange (fun ev -> dispatch (UsernameUpdated ev))
+                     ]
+
+          Html.input [ prop.text "Password"
+                       prop.type'.password
+                       prop.onChange (fun ev -> dispatch (PasswordUpdated ev))]
 
           Html.span
               [ Html.button [ prop.text "Login"; prop.onClick (fun _ -> dispatch LoginClicked) ]

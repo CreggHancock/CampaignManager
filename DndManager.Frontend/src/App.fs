@@ -20,14 +20,15 @@ type Msg =
     | InitiativeTrackerMsg of InitiativeTracker.Msg
     | LoginMsg of Login.Msg
     | LoginClicked
+    | LogoutClicked
 
 let init() = { CurrentUrl = Router.currentPath()
                ActivePage = NotFound
                Username = None }, Cmd.navigatePath(fullPath = Home.route)
 
 
-let forceLoginRedirect userName ifLoggedIn =
-    match userName with
+let forceLoginRedirect username ifLoggedIn =
+    match username with
         | Some _ ->
             ifLoggedIn
         | None ->
@@ -52,7 +53,7 @@ let update msg model =
                 match segments with
                     | [ Home.route ] ->
                         let (homeModel, homeCmd) = Home.init ()
-                        (Page.Home homeModel, homeCmd)
+                        (Page.Home { homeModel with Username = model.Username }, homeCmd)
                     | [ InitiativeTracker.route ] ->
                         let (initiativeTrackerModel, initiativeTrackerCmd) = InitiativeTracker.init ()
                         (Page.InitiativeTracker initiativeTrackerModel, initiativeTrackerCmd) 
@@ -66,13 +67,24 @@ let update msg model =
                          ActivePage = fst pageFromUrl }, snd pageFromUrl
         | LoginClicked ->
             (model, Cmd.navigatePath(fullPath = Login.route))
+        | LogoutClicked ->
         | _ ->
             model, Cmd.none
 
 [<ReactComponent>]
-let Navbar dispatch =
-    Html.nav [   
-        Html.button [
+let Navbar (username : string option) dispatch =
+    Html.nav [
+        match username with
+        | Some name ->
+            Html.span [
+                Html.text name
+                Html.button [
+                    prop.text "Logout"
+                    prop.onClick (fun _ -> dispatch LoginClicked)
+                ]
+            ]
+        | None ->
+            Html.button [
             prop.text "Login"
             prop.onClick (fun _ -> dispatch LoginClicked)
         ]
@@ -100,7 +112,7 @@ let view model dispatch =
                 prop.style [ style.padding 20 ]
                 prop.children [
                     Html.div [
-                        Navbar dispatch
+                        Navbar model.Username dispatch
                         currentPage
                     ]
                 ]

@@ -8,12 +8,12 @@ open Feliz.Router
 [<Literal>]
 let route = "Home"
 
-type Model = { userName: string }
+type Model = { Username: string option }
 
 type Msg =
     | NavigateToInitiativeTracker
 
-let init() = { userName = "Cregg" }, Cmd.none
+let init() = { Username = None }, Cmd.none
 
 let update (msg: Msg) (model: Model) =
     match msg with
@@ -22,9 +22,13 @@ let update (msg: Msg) (model: Model) =
 let view model dispatch =
     Html.div [
         Html.h1 "Home"
-        Html.h2 $"Hello, {model.userName}"
-        Html.button [
+        match model.Username with
+        | Some userName ->
+            Html.h2 $"Hello, {userName}"
+            Html.button [
             prop.text "Initiative"
             prop.onClick (fun _ -> dispatch NavigateToInitiativeTracker)
-        ]
+            ]
+        | None ->
+            Html.span "Log in to get started!"
     ]
