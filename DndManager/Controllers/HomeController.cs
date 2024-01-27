@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using DndManager.Helpers;
 using DndManager.Data.Characters;
 using Microsoft.AspNetCore.Authorization;
+using DndManager.Services;
+using DndManager.Data.Initiatives;
 
 namespace DndManager.Controllers;
 
@@ -17,10 +19,8 @@ namespace DndManager.Controllers;
 /// <param name="unitOfWork"></param>
 [ApiController]
 [Route("[Controller]/[Action]")]
-public class HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWork) : ControllerBase
+public class HomeController(ILogger<HomeController> logger, InitiativeService initiativeService, IUnitOfWork unitOfWork) : ControllerBase
 {
-    private readonly ILogger<HomeController> _logger = logger;
-    private readonly IUnitOfWork unitOfWork = unitOfWork;
 
     /// <summary>Gets the data needed for the home page</summary>
     /// <returns>A <see cref="HomeViewModel"/> containing data needed for the home page.</returns>
@@ -29,10 +29,10 @@ public class HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWo
     {
         var userAuthenticated = User.Identity?.IsAuthenticated ?? false;
         IEnumerable<Character> characters = Array.Empty<Character>();
-        string? userId = null;
-        if (userAuthenticated) 
+        IEnumerable<Scene> initiativeScenes = Array.Empty<Scene>();
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userAuthenticated && userId != null) 
         {
-            userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var characterRepository = unitOfWork.Repository<Character>();
             characters = await characterRepository.GetAsync(async dbSet =>
             {
@@ -41,11 +41,14 @@ public class HomeController(ILogger<HomeController> logger, IUnitOfWork unitOfWo
 
             var emptyCharacter = CharacterHelpers.BuildEmptyCharacter(userId);
             characters = characters.Append(emptyCharacter);
+
+            initiativeScenes = await initiativeService.GetScenes(userId);
         }
 
         return new HomeViewModel
         {
             UserCharacters = characters,
+            UserScenes = initiativeScenes
         };
     }
 

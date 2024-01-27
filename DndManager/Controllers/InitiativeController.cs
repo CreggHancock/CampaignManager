@@ -9,13 +9,14 @@ namespace DndManager.Controllers
 {
     /// <summary>The controller used to manage initiative tracking.</summary>
     /// <param name="initiativeService">The <see cref="InitiativeService"/></param>
+    [ApiController]
+    [Route("[Controller]/[Action]")]
     public class InitiativeController(InitiativeService initiativeService) : Controller
     {
-        private readonly InitiativeService initiativeService = initiativeService;
-
         /// <summary>Gets a model containing the scene used for initiative tracking.</summary>
         /// <param name="id">The scene ID.</param>
         /// <returns>The model containing the scene.</returns>
+        [HttpGet]
         public async Task<InitiativeViewModel> Get(int? id)
         {
             var userIdentifier = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -52,7 +53,7 @@ namespace DndManager.Controllers
                 throw new InvalidOperationException("Can't update a character that isn't owned by the user");
             }
 
-           return await this.initiativeService.UpdateOrCreateScene(userIdentifier, dto);
+           return await initiativeService.UpdateOrCreateScene(userIdentifier, dto);
         }
 
         /// <summary>Deletes an initiative scene.</summary>
@@ -68,7 +69,7 @@ namespace DndManager.Controllers
                 throw new InvalidOperationException("User must be logged in to access this content");
             }
 
-            await this.initiativeService.DeleteScene(userIdentifier, id);
+            await initiativeService.DeleteScene(userIdentifier, id);
         }
     }
 }

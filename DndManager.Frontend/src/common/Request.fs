@@ -3,6 +3,12 @@ module Request
 open Fetch.Types
 open Thoth.Json
 
+
+let fetchEmpty (url: string) (init: RequestProperties list) =
+    promise {
+        GlobalFetch.fetch(RequestInfo.Url url, Fetch.requestProps init) |> ignore
+    }
+
 // Fetch a data structure from specified url and using the decoder
 let fetchWithDecoder<'T> (url: string) (decoder: Decoder<'T>) (init: RequestProperties list) =
     promise {

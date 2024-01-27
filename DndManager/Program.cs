@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Reflection;
 using DndManager.Helpers;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.CookiePolicy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +57,7 @@ static void ConfigureServices(
     services.AddTransient<IEmailSender, EmailSender>();
     services.AddTransient<IUnitOfWork, UnitOfWork>();
     services.AddTransient<CharacterService>();
+    services.AddTransient<InitiativeService>();
 
     services.AddIdentityApiEndpoints<IdentityUser>()
         .AddEntityFrameworkStores<ApplicationDbContext>();

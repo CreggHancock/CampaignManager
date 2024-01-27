@@ -3,6 +3,7 @@ using DndManager.Data;
 using DndManager.Data.Initiatives;
 using DndManager.DataContracts.Initiatives;
 using DndManager.Helpers;
+using Microsoft.EntityFrameworkCore;
 
 namespace DndManager.Services;
 
@@ -15,6 +16,17 @@ public class InitiativeService
     {
         this.unitOfWork = unitOfWork;
         this.mapper = mapper;
+    }
+
+    public async Task<IEnumerable<Scene>> GetScenes(string userId)
+    {
+        var repository = this.unitOfWork.Repository<Scene>();
+        var userScenes = await repository.GetAsync(async dbSet =>
+        {
+            return await dbSet.Where(c => c.UserId == userId).ToListAsync();
+        });
+
+        return userScenes ?? Array.Empty<Scene>();
     }
 
     public async Task<Scene> GetScene(string userId, int? sceneId)

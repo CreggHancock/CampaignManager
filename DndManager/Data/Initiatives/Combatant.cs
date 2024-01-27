@@ -1,4 +1,6 @@
-﻿namespace DndManager.Data.Initiatives;
+﻿using DndManager.Data.Characters;
+
+namespace DndManager.Data.Initiatives;
 
 public class Combatant : EntityBase
 {
@@ -27,4 +29,6 @@ public class Combatant : EntityBase
     public int InitiativeModifier { get; set; }
 
     public int HardInitiative { get; set; }
+
+    public virtual Scene Scene { get; set; } = null!;
 }

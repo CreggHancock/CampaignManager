@@ -1,4 +1,5 @@
 ﻿using DndManager.Data.Characters;
+using DndManager.Data.Initiatives;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +27,10 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<CharacterAbility> Abilities => this.Set<CharacterAbility>();
 
     public DbSet<Language> Languages => this.Set<Language>();
+
+    public DbSet<Scene> Scenes => this.Set<Scene>();
+
+    public DbSet<Combatant> Combatants => this.Set<Combatant>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
