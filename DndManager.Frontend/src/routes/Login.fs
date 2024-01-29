@@ -7,6 +7,7 @@ open Fetch.Types
 open Thoth.Fetch
 open Thoth.Json
 open Fable.Core
+open Feliz.Bulma
 
 [<Literal>]
 let route = "Login"
@@ -14,7 +15,8 @@ let route = "Login"
 type Model =
     { Username: string
       Password: string
-      ErrorMessage: string }
+      ErrorMessage: string
+      IsRegistering: bool }
 
 
 type LoginResponse =
@@ -37,7 +39,8 @@ type Msg =
 let init () =
     { Username = ""
       Password = ""
-      ErrorMessage = "" },
+      ErrorMessage = ""
+      IsRegistering = false },
     Cmd.none
 
 let loginOrRegData model =
@@ -90,30 +93,54 @@ let update (msg: Msg) (model: Model) =
 
 
 let view model dispatch =
-    Html.div
-        [ Html.h1 "Login or Register"
-          Html.div [
-              Html.label [ Html.text "Email"
-                           Html.input [ 
-                               prop.type'.text
-                               prop.onChange (fun ev -> dispatch (UsernameUpdated ev))
-                           ]
-              ]
-          ]
+    Html.div [
+        Bulma.panel [
+          Bulma.panelHeading [ prop.text "Login" ]
+          Bulma.panelBlock.div [
+              Html.form [
+                  prop.onSubmit (fun ev -> ev.preventDefault ())
+                  prop.children [
+                      Bulma.field.div [
+                          Bulma.label "Email"
+                          Bulma.control.div [
+                            Bulma.input.text [
+                                prop.required true
+                                prop.onChange (fun ev -> dispatch (UsernameUpdated ev))
+                            ]
+                          ]
+                      ]
 
-          Html.div [
-              Html.label [ Html.text "Password"
-                           Html.input [ 
-                               prop.type'.password
-                               prop.onChange (fun ev -> dispatch (PasswordUpdated ev))
-                           ]
-              ]
-          ]
+                      Bulma.field.div [
+                          Bulma.label "Password"
+                          Bulma.control.div [
+                            Bulma.input.password [
+                                prop.required true
+                                prop.onChange (fun ev -> dispatch (PasswordUpdated ev))
+                            ]
+                          ]
+                      ]
 
-          Html.div [
-          Html.span [ 
-                Html.button [ prop.type' "button"; prop.text "Login"; prop.onClick (fun _ -> dispatch LoginClicked) ]
-                Html.button [ prop.type' "button"; prop.text "Register"; prop.onClick (fun _ -> dispatch RegisterClicked) ] 
+                      Bulma.field.div [
+                          Bulma.field.isGrouped
+                          Bulma.field.isGroupedCentered
+                          prop.children [
+                                if model.IsRegistering then
+                                    Bulma.button.button [ 
+                                        Bulma.color.isInfo
+                                        prop.text "Register"
+                                        prop.onClick (fun _ -> dispatch RegisterClicked)
+                                    ] 
+                                else
+                                    Bulma.button.button [ 
+                                        Bulma.color.isInfo
+                                        prop.text "Login"
+                                        prop.onClick (fun _ -> dispatch LoginClicked) 
+                                    ]
+                        
+                          ]
+                      ]
+                  ]
               ]
           ]
         ]
+    ]

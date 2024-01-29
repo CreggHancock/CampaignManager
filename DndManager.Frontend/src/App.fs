@@ -6,6 +6,7 @@ open Feliz.Router
 open Thoth.Fetch
 open Fable.Core
 open Fetch.Types
+open Feliz.Bulma
 
 type UserInfo = { email: string
                   isEmailConfirmed: bool }
@@ -131,20 +132,40 @@ let update msg model =
 
 [<ReactComponent>]
 let Navbar (username : string option) dispatch =
-    Html.nav [
-        match username with
-        | Some name ->
-            Html.span [
-                Html.text name
-                Html.button [
-                    prop.text "Logout"
-                    prop.onClick (fun _ -> dispatch LogoutClicked)
+    Bulma.navbar [
+        Bulma.color.isBlack
+        prop.children [
+            Bulma.navbarBrand.div [
+                Bulma.navbarItem.a [
+                    Html.i [
+                        prop.className "fa-solid fa-dice-d20" 
+                    ]
                 ]
             ]
-        | None ->
-            Html.button [
-            prop.text "Login"
-            prop.onClick (fun _ -> dispatch LoginClicked)
+            Bulma.navbarMenu [
+                Bulma.navbarStart.div [
+                    Bulma.navbarItem.a [ prop.text "Home" ]
+                ]
+                Bulma.navbarEnd.div [
+                    Bulma.navbarItem.div [
+                        match username with
+                            | Some name ->
+                                Html.span [
+                                    Html.text name
+                                    Bulma.button.a [
+                                        prop.text "Logout"
+                                        prop.onClick (fun _ -> dispatch LogoutClicked)
+                                    ]
+                                ]
+                            | None ->
+                                Bulma.button.a [
+                                prop.text "Login"
+                                prop.onClick (fun _ -> dispatch LoginClicked)
+                            ]
+                        ]
+                    ]
+                ]
+            
         ]
     ]
 

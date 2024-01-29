@@ -72,7 +72,6 @@ let viewScenes (scenes : Scene List) dispatch: Fable.React.ReactElement =
 
 let view model userName dispatch =
     Html.div [
-        Html.h1 "Home"
         match userName with
         | Some name ->
             Html.h2 $"Hello, {name}"
