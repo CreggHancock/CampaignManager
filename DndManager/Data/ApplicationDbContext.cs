@@ -1,5 +1,6 @@
 ﻿using DndManager.Data.Characters;
 using DndManager.Data.Initiatives;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,5 +41,12 @@ public class ApplicationDbContext : IdentityDbContext
         {
             throw new ArgumentNullException(nameof(modelBuilder));
         }
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder
+            .Properties<DateTimeOffset>()
+            .HaveConversion<DateTimeOffsetConverter>();
     }
 }

@@ -12,20 +12,35 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DndManager.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231015003839_ChangeCharacterUserIdToString")]
-    partial class ChangeCharacterUserIdToString
+    [Migration("20240211181433_FixingDateTimeOffsetType")]
+    partial class FixingDateTimeOffsetType
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.11")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("DndManager.Data.Ability", b =>
+            modelBuilder.Entity("CharacterLanguage", b =>
+                {
+                    b.Property<int>("CharactersId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LanguagesId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("CharactersId", "LanguagesId");
+
+                    b.HasIndex("LanguagesId");
+
+                    b.ToTable("CharacterLanguage");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Characters.AbilityDefinition", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -34,12 +49,18 @@ namespace DndManager.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CharacterId")
+                    b.Property<int>("CreatedBy")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsCustom")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("MaxUses")
                         .HasColumnType("integer");
@@ -48,17 +69,12 @@ namespace DndManager.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("RemainingUses")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("CharacterId");
-
-                    b.ToTable("Abilities");
+                    b.ToTable("AbilityDefinition");
                 });
 
-            modelBuilder.Entity("DndManager.Data.Character", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.Character", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -71,12 +87,31 @@ namespace DndManager.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Background")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Charisma")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Constitution")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Copper")
                         .HasColumnType("integer");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("Dexterity")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Electrum")
                         .HasColumnType("integer");
@@ -98,6 +133,9 @@ namespace DndManager.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("InitiativeBonus")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Intelligence")
                         .HasColumnType("integer");
 
                     b.Property<int>("Level")
@@ -127,6 +165,9 @@ namespace DndManager.Data.Migrations
                     b.Property<int>("Speed")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Strength")
+                        .HasColumnType("integer");
+
                     b.Property<int>("TempHealth")
                         .HasColumnType("integer");
 
@@ -134,12 +175,48 @@ namespace DndManager.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Wisdom")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.ToTable("Characters");
                 });
 
-            modelBuilder.Entity("DndManager.Data.CharacterClass", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.CharacterAbility", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("Id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AbilityDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CharacterId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RemainingUses")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AbilityDefinitionId");
+
+                    b.HasIndex("CharacterId");
+
+                    b.ToTable("Abilities");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Characters.CharacterClass", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -150,6 +227,45 @@ namespace DndManager.Data.Migrations
 
                     b.Property<int>("CharacterId")
                         .HasColumnType("integer");
+
+                    b.Property<int>("ClassDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("ClassDefinitionId");
+
+                    b.ToTable("CharacterClasses");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Characters.ClassDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("Id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCustom")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -160,12 +276,10 @@ namespace DndManager.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CharacterId");
-
-                    b.ToTable("CharacterClasses");
+                    b.ToTable("ClassDefinition");
                 });
 
-            modelBuilder.Entity("DndManager.Data.InventoryItem", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.InventoryItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -176,6 +290,12 @@ namespace DndManager.Data.Migrations
 
                     b.Property<int>("CharacterId")
                         .HasColumnType("integer");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -188,7 +308,34 @@ namespace DndManager.Data.Migrations
                     b.ToTable("InventoryItems");
                 });
 
-            modelBuilder.Entity("DndManager.Data.ProficiencyBonus", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.Language", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("Id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCustom")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Languages");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Characters.ProficiencyBonus", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -203,6 +350,12 @@ namespace DndManager.Data.Migrations
                     b.Property<int>("CharacterId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int?>("SkillType")
                         .HasColumnType("integer");
 
@@ -213,7 +366,7 @@ namespace DndManager.Data.Migrations
                     b.ToTable("ProfiencyBonuses");
                 });
 
-            modelBuilder.Entity("DndManager.Data.Spell", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.Spell", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -224,6 +377,9 @@ namespace DndManager.Data.Migrations
 
                     b.Property<int>("CharacterId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("IsCustom")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -239,7 +395,7 @@ namespace DndManager.Data.Migrations
                     b.ToTable("Spells");
                 });
 
-            modelBuilder.Entity("DndManager.Data.SpellSlot", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.SpellSlot", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -250,6 +406,12 @@ namespace DndManager.Data.Migrations
 
                     b.Property<int>("CharacterId")
                         .HasColumnType("integer");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -267,7 +429,7 @@ namespace DndManager.Data.Migrations
                     b.ToTable("SpellSlots");
                 });
 
-            modelBuilder.Entity("DndManager.Data.Stats", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.SubClass", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -276,35 +438,173 @@ namespace DndManager.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CharacterId")
+                    b.Property<int>("CharacterClassId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Charisma")
+                    b.Property<int>("ClassId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Constitution")
+                    b.Property<int>("CreatedBy")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Dexterity")
-                        .HasColumnType("integer");
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Intelligence")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Strength")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Wisdom")
+                    b.Property<int>("SubClassDefinitionId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CharacterId");
+                    b.HasIndex("CharacterClassId");
 
-                    b.ToTable("AbilityModifiers");
+                    b.HasIndex("SubClassDefinitionId");
+
+                    b.ToTable("SubClass");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Characters.SubClassDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("Id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClassDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCustom")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassDefinitionId");
+
+                    b.ToTable("SubClassDefinition");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Initiatives.Combatant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("Id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("HardInitiative")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Health")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("text");
+
+                    b.Property<int>("InitiativeModifier")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsPlayer")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("LocationX")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LocationY")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxHealth")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SceneId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SceneId");
+
+                    b.ToTable("Combatants");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Initiatives.Scene", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("Id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CombatantTurn")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Round")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SquareSize")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Scenes");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -450,12 +750,10 @@ namespace DndManager.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("text");
@@ -492,12 +790,10 @@ namespace DndManager.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
                         .HasColumnType("text");
@@ -507,31 +803,62 @@ namespace DndManager.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("DndManager.Data.Ability", b =>
+            modelBuilder.Entity("CharacterLanguage", b =>
                 {
-                    b.HasOne("DndManager.Data.Character", "Character")
+                    b.HasOne("DndManager.Data.Characters.Character", null)
+                        .WithMany()
+                        .HasForeignKey("CharactersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DndManager.Data.Characters.Language", null)
+                        .WithMany()
+                        .HasForeignKey("LanguagesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DndManager.Data.Characters.CharacterAbility", b =>
+                {
+                    b.HasOne("DndManager.Data.Characters.AbilityDefinition", "AbilityDefinition")
+                        .WithMany("CharacterAbilities")
+                        .HasForeignKey("AbilityDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DndManager.Data.Characters.Character", "Character")
                         .WithMany("Abilities")
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("AbilityDefinition");
+
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("DndManager.Data.CharacterClass", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.CharacterClass", b =>
                 {
-                    b.HasOne("DndManager.Data.Character", "Character")
+                    b.HasOne("DndManager.Data.Characters.Character", "Character")
                         .WithMany("CharacterClasses")
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DndManager.Data.Characters.ClassDefinition", "ClassDefinition")
+                        .WithMany("CharacterClasses")
+                        .HasForeignKey("ClassDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Character");
+
+                    b.Navigation("ClassDefinition");
                 });
 
-            modelBuilder.Entity("DndManager.Data.InventoryItem", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.InventoryItem", b =>
                 {
-                    b.HasOne("DndManager.Data.Character", "Character")
+                    b.HasOne("DndManager.Data.Characters.Character", "Character")
                         .WithMany("InventoryItems")
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -540,9 +867,9 @@ namespace DndManager.Data.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("DndManager.Data.ProficiencyBonus", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.ProficiencyBonus", b =>
                 {
-                    b.HasOne("DndManager.Data.Character", "Character")
+                    b.HasOne("DndManager.Data.Characters.Character", "Character")
                         .WithMany("ProficiencyBonuses")
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -551,9 +878,9 @@ namespace DndManager.Data.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("DndManager.Data.Spell", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.Spell", b =>
                 {
-                    b.HasOne("DndManager.Data.Character", "Character")
+                    b.HasOne("DndManager.Data.Characters.Character", "Character")
                         .WithMany("Spells")
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -562,9 +889,9 @@ namespace DndManager.Data.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("DndManager.Data.SpellSlot", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.SpellSlot", b =>
                 {
-                    b.HasOne("DndManager.Data.Character", "Character")
+                    b.HasOne("DndManager.Data.Characters.Character", "Character")
                         .WithMany("SpellSlots")
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -573,15 +900,45 @@ namespace DndManager.Data.Migrations
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("DndManager.Data.Stats", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.SubClass", b =>
                 {
-                    b.HasOne("DndManager.Data.Character", "Character")
+                    b.HasOne("DndManager.Data.Characters.CharacterClass", "CharacterClass")
                         .WithMany()
-                        .HasForeignKey("CharacterId")
+                        .HasForeignKey("CharacterClassId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Character");
+                    b.HasOne("DndManager.Data.Characters.SubClassDefinition", "SubClassDefinition")
+                        .WithMany("SubClasses")
+                        .HasForeignKey("SubClassDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CharacterClass");
+
+                    b.Navigation("SubClassDefinition");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Characters.SubClassDefinition", b =>
+                {
+                    b.HasOne("DndManager.Data.Characters.ClassDefinition", "ClassDefinition")
+                        .WithMany("SubSubClassDefinitions")
+                        .HasForeignKey("ClassDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClassDefinition");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Initiatives.Combatant", b =>
+                {
+                    b.HasOne("DndManager.Data.Initiatives.Scene", "Scene")
+                        .WithMany("Combatants")
+                        .HasForeignKey("SceneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Scene");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -635,7 +992,12 @@ namespace DndManager.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DndManager.Data.Character", b =>
+            modelBuilder.Entity("DndManager.Data.Characters.AbilityDefinition", b =>
+                {
+                    b.Navigation("CharacterAbilities");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Characters.Character", b =>
                 {
                     b.Navigation("Abilities");
 
@@ -648,6 +1010,23 @@ namespace DndManager.Data.Migrations
                     b.Navigation("SpellSlots");
 
                     b.Navigation("Spells");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Characters.ClassDefinition", b =>
+                {
+                    b.Navigation("CharacterClasses");
+
+                    b.Navigation("SubSubClassDefinitions");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Characters.SubClassDefinition", b =>
+                {
+                    b.Navigation("SubClasses");
+                });
+
+            modelBuilder.Entity("DndManager.Data.Initiatives.Scene", b =>
+                {
+                    b.Navigation("Combatants");
                 });
 #pragma warning restore 612, 618
         }

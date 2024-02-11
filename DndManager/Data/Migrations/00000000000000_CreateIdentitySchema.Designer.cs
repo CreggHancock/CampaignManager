@@ -90,7 +90,7 @@ namespace DndManager.Data.Migrations
                         .HasColumnType("BOOLEAN");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NormalizedEmail")
                         .HasColumnType("TEXT")
