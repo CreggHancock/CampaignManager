@@ -97,8 +97,8 @@ let update msg model =
                         let (homeModel, homeCmd) = Home.init accessToken
                         (Page.Home homeModel, Cmd.map (fun (cmd) -> (HomeMsg)cmd) homeCmd)
                     | [ InitiativeTracker.route ] ->
-                        let (initiativeTrackerModel, initiativeTrackerCmd) = InitiativeTracker.init ()
-                        (Page.InitiativeTracker initiativeTrackerModel, initiativeTrackerCmd) 
+                        let (initiativeTrackerModel, initiativeTrackerCmd) = InitiativeTracker.init accessToken
+                        (Page.InitiativeTracker initiativeTrackerModel, Cmd.map (fun (cmd) -> (InitiativeTrackerMsg)cmd) initiativeTrackerCmd) 
                             |> forceLoginRedirect model.UserInfo
                     | [ Login.route ] ->
                         let (loginModel, loginCmd) = Login.init ()
@@ -144,7 +144,7 @@ let Navbar (username : string option) dispatch =
             ]
             Bulma.navbarMenu [
                 Bulma.navbarStart.div [
-                    Bulma.navbarItem.a [ prop.text "Home" ]
+                    Bulma.navbarItem.a [ prop.text "Home"; prop.href "/Home" ]
                 ]
                 Bulma.navbarEnd.div [
                     Bulma.navbarItem.div [
