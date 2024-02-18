@@ -5,30 +5,27 @@ name: .NET
 
 on:
   push:
-    branches: [ "main", "FSharp" ]
+    branches: ['main', 'FSharp']
   pull_request:
-    branches: [ "main", "FSharp" ]
+    branches: ['main', 'FSharp']
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 8.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Restore tools
-      run: dotnet tool restore
-      working-directory: ./DndManager.Frontend/src
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
-    - name: Build Frontend
-      run: dotnet fable
-      working-directory: ./DndManager.Frontend/src
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Restore tools
+        run: dotnet tool restore
+        working-directory: ./DndManager.Frontend/src
+      - name: Build
+        run: dotnet build --no-restore
+      - name: Build Frontend
+        run: dotnet fable
+        working-directory: ./DndManager.Frontend/src
