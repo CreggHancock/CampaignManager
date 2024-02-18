@@ -103,11 +103,13 @@ let updateLocalStorage (model: Model, cmd: Cmd<Msg>) =
     let sceneResults = Decode.Auto.fromString<Scene List>(Browser.WebStorage.localStorage.getItem ("scenes"))
     match sceneResults with
         | Ok scenes ->
+            let nextId =
+                scenes |> List.map (fun (s) -> s.id) |> List.sortDescending |> List.tryHead |> Option.defaultWith (fun () -> 0) |> (fun (n) -> n + 1)
             let updatedScenes = 
-                if List.exists (fun (s) -> s.id = model.InitiativeViewModel.scene.id) scenes then
+                if model.InitiativeViewModel.scene.id > 0 && List.exists (fun (s) -> s.id = model.InitiativeViewModel.scene.id) scenes then
                     List.map (fun (s) -> if s.id = model.InitiativeViewModel.scene.id then model.InitiativeViewModel.scene else s) scenes
                 else
-                    model.InitiativeViewModel.scene :: scenes
+                    { model.InitiativeViewModel.scene with id = nextId }:: scenes
             model, Cmd.batch [ 
                 cmd 
                 Cmd.OfFunc.either
@@ -117,7 +119,12 @@ let updateLocalStorage (model: Model, cmd: Cmd<Msg>) =
                     OnStorageUpdatedError
             ]
         | Error err ->
-            { model with ErrorMessage = err }, cmd
+            { model with ErrorMessage = "No scenes found" }
+            , Cmd.OfFunc.either
+                    (fun () -> Browser.WebStorage.localStorage.setItem ("scenes", Encode.Auto.toString (0, List.singleton { model.InitiativeViewModel.scene with id = 1 }) ))
+                    ()
+                    (fun () -> OnStorageUpdatedSuccess)
+                    OnStorageUpdatedError
     
 
 let init accessToken sceneId = ({
@@ -149,10 +156,10 @@ let update (msg: Msg) (model: Model) =
     match msg with
     | NoOp -> model, Cmd.none
     | AddCharacterClicked -> { model with NewCharacter = Some { name = ""; initiativeModifier = 0; imageUrl = ""; playerType = CombatantType.Player; locationX = 0; locationY = 0; health = 0; maxHealth = 0 } }, Cmd.none
-    | RollInitiativesClicked -> updateScene model (fun scene -> { scene with gameState = GameState.InitiativeRolled }), Cmd.none 
-    | StartCombatClicked -> updateScene model (fun scene -> { scene with gameState = GameState.Active; combatantTurn = 0 }), Cmd.none 
-    | EndTurnClicked -> updateScene model (fun scene -> { scene with gameState = GameState.Active; combatantTurn = scene.combatantTurn + 1 }), Cmd.none 
-    | ResetClicked -> updateScene model  (fun scene -> { scene with gameState = GameState.CharacterSetup; combatantTurn = 0 }), Cmd.none
+    | RollInitiativesClicked -> (updateScene model (fun scene -> { scene with gameState = GameState.InitiativeRolled }), Cmd.none) |> updateLocalStorage
+    | StartCombatClicked -> (updateScene model (fun scene -> { scene with gameState = GameState.Active; combatantTurn = 0 }), Cmd.none) |> updateLocalStorage 
+    | EndTurnClicked -> (updateScene model (fun scene -> { scene with gameState = GameState.Active; combatantTurn = scene.combatantTurn + 1 }), Cmd.none) |> updateLocalStorage
+    | ResetClicked -> (updateScene model  (fun scene -> { scene with gameState = GameState.CharacterSetup; combatantTurn = 0 }), Cmd.none) |> updateLocalStorage
     | NewCharacterNameUpdated event -> { model with NewCharacter = Option.map (fun c -> { c with name = event } ) model.NewCharacter }, Cmd.none
     | NewCharacterDexterityUpdated event -> { model with NewCharacter = Option.map (fun c -> { c with initiativeModifier = int event } ) model.NewCharacter }, Cmd.none
     | NewCharacterImageUpdated event -> { model with NewCharacter = Option.map (fun c -> { c with imageUrl = event } ) model.NewCharacter }, Cmd.none
@@ -167,12 +174,12 @@ let update (msg: Msg) (model: Model) =
         match model.NewCharacter with
             | Some character ->
                 let updatedScene = updateScene model (fun scene -> { scene with combatants = character :: scene.combatants})
-                { updatedScene with NewCharacter = None }, Cmd.none
+                ({ updatedScene with NewCharacter = None }, Cmd.none) |> updateLocalStorage
             | None ->
                 model, Cmd.none
-    | BackgroundUpdated background -> updateScene model (fun scene -> { scene with backgroundImage = background }) , Cmd.none
+    | BackgroundUpdated background -> (updateScene model (fun scene -> { scene with backgroundImage = background }) , Cmd.none) |> updateLocalStorage
     | OnGetModelSuccess viewModel -> model, Cmd.none
-    | OnGetModelError err -> { model with ErrorMessage = err.ToString() }, Cmd.none
+    | OnGetModelError err -> { model with ErrorMessage = err.Message }, Cmd.none
     | OnGotModelFromStorageSuccess (scenesString, sceneId) ->
         let sceneResults = Decode.Auto.fromString<Scene List>(scenesString)
         match sceneResults with
@@ -180,9 +187,16 @@ let update (msg: Msg) (model: Model) =
                 updateScene model (fun scene -> (scenes |> List.tryFind (fun (sceneOption) -> sceneOption.id.ToString() = sceneId) |> Option.defaultWith (fun () -> scene))), Cmd.none
             | Error err ->
                 { model with ErrorMessage = err }, Cmd.none
-    | OnGotModelFromStorageError err -> { model with ErrorMessage = err.ToString() }, Cmd.none
+    | OnGotModelFromStorageError err -> { model with ErrorMessage = err.Message }, Cmd.none
+    | OnStorageUpdatedSuccess -> model, Cmd.none
+    | OnStorageUpdatedError err -> 
+        ({ model with ErrorMessage = err.Message }
+        , Cmd.OfFunc.either
+                    (fun () -> Browser.WebStorage.localStorage.setItem ("scenes", Encode.Auto.toString (0, []) ))
+                    ()
+                    (fun () -> OnStorageUpdatedSuccess)
+                    OnStorageUpdatedError)
         
-
 
 let viewPlayerCard player dispatch =
     let getClassFromPlayer playerType = 
