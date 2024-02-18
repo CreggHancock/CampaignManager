@@ -75,16 +75,16 @@ let view model userName dispatch =
         match userName with
         | Some name ->
             Html.h2 $"Hello, {name}"
-            (viewCharacters model.homeViewModel.userCharacters)
-            Html.button [
-            prop.text "New Character"
-            prop.onClick (fun _ -> dispatch NavigateToInitiativeCharacter)
-            ]
-            (viewScenes model.homeViewModel.userScenes dispatch)
-            Html.button [
-            prop.text "New Scene"
-            prop.onClick (fun _ -> dispatch NavigateToInitiativeTracker)
-            ]
         | None ->
-            Html.span "Log in to get started!"
+            Html.span ""
+        (viewCharacters model.homeViewModel.userCharacters)
+        Html.button [
+        prop.text "New Character"
+        prop.onClick (fun _ -> dispatch NavigateToInitiativeCharacter)
+        ]
+        (viewScenes model.homeViewModel.userScenes dispatch)
+        Html.button [
+        prop.text "New Scene"
+        prop.onClick (fun _ -> dispatch NavigateToInitiativeTracker)
+        ]
     ]

@@ -5,11 +5,12 @@ open Elmish
 open Feliz.Bulma
 open Fetch
 open Thoth.Fetch
+open Thoth.Json
 
 [<Literal>]
 let route = "InitiativeTracker"
 
-type PlayerType =
+type CombatantType =
     | Enemy
     | Ally
     | Player
@@ -19,38 +20,40 @@ type GameState =
     | InitiativeRolled
     | Active
 
-type Player = {
+type Combatant = {
     initiativeModifier: int
     name: string
     imageUrl: string
-    playerType: PlayerType
-}
-
-type Model = { 
-    Count: int
-    Players: Player List
-    PlayerTurn: int
-    NewCharacter: Player option
-    GameState: GameState
-    BackgroundUrl: string
-}
-
-type Character = {
-        id: int
-        name: string
-        description: string
-        level: int
+    playerType: CombatantType
+    locationX: int
+    locationY: int
+    health: int
+    maxHealth: int
 }
 
 type Scene = {
-        id: int
-        name: string
-        description: string
+    id: int
+    name: string
+    description: string
+    backgroundImage: string
+    width: int
+    height: int
+    squareSize: int
+    combatantTurn: int
+    round: int
+    combatants: Combatant List
+    gameState: GameState
 }
 
-type HomeViewModel = { 
-      userCharacters : Character List
-      userScenes : Scene List
+type InitiativeViewModel = { 
+      scene : Scene
+    }
+
+type Model = {
+    InitiativeViewModel: InitiativeViewModel
+    NewCharacter: Combatant option
+    ErrorMessage: string
+    IsLoggedIn: bool
 }
 
 type Msg =
@@ -67,60 +70,118 @@ type Msg =
     | NewCharacterCancelClicked
     | NewCharacterCreateClicked
     | BackgroundUpdated of string
-    | OnGetModelSuccess of HomeViewModel
+    | OnGetModelSuccess of InitiativeViewModel
     | OnGetModelError of exn
+    | OnGotModelFromStorageSuccess of string * string
+    | OnGotModelFromStorageError of exn
+    | OnStorageUpdatedSuccess
+    | OnStorageUpdatedError of exn
 
-let getInitiativeViewModel accessToken =
-    let 
-        headers =
+let getInitiativeViewModel accessToken maybeSceneId =
+    match maybeSceneId |> Option.map (fun (id) -> id.ToString ()) with
+        | Some sceneId ->
             match accessToken with
                 | Some token ->
-                    [ HttpRequestHeaders.Authorization ("Bearer " + token) ]
+                    let 
+                        headers = [ HttpRequestHeaders.Authorization ("Bearer " + token) ]
+                    Cmd.OfPromise.either
+                            (fun () -> Fetch.get ("https://localhost:7068/Home/Get/" + sceneId, headers = headers))
+                            ()
+                            (fun (response) -> OnGetModelSuccess response)
+                            OnGetModelError
                 | None ->
-                    []
-    Cmd.OfPromise.either
-            (fun () -> Fetch.get ("https://localhost:7068/Home/Get", headers = headers))
-            ()
-            (fun response -> OnGetModelSuccess response)
-            OnGetModelError
+                    (Cmd.OfFunc.either 
+                        (fun () -> Browser.WebStorage.localStorage.getItem ("scenes"))
+                        ()
+                        (fun (sceneInfo) -> OnGotModelFromStorageSuccess (sceneInfo, sceneId)))
+                        OnGotModelFromStorageError
+        | None ->
+            Cmd.none
 
-let init accessToken = ({
-        Count = 0 
-        Players = []
-        PlayerTurn = 0
+
+let updateLocalStorage (model: Model, cmd: Cmd<Msg>) =
+    let sceneResults = Decode.Auto.fromString<Scene List>(Browser.WebStorage.localStorage.getItem ("scenes"))
+    match sceneResults with
+        | Ok scenes ->
+            let updatedScenes = 
+                if List.exists (fun (s) -> s.id = model.InitiativeViewModel.scene.id) scenes then
+                    List.map (fun (s) -> if s.id = model.InitiativeViewModel.scene.id then model.InitiativeViewModel.scene else s) scenes
+                else
+                    model.InitiativeViewModel.scene :: scenes
+            model, Cmd.batch [ 
+                cmd 
+                Cmd.OfFunc.either
+                    (fun () -> Browser.WebStorage.localStorage.setItem ("scenes", Encode.Auto.toString (0, updatedScenes) ))
+                    ()
+                    (fun () -> OnStorageUpdatedSuccess)
+                    OnStorageUpdatedError
+            ]
+        | Error err ->
+            { model with ErrorMessage = err }, cmd
+    
+
+let init accessToken sceneId = ({
+        InitiativeViewModel = { 
+            scene = {
+                id = sceneId |> Option.defaultWith (fun () -> -1)
+                combatants = []
+                name = ""
+                description = ""
+                combatantTurn = 0
+                round = 0
+                width = 0
+                height = 0
+                squareSize = 0
+                gameState = CharacterSetup
+                backgroundImage = "https://rattrapgames.com/cdn/shop/products/RAT-MAT-GF001_1024x1024@2x.jpg?v=1576461000"
+            }
+        }
         NewCharacter = None
-        GameState = CharacterSetup
-        BackgroundUrl = "https://rattrapgames.com/cdn/shop/products/RAT-MAT-GF001_1024x1024@2x.jpg?v=1576461000"
+        ErrorMessage = ""
+        IsLoggedIn = Option.isSome accessToken
     }
-    , getInitiativeViewModel accessToken)
+    , getInitiativeViewModel accessToken sceneId)
+
+let updateScene model updater =
+    { model with InitiativeViewModel = { scene = updater model.InitiativeViewModel.scene } }
 
 let update (msg: Msg) (model: Model) =
     match msg with
     | NoOp -> model, Cmd.none
-    | AddCharacterClicked -> { model with NewCharacter = Some { name = ""; initiativeModifier = 0; imageUrl = ""; playerType = PlayerType.Player } }, Cmd.none
-    | RollInitiativesClicked -> { model with GameState = GameState.InitiativeRolled }, Cmd.none 
-    | StartCombatClicked -> { model with GameState = GameState.Active; PlayerTurn = 0 }, Cmd.none 
-    | EndTurnClicked -> { model with GameState = GameState.Active; PlayerTurn = model.PlayerTurn + 1 }, Cmd.none 
-    | ResetClicked -> { model with GameState = GameState.CharacterSetup; PlayerTurn = 0 }, Cmd.none
+    | AddCharacterClicked -> { model with NewCharacter = Some { name = ""; initiativeModifier = 0; imageUrl = ""; playerType = CombatantType.Player; locationX = 0; locationY = 0; health = 0; maxHealth = 0 } }, Cmd.none
+    | RollInitiativesClicked -> updateScene model (fun scene -> { scene with gameState = GameState.InitiativeRolled }), Cmd.none 
+    | StartCombatClicked -> updateScene model (fun scene -> { scene with gameState = GameState.Active; combatantTurn = 0 }), Cmd.none 
+    | EndTurnClicked -> updateScene model (fun scene -> { scene with gameState = GameState.Active; combatantTurn = scene.combatantTurn + 1 }), Cmd.none 
+    | ResetClicked -> updateScene model  (fun scene -> { scene with gameState = GameState.CharacterSetup; combatantTurn = 0 }), Cmd.none
     | NewCharacterNameUpdated event -> { model with NewCharacter = Option.map (fun c -> { c with name = event } ) model.NewCharacter }, Cmd.none
     | NewCharacterDexterityUpdated event -> { model with NewCharacter = Option.map (fun c -> { c with initiativeModifier = int event } ) model.NewCharacter }, Cmd.none
     | NewCharacterImageUpdated event -> { model with NewCharacter = Option.map (fun c -> { c with imageUrl = event } ) model.NewCharacter }, Cmd.none
     | NewCharacterPlayerTypeUpdated event -> 
         match event with
-            | "player" -> { model with NewCharacter = Option.map (fun c -> { c with playerType = PlayerType.Player } ) model.NewCharacter }, Cmd.none
-            | "enemy" ->  { model with NewCharacter = Option.map (fun c -> { c with playerType = PlayerType.Enemy } ) model.NewCharacter }, Cmd.none
-            | "ally" -> { model with NewCharacter = Option.map (fun c -> { c with playerType = PlayerType.Ally } ) model.NewCharacter }, Cmd.none
-            | _ -> { model with NewCharacter = Option.map (fun c -> { c with playerType = PlayerType.Player } ) model.NewCharacter }, Cmd.none
+            | "player" -> { model with NewCharacter = Option.map (fun c -> { c with playerType = CombatantType.Player } ) model.NewCharacter }, Cmd.none
+            | "enemy" ->  { model with NewCharacter = Option.map (fun c -> { c with playerType = CombatantType.Enemy } ) model.NewCharacter }, Cmd.none
+            | "ally" -> { model with NewCharacter = Option.map (fun c -> { c with playerType = CombatantType.Ally } ) model.NewCharacter }, Cmd.none
+            | _ -> { model with NewCharacter = Option.map (fun c -> { c with playerType = CombatantType.Player } ) model.NewCharacter }, Cmd.none
     | NewCharacterCancelClicked -> { model with NewCharacter = None }, Cmd.none
     | NewCharacterCreateClicked ->
         match model.NewCharacter with
             | Some character ->
-                { model with Players = character :: model.Players; NewCharacter = None }, Cmd.none
+                let updatedScene = updateScene model (fun scene -> { scene with combatants = character :: scene.combatants})
+                { updatedScene with NewCharacter = None }, Cmd.none
             | None ->
                 model, Cmd.none
-    | BackgroundUpdated background -> { model with BackgroundUrl = background }, Cmd.none
+    | BackgroundUpdated background -> updateScene model (fun scene -> { scene with backgroundImage = background }) , Cmd.none
     | OnGetModelSuccess viewModel -> model, Cmd.none
-    | OnGetModelError err -> model, Cmd.none
+    | OnGetModelError err -> { model with ErrorMessage = err.ToString() }, Cmd.none
+    | OnGotModelFromStorageSuccess (scenesString, sceneId) ->
+        let sceneResults = Decode.Auto.fromString<Scene List>(scenesString)
+        match sceneResults with
+            | Ok scenes ->
+                updateScene model (fun scene -> (scenes |> List.tryFind (fun (sceneOption) -> sceneOption.id.ToString() = sceneId) |> Option.defaultWith (fun () -> scene))), Cmd.none
+            | Error err ->
+                { model with ErrorMessage = err }, Cmd.none
+    | OnGotModelFromStorageError err -> { model with ErrorMessage = err.ToString() }, Cmd.none
+        
 
 
 let viewPlayerCard player dispatch =
@@ -227,8 +288,8 @@ let view model dispatch =
                 (Html.img [
                     prop.id "draggable-image"
                     prop.className "map-image"
-                    prop.src model.BackgroundUrl
-                ]) :: List.mapi (fun ind player -> viewPlayerToken player (model.PlayerTurn = ind) dispatch) model.Players
+                    prop.src model.InitiativeViewModel.scene.backgroundImage
+                ]) :: List.mapi (fun ind player -> viewPlayerToken player (model.InitiativeViewModel.scene.combatantTurn = ind) dispatch) model.InitiativeViewModel.scene.combatants
                     |> prop.children
             ]
             Html.div [
@@ -240,7 +301,7 @@ let view model dispatch =
                             Html.div [
                                 prop.className "initiative"
                                 prop.id "initiativeRotation"
-                                List.map (fun player -> viewPlayerCard player dispatch) model.Players |> prop.children
+                                List.map (fun player -> viewPlayerCard player dispatch) model.InitiativeViewModel.scene.combatants |> prop.children
                             ]
                         ]
                     ]
@@ -338,11 +399,11 @@ let view model dispatch =
                 prop.className "game-buttons"
                 prop.id "gameButtons"
                 prop.children [
-                    viewStateButton GameState.CharacterSetup model.GameState "Add" "addCharacter" AddCharacterClicked dispatch
-                    viewStateButton GameState.CharacterSetup model.GameState "Roll Initiatives" "rollInitiative" RollInitiativesClicked dispatch
-                    viewStateButton GameState.InitiativeRolled model.GameState "Start Combat" "startCombat" StartCombatClicked dispatch
-                    viewStateButton GameState.Active model.GameState "End Turn" "endTurn" EndTurnClicked dispatch
-                    viewStateButton GameState.Active model.GameState "Reset" "reset" ResetClicked dispatch
+                    viewStateButton GameState.CharacterSetup model.InitiativeViewModel.scene.gameState "Add" "addCharacter" AddCharacterClicked dispatch
+                    viewStateButton GameState.CharacterSetup model.InitiativeViewModel.scene.gameState "Roll Initiatives" "rollInitiative" RollInitiativesClicked dispatch
+                    viewStateButton GameState.InitiativeRolled model.InitiativeViewModel.scene.gameState "Start Combat" "startCombat" StartCombatClicked dispatch
+                    viewStateButton GameState.Active model.InitiativeViewModel.scene.gameState "End Turn" "endTurn" EndTurnClicked dispatch
+                    viewStateButton GameState.Active model.InitiativeViewModel.scene.gameState "Reset" "reset" ResetClicked dispatch
                 ]
             ]
         ]

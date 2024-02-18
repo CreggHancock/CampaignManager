@@ -62,15 +62,6 @@ let init() = { CurrentUrl = Router.currentPath()
                getUserInfo accessToken
 
 
-let forceLoginRedirect userInfo ifLoggedIn =
-    match userInfo with
-        | Some _ ->
-            ifLoggedIn
-        | None ->
-            let (loginModel, loginCmd) = Login.init ()
-            (Page.Login loginModel, loginCmd)
-
-
 let update msg model =
     match model.ActivePage, msg with
     | Page.Home homeModel, HomeMsg homeMsg ->
@@ -97,9 +88,11 @@ let update msg model =
                         let (homeModel, homeCmd) = Home.init accessToken
                         (Page.Home homeModel, Cmd.map (fun (cmd) -> (HomeMsg)cmd) homeCmd)
                     | [ InitiativeTracker.route ] ->
-                        let (initiativeTrackerModel, initiativeTrackerCmd) = InitiativeTracker.init accessToken
+                        let (initiativeTrackerModel, initiativeTrackerCmd) = InitiativeTracker.init accessToken None
+                        (Page.InitiativeTracker initiativeTrackerModel, Cmd.map (fun (cmd) -> (InitiativeTrackerMsg)cmd) initiativeTrackerCmd)
+                    | [ InitiativeTracker.route; Route.Query [ "sceneId", Route.Int sceneId ]] ->
+                        let (initiativeTrackerModel, initiativeTrackerCmd) = InitiativeTracker.init accessToken (Option.Some sceneId)
                         (Page.InitiativeTracker initiativeTrackerModel, Cmd.map (fun (cmd) -> (InitiativeTrackerMsg)cmd) initiativeTrackerCmd) 
-                            |> forceLoginRedirect model.UserInfo
                     | [ Login.route ] ->
                         let (loginModel, loginCmd) = Login.init ()
                         (Page.Login loginModel, loginCmd)

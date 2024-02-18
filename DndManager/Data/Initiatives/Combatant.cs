@@ -1,4 +1,6 @@
 ﻿using DndManager.Data.Characters;
+using System.Numerics;
+using System;
 
 namespace DndManager.Data.Initiatives;
 
@@ -20,7 +22,7 @@ public class Combatant : EntityBase
 
     public int LocationY { get; set; }
 
-    public bool IsPlayer { get; set; }
+    public CombatantType CombatantType { get; set; }
 
     public int Health { get; set; }
 
@@ -31,4 +33,11 @@ public class Combatant : EntityBase
     public int HardInitiative { get; set; }
 
     public virtual Scene Scene { get; set; } = null!;
+}
+
+public enum CombatantType
+{
+    Enemy,
+    Ally,
+    Player,
 }
