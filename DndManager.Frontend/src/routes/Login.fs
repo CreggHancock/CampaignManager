@@ -85,11 +85,11 @@ let update (msg: Msg) (model: Model) =
         { model with
             ErrorMessage = error.Message },
         Cmd.none
-    | OnRegisterSuccess -> model, Cmd.navigatePath (fullPath = "")
+    | OnRegisterSuccess -> model, Cmd.navigate (fullPath = "")
     | UsernameUpdated event -> { model with Username = event } , Cmd.none
     | PasswordUpdated event -> { model with Password = event } , Cmd.none
     | OnStorageSet ->
-        model, Cmd.navigatePath (fullPath = "")
+        model, Cmd.navigate (fullPath = "")
 
 
 let view model dispatch =

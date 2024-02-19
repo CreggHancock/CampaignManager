@@ -97,18 +97,18 @@ let update msg model =
                         let (loginModel, loginCmd) = Login.init ()
                         (Page.Login loginModel, loginCmd)
                     | _ ->
-                        (Page.NotFound, Cmd.navigatePath(fullPath = Home.route) )
+                        (Page.NotFound, Cmd.navigate(fullPath = Home.route) )
             { model with CurrentUrl = segments
                          ActivePage = fst pageFromUrl }, Cmd.batch [ preNavigateCmds; snd pageFromUrl ]
         | LoginClicked ->
-            (model, Cmd.navigatePath(fullPath = Login.route))
+            (model, Cmd.navigate(fullPath = Login.route))
         | LogoutClicked ->
             ({ model with UserInfo = None }, Cmd.OfFunc.perform 
                 (fun () -> Browser.WebStorage.localStorage.removeItem ("accessToken"))
                 ()
                 (fun () -> OnLogoutSuccess))
         | OnLogoutSuccess ->
-            (model, Cmd.navigatePath(fullPath = Login.route))
+            (model, Cmd.navigate(fullPath = Login.route))
         | OnLogoutError error ->
             { model with
                 ErrorMessage = error.Message },
@@ -137,7 +137,7 @@ let Navbar (username : string option) dispatch =
             ]
             Bulma.navbarMenu [
                 Bulma.navbarStart.div [
-                    Bulma.navbarItem.a [ prop.text "Home"; prop.href "/Home" ]
+                    Bulma.navbarItem.a [ prop.text "Home"; prop.href "/#/Home" ]
                 ]
                 Bulma.navbarEnd.div [
                     Bulma.navbarItem.div [
@@ -176,7 +176,6 @@ let view model dispatch =
 
     
     React.router [
-        router.pathMode
         router.onUrlChanged (UrlChanged >> dispatch)
 
         router.children [

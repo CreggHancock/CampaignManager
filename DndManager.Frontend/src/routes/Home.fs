@@ -65,11 +65,11 @@ let init accessToken =
 
 let update (msg: Msg) (model: Model) =
     match msg with
-    | NavigateToInitiativeTracker -> model, Cmd.navigatePath(InitiativeTracker.route)
+    | NavigateToInitiativeTracker -> model, Cmd.navigate(InitiativeTracker.route)
     | OnGetModelSuccess response -> { model with homeViewModel = response }, Cmd.none
     | OnGetModelError error -> { model with ErrorMessage = error.Message }, Cmd.none
-    | NavigateToInitiativeCharacter -> model, Cmd.navigatePath(InitiativeTracker.route)
-    | NavigateToInitiativeTrackerWithId id -> model, Cmd.navigatePath(InitiativeTracker.route + "?sceneId=" + id.ToString() )
+    | NavigateToInitiativeCharacter -> model, Cmd.navigate(InitiativeTracker.route)
+    | NavigateToInitiativeTrackerWithId id -> model, Cmd.navigate(InitiativeTracker.route + "?sceneId=" + id.ToString() )
     | OnGotModelFromStorageSuccess scenesString -> 
         let sceneResults = Decode.Auto.fromString<Scene List>(scenesString)
         match sceneResults with
