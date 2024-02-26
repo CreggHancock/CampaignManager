@@ -155,8 +155,8 @@
       z-index: 5;
       animation: highlight 2s infinite;
       &:before {
-        content: '';
-        background: url('https://media.giphy.com/media/isqxY03RuhGxNbCPzY/giphy.gif');
+        content: "";
+        background: url("https://media.giphy.com/media/isqxY03RuhGxNbCPzY/giphy.gif");
         position: absolute;
         top: 0;
         left: 0;
@@ -424,8 +424,8 @@
         padding: 0.15rem;
       }
       &:before {
-        content: '';
-        background: url('https://media.giphy.com/media/YqhIK6Gbor6CLeloBq/giphy-downsized-large.gif');
+        content: "";
+        background: url("https://media.giphy.com/media/YqhIK6Gbor6CLeloBq/giphy-downsized-large.gif");
         position: absolute;
         top: 0;
         left: 0;
@@ -576,7 +576,7 @@ html {
 body {
   min-height: 100vh;
   background: #000;
-  background: url('https://getwallpapers.com/wallpaper/full/7/0/c/66338.jpg');
+  background: url("https://getwallpapers.com/wallpaper/full/7/0/c/66338.jpg");
   background-size: cover;
   margin: 0;
 }
@@ -611,4 +611,24 @@ body {
   50% {
     filter: brightness(150%);
   }
+}
+.create-character-name {
+  position: relative;
+}
+
+#characterName {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+.filter-box {
+  position: absolute;
+  top: 1.25rem;
+  border: 1px solid gray;
+  right: 0;
+  left: 0;
 }

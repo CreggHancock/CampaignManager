@@ -44,103 +44,84 @@ let init () =
     Cmd.none
 
 let loginOrRegData model =
-        Encode.object [
-            "email", Encode.string model.Username
-            "password", Encode.string model.Password
-        ]
+    Encode.object
+        [ "email", Encode.string model.Username
+          "password", Encode.string model.Password ]
 
 let login model =
     Cmd.OfPromise.either
-            (fun () -> Fetch.post ("https://localhost:7068/login", loginOrRegData model))
-            ()
-            (fun response -> OnLoginSuccess response)
-            OnLoginError
+        (fun () -> Fetch.post ("https://localhost:7068/login", loginOrRegData model))
+        ()
+        (fun response -> OnLoginSuccess response)
+        OnLoginError
 
 let register model =
     Cmd.OfPromise.either
-            (fun () -> Fetch.post ("https://localhost:7068/register", loginOrRegData model))
-            ()
-            (fun () -> OnRegisterSuccess)
-            OnRegisterError
+        (fun () -> Fetch.post ("https://localhost:7068/register", loginOrRegData model))
+        ()
+        (fun () -> OnRegisterSuccess)
+        OnRegisterError
 
 
 let update (msg: Msg) (model: Model) =
     match msg with
-    | RegisterClicked ->
-        model,
-        register model
-    | LoginClicked -> 
-        model,
-        login model
+    | RegisterClicked -> model, register model
+    | LoginClicked -> model, login model
     | OnLoginError error ->
         { model with
             ErrorMessage = error.Message },
         Cmd.none
     | OnLoginSuccess response ->
-        model, Cmd.OfFunc.perform 
-                (fun () -> Browser.WebStorage.localStorage.setItem ("accessToken", response.accessToken))
-                ()
-                (fun () -> OnStorageSet)
+        model,
+        Cmd.OfFunc.perform
+            (fun () -> Browser.WebStorage.localStorage.setItem ("accessToken", response.accessToken))
+            ()
+            (fun () -> OnStorageSet)
     | OnRegisterError error ->
         { model with
             ErrorMessage = error.Message },
         Cmd.none
     | OnRegisterSuccess -> model, Cmd.navigate (fullPath = "")
-    | UsernameUpdated event -> { model with Username = event } , Cmd.none
-    | PasswordUpdated event -> { model with Password = event } , Cmd.none
-    | OnStorageSet ->
-        model, Cmd.navigate (fullPath = "")
+    | UsernameUpdated event -> { model with Username = event }, Cmd.none
+    | PasswordUpdated event -> { model with Password = event }, Cmd.none
+    | OnStorageSet -> model, Cmd.navigate (fullPath = "")
 
 
 let view model dispatch =
-    Html.div [
-        Bulma.panel [
-          Bulma.panelHeading [ prop.text "Login" ]
-          Bulma.panelBlock.div [
-              Html.form [
-                  prop.onSubmit (fun ev -> ev.preventDefault ())
-                  prop.children [
-                      Bulma.field.div [
-                          Bulma.label "Email"
-                          Bulma.control.div [
-                            Bulma.input.text [
-                                prop.required true
-                                prop.onChange (fun ev -> dispatch (UsernameUpdated ev))
-                            ]
-                          ]
-                      ]
+    Html.div
+        [ Bulma.panel
+              [ Bulma.panelHeading [ prop.text "Login" ]
+                Bulma.panelBlock.div
+                    [ Html.form
+                          [ prop.onSubmit (fun ev -> ev.preventDefault ())
+                            prop.children
+                                [ Bulma.field.div
+                                      [ Bulma.label "Email"
+                                        Bulma.control.div
+                                            [ Bulma.input.text
+                                                  [ prop.required true
+                                                    prop.onChange (fun ev -> dispatch (UsernameUpdated ev)) ] ] ]
 
-                      Bulma.field.div [
-                          Bulma.label "Password"
-                          Bulma.control.div [
-                            Bulma.input.password [
-                                prop.required true
-                                prop.onChange (fun ev -> dispatch (PasswordUpdated ev))
-                            ]
-                          ]
-                      ]
+                                  Bulma.field.div
+                                      [ Bulma.label "Password"
+                                        Bulma.control.div
+                                            [ Bulma.input.password
+                                                  [ prop.required true
+                                                    prop.onChange (fun ev -> dispatch (PasswordUpdated ev)) ] ] ]
 
-                      Bulma.field.div [
-                          Bulma.field.isGrouped
-                          Bulma.field.isGroupedCentered
-                          prop.children [
-                                if model.IsRegistering then
-                                    Bulma.button.button [ 
-                                        Bulma.color.isInfo
-                                        prop.text "Register"
-                                        prop.onClick (fun _ -> dispatch RegisterClicked)
-                                    ] 
-                                else
-                                    Bulma.button.button [ 
-                                        Bulma.color.isInfo
-                                        prop.text "Login"
-                                        prop.onClick (fun _ -> dispatch LoginClicked) 
-                                    ]
-                        
-                          ]
-                      ]
-                  ]
-              ]
-          ]
-        ]
-    ]
+                                  Bulma.field.div
+                                      [ Bulma.field.isGrouped
+                                        Bulma.field.isGroupedCentered
+                                        prop.children
+                                            [ if model.IsRegistering then
+                                                  Bulma.button.button
+                                                      [ Bulma.color.isInfo
+                                                        prop.text "Register"
+                                                        prop.onClick (fun _ -> dispatch RegisterClicked) ]
+                                              else
+                                                  Bulma.button.button
+                                                      [ Bulma.color.isInfo
+                                                        prop.text "Login"
+                                                        prop.onClick (fun _ -> dispatch LoginClicked) ]
+
+                                              ] ] ] ] ] ] ]
