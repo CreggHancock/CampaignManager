@@ -614,6 +614,8 @@ body {
 }
 .create-character-name {
   position: relative;
+  background: #fff;
+  border-radius: 6px;
 }
 
 #characterName {
@@ -623,12 +625,27 @@ body {
   box-sizing: border-box;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
+  border-radius: 6px 6px 6px 6px;
 }
 
 .filter-box {
+  display: none;
+}
+
+.create-character-name:focus-within > .filter-box {
+  display: initial;
   position: absolute;
-  top: 1.25rem;
-  border: 1px solid gray;
+  top: 2.5rem;
   right: 0;
   left: 0;
+  background: #fff;
+  z-index: 1;
+  border-radius: 6px;
+  border: 2px solid rgb(74, 74, 74);
+}
+
+.filter-option > button {
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
 }

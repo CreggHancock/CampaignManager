@@ -6,7 +6,6 @@ open Feliz.Bulma
 open Fetch
 open Thoth.Fetch
 open Thoth.Json
-open System
 
 [<Literal>]
 let route = "InitiativeTracker"
@@ -24,9 +23,8 @@ type GameState =
 type Monster =
     { Index: string
       Name: string
-      Image: string
+      Image: string option
       HitPoints: int
-      ArmorClass: int
       Dexterity: int }
 
 type MonsterSummary = { Index: string; Name: string }
@@ -119,9 +117,9 @@ let getMonsterOptions () =
         (fun (response) -> OnGetMonsterOptionsSuccess response)
         OnGetMonsterOptionsError
 
-let getMonsterODetails index =
+let getMonsterDetails index =
     Cmd.OfPromise.either
-        (fun () -> Fetch.get ("https://www.dnd5eapi.co/api/monsters/" + index, caseStrategy = CaseStrategy.CamelCase))
+        (fun () -> Fetch.get ("https://www.dnd5eapi.co/api/monsters/" + index, caseStrategy = CaseStrategy.SnakeCase))
         ()
         (fun (response) -> OnGetMonsterDetailsSuccess response)
         OnGetMonsterDetailsError
@@ -367,7 +365,18 @@ let update (msg: Msg) (model: Model) =
         { model with
             ErrorMessage = err.Message },
         Cmd.none
-    | NewCharacterNameOptionClicked monsterIndex -> (model, Cmd.none)
+    | NewCharacterNameOptionClicked(monsterIndex: string) ->
+        let selectedMonster =
+            model.MonsterOptions |> List.tryFind (fun (m) -> m.Index = monsterIndex)
+
+        match selectedMonster with
+        | Some monster ->
+            ({ model with
+                NewCharacter =
+                    model.NewCharacter
+                    |> Option.map (fun (character) -> { character with Name = monster.Name }) },
+             getMonsterDetails monsterIndex)
+        | None -> (model, Cmd.none)
     | OnGetMonsterDetailsSuccess response ->
         ({ model with
             NewCharacter =
@@ -376,7 +385,10 @@ let update (msg: Msg) (model: Model) =
                     { n with
                         Health = response.HitPoints
                         MaxHealth = response.HitPoints
-                        ImageUrl = response.Image
+                        ImageUrl =
+                            response.Image
+                            |> Option.map (fun (img) -> "https://www.dnd5eapi.co" + img)
+                            |> Option.defaultWith (fun () -> "")
                         InitiativeModifier = (response.Dexterity - 10) / 2 }) },
          Cmd.none)
     | OnGetMonsterDetailsError err ->
@@ -507,65 +519,62 @@ let view model dispatch =
                           [ Html.h1 [ prop.className "container-title"; prop.text "Add Character" ]
                             Html.div
                                 [ prop.classes [ "flex-50"; "create-character-name" ]
-                                  prop.children
+                                  prop.children (
+                                      let filteredOptions =
+                                          model.MonsterOptions
+                                          |> List.filter (fun (m) ->
+                                              model.NewCharacter
+                                              |> Option.map (fun (c) ->
+                                                  c.Name.Length > 0
+                                                  && m.Name.StartsWith(
+                                                      c.Name,
+                                                      System.StringComparison.InvariantCultureIgnoreCase
+                                                  ))
+                                              |> Option.defaultWith (fun () -> false))
+
                                       [ Bulma.input.text
                                             [ prop.placeholder "Name"
                                               prop.name "characterName"
                                               prop.type' "text"
                                               prop.id "characterName"
                                               prop.required true
+                                              prop.className (
+                                                  if List.length filteredOptions > 0 then
+                                                      "input-with-filters"
+                                                  else
+                                                      "input-no-filters"
+                                              )
                                               prop.onChange (fun ev -> dispatch (NewCharacterNameUpdated ev))
                                               (model.NewCharacter
                                                |> Option.map (fun (c) -> c.Name)
                                                |> Option.defaultWith (fun () -> "")
                                                |> prop.value) ]
-                                        (if
-                                             model.NewCharacter
-                                             |> Option.map (fun (c) -> c.PlayerType = CombatantType.Player)
-                                             |> Option.defaultWith (fun () -> false)
-                                             |> not
-                                         then
-                                             let filteredOptions =
-                                                 model.MonsterOptions
-                                                 |> List.filter (fun (m) ->
-                                                     model.NewCharacter
-                                                     |> Option.map (fun (c) ->
-                                                         c.Name.Length > 0
-                                                         && m.Name.StartsWith(
-                                                             c.Name,
-                                                             System.StringComparison.InvariantCultureIgnoreCase
-                                                         ))
-                                                     |> Option.defaultWith (fun () -> false))
+                                        Html.div
+                                            [ prop.className "filter-box"
+                                              prop.children (
+                                                  filteredOptions
+                                                  |> List.sortBy (fun (m) -> m.Name)
+                                                  |> List.take (
+                                                      if List.length filteredOptions > 4 then
+                                                          4
+                                                      else
+                                                          List.length filteredOptions
+                                                  )
+                                                  |> List.map (fun (m) ->
+                                                      Html.div
+                                                          [ prop.className "filter-option"
+                                                            prop.children
+                                                                [ Bulma.button.button
+                                                                      [ button.isInverted
+                                                                        color.isInfo
+                                                                        prop.text m.Name
+                                                                        prop.onClick (fun _ ->
+                                                                            dispatch
+                                                                            <| NewCharacterNameOptionClicked m.Index) ] ] ])
+                                              ) ]
 
-                                             Html.div
-                                                 [ prop.className "filter-box"
-                                                   prop.children (
-                                                       filteredOptions
-                                                       |> List.sortBy (fun (m) -> m.Name)
-                                                       |> List.take (
-                                                           if List.length filteredOptions > 4 then
-                                                               4
-                                                           else
-                                                               List.length filteredOptions
-                                                       )
-                                                       |> List.map (fun (m) ->
-                                                           Html.div
-                                                               [ prop.className "filter-option"
-                                                                 prop.children
-                                                                     [ Bulma.button.button
-                                                                           [ button.isInverted
-                                                                             color.isInfo
-                                                                             prop.text m.Name
-                                                                             prop.onClick (fun _ ->
-                                                                                 dispatch
-                                                                                 <| NewCharacterNameOptionClicked
-                                                                                     m.Index) ] ] ])
-                                                   ) ]
-
-                                         else
-                                             Html.text "")
-
-                                        ] ]
+                                        ]
+                                  ) ]
                             Html.div
                                 [ prop.className "flex-50"
                                   prop.children
@@ -575,7 +584,11 @@ let view model dispatch =
                                               prop.type' "text"
                                               prop.id "characterDex"
                                               prop.required true
-                                              prop.onChange (fun ev -> dispatch (NewCharacterDexterityUpdated ev)) ] ] ]
+                                              prop.onChange (fun ev -> dispatch (NewCharacterDexterityUpdated ev))
+                                              (model.NewCharacter
+                                               |> Option.map (fun (c) -> c.InitiativeModifier.ToString())
+                                               |> Option.defaultWith (fun () -> "")
+                                               |> prop.value) ] ] ]
                             Html.div
                                 [ prop.className "flex-50"
                                   prop.children
@@ -585,7 +598,11 @@ let view model dispatch =
                                               prop.type' "text"
                                               prop.id "characterImage"
                                               prop.required true
-                                              prop.onChange (fun ev -> dispatch (NewCharacterImageUpdated ev)) ] ] ]
+                                              prop.onChange (fun ev -> dispatch (NewCharacterImageUpdated ev))
+                                              (model.NewCharacter
+                                               |> Option.map (fun (c) -> c.ImageUrl)
+                                               |> Option.defaultWith (fun () -> "")
+                                               |> prop.value) ] ] ]
                             Html.div
                                 [ prop.className "flex-50"
                                   prop.children
