@@ -3,13 +3,11 @@
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="common\Request.fs" />
     <Compile Include="routes\Login.fs" />
     <Compile Include="routes\InitiativeTracker.fs" />
     <Compile Include="routes\Home.fs" />
     <Compile Include="App.fs" />
     <None Include="index.html" />
-    <Compile Include="Extensions.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>

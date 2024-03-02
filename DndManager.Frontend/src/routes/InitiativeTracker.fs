@@ -97,7 +97,7 @@ let getInitiativeViewModel accessToken maybeSceneId =
     | Some sceneId ->
         match accessToken with
         | Some token ->
-            let headers = [ HttpRequestHeaders.Authorization("Bearer " + token) ]
+            let headers = [ Authorization("Bearer " + token) ]
 
             Cmd.OfPromise.either
                 (fun () -> Fetch.get ("https://localhost:7068/Home/Get/" + sceneId, headers = headers))
@@ -219,7 +219,7 @@ let update (msg: Msg) (model: Model) =
                     { Name = ""
                       InitiativeModifier = 0
                       ImageUrl = ""
-                      PlayerType = CombatantType.Player
+                      PlayerType = Player
                       LocationX = 0
                       LocationY = 0
                       Health = 0
@@ -229,27 +229,27 @@ let update (msg: Msg) (model: Model) =
     | RollInitiativesClicked ->
         (updateScene model (fun scene ->
             { scene with
-                GameState = GameState.InitiativeRolled }),
+                GameState = InitiativeRolled }),
          Cmd.none)
         |> updateLocalStorage
     | StartCombatClicked ->
         (updateScene model (fun scene ->
             { scene with
-                GameState = GameState.Active
+                GameState = Active
                 CombatantTurn = 0 }),
          Cmd.none)
         |> updateLocalStorage
     | EndTurnClicked ->
         (updateScene model (fun scene ->
             { scene with
-                GameState = GameState.Active
+                GameState = Active
                 CombatantTurn = scene.CombatantTurn + 1 }),
          Cmd.none)
         |> updateLocalStorage
     | ResetClicked ->
         (updateScene model (fun scene ->
             { scene with
-                GameState = GameState.CharacterSetup
+                GameState = CharacterSetup
                 CombatantTurn = 0 }),
          Cmd.none)
         |> updateLocalStorage
@@ -274,39 +274,19 @@ let update (msg: Msg) (model: Model) =
         match event with
         | "player" ->
             { model with
-                NewCharacter =
-                    Option.map
-                        (fun c ->
-                            { c with
-                                PlayerType = CombatantType.Player })
-                        model.NewCharacter },
+                NewCharacter = Option.map (fun c -> { c with PlayerType = Player }) model.NewCharacter },
             Cmd.none
         | "enemy" ->
             { model with
-                NewCharacter =
-                    Option.map
-                        (fun c ->
-                            { c with
-                                PlayerType = CombatantType.Enemy })
-                        model.NewCharacter },
+                NewCharacter = Option.map (fun c -> { c with PlayerType = Enemy }) model.NewCharacter },
             Cmd.none
         | "ally" ->
             { model with
-                NewCharacter =
-                    Option.map
-                        (fun c ->
-                            { c with
-                                PlayerType = CombatantType.Ally })
-                        model.NewCharacter },
+                NewCharacter = Option.map (fun c -> { c with PlayerType = Ally }) model.NewCharacter },
             Cmd.none
         | _ ->
             { model with
-                NewCharacter =
-                    Option.map
-                        (fun c ->
-                            { c with
-                                PlayerType = CombatantType.Player })
-                        model.NewCharacter },
+                NewCharacter = Option.map (fun c -> { c with PlayerType = Player }) model.NewCharacter },
             Cmd.none
     | NewCharacterCancelClicked -> { model with NewCharacter = None }, Cmd.none
     | NewCharacterCreateClicked ->
@@ -630,35 +610,35 @@ let view model dispatch =
                       prop.id "gameButtons"
                       prop.children
                           [ viewStateButton
-                                GameState.CharacterSetup
+                                CharacterSetup
                                 model.InitiativeViewModel.Scene.GameState
                                 "Add"
                                 "addCharacter"
                                 AddCharacterClicked
                                 dispatch
                             viewStateButton
-                                GameState.CharacterSetup
+                                CharacterSetup
                                 model.InitiativeViewModel.Scene.GameState
                                 "Roll Initiatives"
                                 "rollInitiative"
                                 RollInitiativesClicked
                                 dispatch
                             viewStateButton
-                                GameState.InitiativeRolled
+                                InitiativeRolled
                                 model.InitiativeViewModel.Scene.GameState
                                 "Start Combat"
                                 "startCombat"
                                 StartCombatClicked
                                 dispatch
                             viewStateButton
-                                GameState.Active
+                                Active
                                 model.InitiativeViewModel.Scene.GameState
                                 "End Turn"
                                 "endTurn"
                                 EndTurnClicked
                                 dispatch
                             viewStateButton
-                                GameState.Active
+                                Active
                                 model.InitiativeViewModel.Scene.GameState
                                 "Reset"
                                 "reset"

@@ -3,10 +3,8 @@ module Login
 open Feliz
 open Elmish
 open Feliz.Router
-open Fetch.Types
 open Thoth.Fetch
 open Thoth.Json
-open Fable.Core
 open Feliz.Bulma
 
 [<Literal>]
@@ -20,10 +18,10 @@ type Model =
 
 
 type LoginResponse =
-    { tokenType: string
-      accessToken: string
-      expiresIn: int
-      refreshToken: string }
+    { TokenType: string
+      AccessToken: string
+      ExpiresIn: int
+      RefreshToken: string }
 
 type Msg =
     | RegisterClicked
@@ -74,7 +72,7 @@ let update (msg: Msg) (model: Model) =
     | OnLoginSuccess response ->
         model,
         Cmd.OfFunc.perform
-            (fun () -> Browser.WebStorage.localStorage.setItem ("accessToken", response.accessToken))
+            (fun () -> Browser.WebStorage.localStorage.setItem ("accessToken", response.AccessToken))
             ()
             (fun () -> OnStorageSet)
     | OnRegisterError error ->
@@ -110,17 +108,17 @@ let view model dispatch =
                                                     prop.onChange (fun ev -> dispatch (PasswordUpdated ev)) ] ] ]
 
                                   Bulma.field.div
-                                      [ Bulma.field.isGrouped
-                                        Bulma.field.isGroupedCentered
+                                      [ field.isGrouped
+                                        field.isGroupedCentered
                                         prop.children
                                             [ if model.IsRegistering then
                                                   Bulma.button.button
-                                                      [ Bulma.color.isInfo
+                                                      [ color.isInfo
                                                         prop.text "Register"
                                                         prop.onClick (fun _ -> dispatch RegisterClicked) ]
                                               else
                                                   Bulma.button.button
-                                                      [ Bulma.color.isInfo
+                                                      [ color.isInfo
                                                         prop.text "Login"
                                                         prop.onClick (fun _ -> dispatch LoginClicked) ]
 
