@@ -47,11 +47,7 @@ let getUserInfo accessToken =
     match accessToken with
     | Some token ->
         Cmd.OfPromise.either
-            (fun () ->
-                Fetch.get (
-                    "https://localhost:7068/manage/info",
-                    headers = [ HttpRequestHeaders.Authorization("Bearer " + token) ]
-                ))
+            (fun () -> Fetch.get ("https://localhost:7068/manage/info", headers = [ Authorization("Bearer " + token) ]))
             ()
             (fun (userInfo) -> OnGotUserSuccess userInfo)
             OnGotUserError
@@ -70,54 +66,54 @@ let init () =
 
 let update msg model =
     match model.ActivePage, msg with
-    | Page.Home homeModel, HomeMsg homeMsg ->
+    | Home homeModel, HomeMsg homeMsg ->
         let (homeModel, homeCmd) = Home.update homeMsg homeModel
 
         { model with
-            ActivePage = Page.Home homeModel },
+            ActivePage = Home homeModel },
         Cmd.map HomeMsg homeCmd
-    | Page.InitiativeTracker initiativeTrackerModel, InitiativeTrackerMsg initiativeTrackerMsg ->
+    | InitiativeTracker initiativeTrackerModel, InitiativeTrackerMsg initiativeTrackerMsg ->
         let (initiativeTrackerModel: InitiativeTracker.Model, initiativeCmd) =
             InitiativeTracker.update initiativeTrackerMsg initiativeTrackerModel
 
         { model with
-            ActivePage = Page.InitiativeTracker initiativeTrackerModel },
+            ActivePage = InitiativeTracker initiativeTrackerModel },
         Cmd.map InitiativeTrackerMsg initiativeCmd
-    | Page.Login loginModel, LoginMsg loginMsg ->
+    | Login loginModel, LoginMsg loginMsg ->
         let (loginModel, loginCmd) = Login.update loginMsg loginModel
 
         { model with
-            ActivePage = Page.Login loginModel },
+            ActivePage = Login loginModel },
         Cmd.map LoginMsg loginCmd
     | _, msg ->
         match msg with
         | UrlChanged segments ->
             let preNavigateCmds =
                 match model.ActivePage with
-                | Page.Login loginModel -> getUserInfo accessToken
+                | Login loginModel -> getUserInfo accessToken
                 | _ -> Cmd.none
 
             let pageFromUrl =
                 match segments with
                 | [ Home.route ] ->
                     let (homeModel, homeCmd) = Home.init accessToken
-                    (Page.Home homeModel, Cmd.map (fun (cmd) -> (HomeMsg) cmd) homeCmd)
+                    (Home homeModel, Cmd.map (fun (cmd) -> (HomeMsg) cmd) homeCmd)
                 | [ InitiativeTracker.route ] ->
                     let (initiativeTrackerModel, initiativeTrackerCmd) =
                         InitiativeTracker.init accessToken None
 
-                    (Page.InitiativeTracker initiativeTrackerModel,
+                    (InitiativeTracker initiativeTrackerModel,
                      Cmd.map (fun (cmd) -> (InitiativeTrackerMsg) cmd) initiativeTrackerCmd)
                 | [ InitiativeTracker.route; Route.Query [ "sceneId", Route.Int sceneId ] ] ->
                     let (initiativeTrackerModel, initiativeTrackerCmd) =
                         InitiativeTracker.init accessToken (Option.Some sceneId)
 
-                    (Page.InitiativeTracker initiativeTrackerModel,
+                    (InitiativeTracker initiativeTrackerModel,
                      Cmd.map (fun (cmd) -> (InitiativeTrackerMsg) cmd) initiativeTrackerCmd)
                 | [ Login.route ] ->
                     let (loginModel, loginCmd) = Login.init ()
-                    (Page.Login loginModel, loginCmd)
-                | _ -> (Page.NotFound, Cmd.navigate (fullPath = Home.route))
+                    (Login loginModel, loginCmd)
+                | _ -> (NotFound, Cmd.navigate (fullPath = Home.route))
 
             { model with
                 CurrentUrl = segments
@@ -143,7 +139,7 @@ let update msg model =
 [<ReactComponent>]
 let Navbar (username: string option) dispatch =
     Bulma.navbar
-        [ Bulma.color.isBlack
+        [ color.isBlack
           prop.children
               [ Bulma.navbarBrand.div [ Bulma.navbarItem.a [ Html.i [ prop.className "fa-solid fa-dice-d20" ] ] ]
                 Bulma.navbarMenu
@@ -155,21 +151,25 @@ let Navbar (username: string option) dispatch =
                                       Html.span
                                           [ Html.text name
                                             Bulma.button.a
-                                                [ prop.text "Logout"; prop.onClick (fun _ -> dispatch LogoutClicked) ] ]
+                                                [ prop.style [ style.visibility.hidden ]
+                                                  prop.text "Logout"
+                                                  prop.onClick (fun _ -> dispatch LogoutClicked) ] ]
                                   | None ->
                                       Bulma.button.a
-                                          [ prop.text "Login"; prop.onClick (fun _ -> dispatch LoginClicked) ] ] ] ]
+                                          [ prop.style [ style.visibility.hidden ]
+                                            prop.text "Login"
+                                            prop.onClick (fun _ -> dispatch LoginClicked) ] ] ] ]
 
                 ] ]
 
 let view model dispatch =
     let currentPage =
         match model.ActivePage with
-        | Page.Home homeModel -> Home.view homeModel (getUserName model) (HomeMsg >> dispatch)
-        | Page.InitiativeTracker initiativeTrackerModel ->
+        | Home homeModel -> Home.view homeModel (getUserName model) (HomeMsg >> dispatch)
+        | InitiativeTracker initiativeTrackerModel ->
             InitiativeTracker.view initiativeTrackerModel (InitiativeTrackerMsg >> dispatch)
-        | Page.NotFound -> Html.span []
-        | Page.Login loginModel -> Login.view loginModel (LoginMsg >> dispatch)
+        | NotFound -> Html.span []
+        | Login loginModel -> Login.view loginModel (LoginMsg >> dispatch)
 
 
     React.router

@@ -3,6 +3,7 @@ module Home
 open Feliz
 open Elmish
 open Feliz.Router
+open Feliz.Bulma
 open Thoth.Fetch
 open Fetch
 open Thoth.Json
@@ -19,6 +20,7 @@ type Character =
 type Scene =
     { Id: int
       Name: string
+      BackgroundImage: string
       Description: string }
 
 type HomeViewModel =
@@ -93,20 +95,52 @@ let viewCharacters (characters: Character List) : Fable.React.ReactElement =
     )
 
 let viewScenes (scenes: Scene List) dispatch : Fable.React.ReactElement =
-    Html.div (
-        Html.div [ Html.h3 "Scenes" ]
-        :: List.map
-            (fun (scene: Scene) ->
-                Html.button
-                    [ prop.text (
-                          if scene.Name = "" then
-                              "Scene " + scene.Id.ToString()
-                          else
-                              scene.Name
-                      )
-                      prop.onClick (fun _ -> dispatch <| NavigateToInitiativeTrackerWithId scene.Id) ])
-            scenes
-    )
+    Html.div
+        [ prop.className "columns is-4 is-variable is-multiline"
+          prop.children (
+              List.map
+                  (fun (scene: Scene) ->
+                      Html.div
+                          [ prop.classes [ "column"; "is-one-quarter" ]
+                            prop.children
+                                [ Bulma.card
+                                      [ prop.children
+                                            [ Bulma.cardImage
+                                                  [ Bulma.image
+                                                        [ image.is4by3
+                                                          prop.children
+                                                              [ Html.img
+                                                                    [ prop.alt "Placeholder image"
+                                                                      prop.src scene.BackgroundImage ] ] ] ]
+                                              Bulma.cardContent
+                                                  [ Bulma.media
+                                                        [ Bulma.mediaLeft
+                                                              [ Bulma.cardImage
+                                                                    [ Bulma.image
+                                                                          [ Bulma.image.is48x48
+                                                                            prop.children
+                                                                                [ Html.img
+                                                                                      [ prop.alt "Placeholder image"
+                                                                                        prop.src scene.BackgroundImage ] ] ] ] ]
+                                                          Bulma.mediaContent
+                                                              [ Bulma.title.p
+                                                                    [ Bulma.title.is4
+                                                                      prop.text (
+                                                                          if scene.Name = "" then
+                                                                              "Scene " + scene.Id.ToString()
+                                                                          else
+                                                                              scene.Name
+                                                                      ) ] ]
+                                                          Bulma.content scene.Description ] ]
+                                              Bulma.cardFooter
+                                                  [ Bulma.cardFooterItem.a
+                                                        [ button.isSmall
+                                                          color.isDark
+                                                          prop.text "Continue"
+                                                          prop.onClick (fun _ ->
+                                                              dispatch <| NavigateToInitiativeTrackerWithId scene.Id) ] ] ] ] ] ])
+                  scenes
+          ) ]
 
 
 let view model userName dispatch =
@@ -114,11 +148,14 @@ let view model userName dispatch =
         [ match userName with
           | Some name -> Html.h2 $"Hello, {name}"
           | None -> Html.span ""
-          (viewCharacters model.HomeViewModel.UserCharacters)
-          Html.button
-              [ prop.text "New Character"
-                prop.onClick (fun _ -> dispatch NavigateToInitiativeCharacter) ]
-          (viewScenes model.HomeViewModel.UserScenes dispatch)
-          Html.button
-              [ prop.text "New Scene"
-                prop.onClick (fun _ -> dispatch NavigateToInitiativeTracker) ] ]
+          Bulma.section
+              [ (if List.isEmpty model.HomeViewModel.UserScenes then
+                     Html.text ""
+                 else
+                     Html.h1 [ prop.text "Scenes"; Bulma.color.hasTextWhite ])
+                (viewScenes model.HomeViewModel.UserScenes dispatch)
+                Bulma.button.button
+                    [ button.isMedium
+                      color.isInfo
+                      prop.text "New Scene"
+                      prop.onClick (fun _ -> dispatch NavigateToInitiativeTracker) ] ] ]
