@@ -42,7 +42,8 @@ type Combatant =
       LocationY: int
       Health: int
       MaxHealth: int
-      ArmorClass: int }
+      ArmorClass: int
+      IsTokenBeingDragged: bool }
 
 type Scene =
     { Id: int
@@ -91,6 +92,10 @@ type Msg =
     | NewCharacterNameOptionClicked of string
     | OnGetMonsterDetailsSuccess of Monster
     | OnGetMonsterDetailsError of exn
+    | OnTokenClicked of int
+    | OnTokenReleased
+    | OnTokenMove of float * float
+
 
 let getInitiativeViewModel accessToken maybeSceneId =
     match maybeSceneId |> Option.map (fun (id) -> id.ToString()) with
@@ -224,7 +229,8 @@ let update (msg: Msg) (model: Model) =
                       LocationY = 0
                       Health = 0
                       MaxHealth = 0
-                      ArmorClass = 0 } },
+                      ArmorClass = 0
+                      IsTokenBeingDragged = false } },
         Cmd.none
     | RollInitiativesClicked ->
         (updateScene model (fun scene ->
@@ -321,6 +327,9 @@ let update (msg: Msg) (model: Model) =
             updateScene model (fun scene ->
                 (scenes
                  |> List.tryFind (fun (sceneOption) -> sceneOption.Id.ToString() = sceneId)
+                 |> Option.map (fun (scene) ->
+                     { scene with
+                         Combatants = scene.Combatants |> List.map (fun (c) -> { c with IsTokenBeingDragged = false }) })
                  |> Option.defaultWith (fun () -> scene))),
             Cmd.none
         | Error err -> { model with ErrorMessage = err }, Cmd.none
@@ -375,6 +384,49 @@ let update (msg: Msg) (model: Model) =
         { model with
             ErrorMessage = err.Message },
         Cmd.none
+    | OnTokenClicked tokenIndex ->
+        (updateScene model (fun scene ->
+            { scene with
+                Combatants =
+                    scene.Combatants
+                    |> List.mapi (fun ind c ->
+                        if ind = tokenIndex then
+                            { c with IsTokenBeingDragged = true }
+                        else
+                            c) }),
+         Cmd.none)
+    | OnTokenReleased ->
+        (updateScene model (fun scene ->
+            { scene with
+                Combatants = scene.Combatants |> List.map (fun c -> { c with IsTokenBeingDragged = false }) }),
+         Cmd.none)
+    | OnTokenMove(newX, newY) ->
+        let updatedModel =
+            (updateScene model (fun scene ->
+                { scene with
+                    Combatants =
+                        scene.Combatants
+                        |> List.map (fun c ->
+                            if c.IsTokenBeingDragged then
+                                { c with
+                                    LocationX = int newX
+                                    LocationY = int newY }
+                            else
+                                c) }),
+             Cmd.none)
+
+        let shouldSave =
+            model.InitiativeViewModel.Scene.Combatants
+            |> List.exists (fun (c) ->
+                c.IsTokenBeingDragged
+                && (c.LocationX <> (int newX))
+                && (c.LocationY <> (int newY)))
+
+        if shouldSave then
+            updateLocalStorage updatedModel
+        else
+            updatedModel
+
 
 
 let viewPlayerCard player dispatch =
@@ -400,7 +452,7 @@ let viewPlayerCard player dispatch =
                                         Html.span
                                             [ prop.className "stat-mod"; prop.text $"{player.InitiativeModifier}" ] ] ] ] ] ] ]
 
-let viewPlayerToken player isActive dispatch =
+let viewPlayerToken player playerIndex isActive dispatch =
     let getClassFromPlayer playerType =
         match playerType with
         | Enemy -> "enemy"
@@ -410,6 +462,14 @@ let viewPlayerToken player isActive dispatch =
 
     Html.div
         [ prop.id "default1"
+          prop.style
+              [ style.left (length.px (player.LocationX - 70))
+                style.top (length.px (player.LocationY - 140)) ]
+          prop.onMouseDown
+          <| (fun (ev) ->
+              ev.stopPropagation ()
+              ev.preventDefault ()
+              dispatch <| OnTokenClicked playerIndex)
           prop.className
               $"""map-token initiative-card {getClassFromPlayer player.PlayerType} {if isActive then "active" else ""}"""
           prop.children
@@ -441,6 +501,15 @@ let viewStateButton neededGameState currentGameState (buttonText: string) (butto
 let view model dispatch =
     Html.div
         [ prop.className "game-board"
+          prop.onMouseUp
+          <| (fun (ev) ->
+              ev.stopPropagation ()
+              ev.preventDefault ()
+              dispatch <| OnTokenReleased)
+          prop.onMouseMove
+          <| (fun (ev) ->
+              ev.stopPropagation ()
+              dispatch <| OnTokenMove(ev.clientX, ev.clientY))
           prop.children
               [ Html.select
                     [ prop.id "map-select"
@@ -471,7 +540,7 @@ let view model dispatch =
                             prop.src model.InitiativeViewModel.Scene.BackgroundImage ])
                       :: List.mapi
                           (fun ind player ->
-                              viewPlayerToken player (model.InitiativeViewModel.Scene.CombatantTurn = ind) dispatch)
+                              viewPlayerToken player ind (model.InitiativeViewModel.Scene.CombatantTurn = ind) dispatch)
                           model.InitiativeViewModel.Scene.Combatants
                       |> prop.children ]
                 Html.div
