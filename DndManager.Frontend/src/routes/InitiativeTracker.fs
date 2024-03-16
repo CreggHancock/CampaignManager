@@ -579,16 +579,23 @@ let view model dispatch =
                                 [ prop.classes [ "flex-50"; "create-character-name" ]
                                   prop.children (
                                       let filteredOptions =
-                                          model.MonsterOptions
-                                          |> List.filter (fun (m) ->
+                                          if
                                               model.NewCharacter
-                                              |> Option.map (fun (c) ->
-                                                  c.Name.Length > 0
-                                                  && m.Name.StartsWith(
-                                                      c.Name,
-                                                      System.StringComparison.InvariantCultureIgnoreCase
-                                                  ))
-                                              |> Option.defaultWith (fun () -> false))
+                                              |> Option.map (fun (c) -> c.PlayerType <> Player)
+                                              |> Option.defaultValue false
+                                          then
+                                              model.MonsterOptions
+                                              |> List.filter (fun (m) ->
+                                                  model.NewCharacter
+                                                  |> Option.map (fun (c) ->
+                                                      c.Name.Length > 0
+                                                      && m.Name.StartsWith(
+                                                          c.Name,
+                                                          System.StringComparison.InvariantCultureIgnoreCase
+                                                      ))
+                                                  |> Option.defaultWith (fun () -> false))
+                                          else
+                                              []
 
                                       [ Bulma.input.text
                                             [ prop.placeholder "Name"
@@ -607,29 +614,33 @@ let view model dispatch =
                                                |> Option.map (fun (c) -> c.Name)
                                                |> Option.defaultWith (fun () -> "")
                                                |> prop.value) ]
-                                        Html.div
-                                            [ prop.className "filter-box"
-                                              prop.children (
-                                                  filteredOptions
-                                                  |> List.sortBy (fun (m) -> m.Name)
-                                                  |> List.take (
-                                                      if List.length filteredOptions > 4 then
-                                                          4
-                                                      else
-                                                          List.length filteredOptions
-                                                  )
-                                                  |> List.map (fun (m) ->
-                                                      Html.div
-                                                          [ prop.className "filter-option"
-                                                            prop.children
-                                                                [ Bulma.button.button
-                                                                      [ button.isInverted
-                                                                        color.isInfo
-                                                                        prop.text m.Name
-                                                                        prop.onClick (fun _ ->
-                                                                            dispatch
-                                                                            <| NewCharacterNameOptionClicked m.Index) ] ] ])
-                                              ) ]
+                                        if List.isEmpty filteredOptions |> not then
+                                            Html.div
+                                                [ prop.className "filter-box"
+                                                  prop.children (
+                                                      filteredOptions
+                                                      |> List.sortBy (fun (m) -> m.Name)
+                                                      |> List.take (
+                                                          if List.length filteredOptions > 4 then
+                                                              4
+                                                          else
+                                                              List.length filteredOptions
+                                                      )
+                                                      |> List.map (fun (m) ->
+                                                          Html.div
+                                                              [ prop.className "filter-option"
+                                                                prop.children
+                                                                    [ Bulma.button.button
+                                                                          [ button.isInverted
+                                                                            color.isInfo
+                                                                            prop.text m.Name
+                                                                            prop.onClick (fun _ ->
+                                                                                dispatch
+                                                                                <| NewCharacterNameOptionClicked
+                                                                                    m.Index) ] ] ])
+                                                  ) ]
+                                        else
+                                            Html.none
 
                                         ]
                                   ) ]
