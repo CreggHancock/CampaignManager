@@ -6,6 +6,8 @@ open Feliz.Bulma
 open Fetch
 open Thoth.Fetch
 open Thoth.Json
+open Fable.Core.Util
+open Fable.Core
 
 [<Literal>]
 let route = "InitiativeTracker"
@@ -188,6 +190,10 @@ let updateLocalStorage (model: Model, cmd: Cmd<Msg>) =
             OnStorageUpdatedError
 
 
+[<Import("initialize", "../js/pan.js")>]
+let initializePan: unit -> unit = jsNative
+
+
 let init accessToken sceneId =
     ({ InitiativeViewModel =
         { Scene =
@@ -206,7 +212,10 @@ let init accessToken sceneId =
        ErrorMessage = ""
        IsLoggedIn = Option.isSome accessToken
        MonsterOptions = [] },
-     Cmd.batch [ getInitiativeViewModel accessToken sceneId; getMonsterOptions () ]
+     Cmd.batch
+         [ getInitiativeViewModel accessToken sceneId
+           getMonsterOptions ()
+           Cmd.OfFunc.perform (fun () -> initializePan ()) () (fun () -> NoOp) ]
 
     )
 
