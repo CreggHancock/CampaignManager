@@ -37,7 +37,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload frontend code to pages
-          path: "./DndManager.Frontend/dist/"
+          path: "./CampaignManager.Frontend/dist/"
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

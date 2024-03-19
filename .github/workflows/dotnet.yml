@@ -5,9 +5,9 @@ name: .NET
 
 on:
   push:
-    branches: ['main', 'FSharp']
+    branches: ["main", "FSharp"]
   pull_request:
-    branches: ['main', 'FSharp']
+    branches: ["main", "FSharp"]
 
 jobs:
   build:
@@ -23,9 +23,9 @@ jobs:
         run: dotnet restore
       - name: Restore tools
         run: dotnet tool restore
-        working-directory: ./DndManager.Frontend/src
+        working-directory: ./CampaignManager.Frontend/src
       - name: Build
         run: dotnet build --no-restore
       - name: Build Frontend
         run: dotnet fable
-        working-directory: ./DndManager.Frontend/src
+        working-directory: ./CampaignManager.Frontend/src
