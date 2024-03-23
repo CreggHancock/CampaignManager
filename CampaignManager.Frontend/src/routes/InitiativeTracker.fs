@@ -3,14 +3,16 @@ module InitiativeTracker
 open Feliz
 open Elmish
 open Feliz.Bulma
+open Feliz.Router
 open Fetch
 open Thoth.Fetch
 open Thoth.Json
 open Fable.Core.Util
 open Fable.Core
+open Feliz.Router
 
 [<Literal>]
-let route = "InitiativeTracker"
+let Route = "InitiativeTracker"
 
 type CombatantType =
     | Enemy
@@ -131,6 +133,10 @@ let getMonsterDetails index =
         (fun (response) -> OnGetMonsterDetailsSuccess response)
         OnGetMonsterDetailsError
 
+let updateScene updater model =
+    { model with
+        InitiativeViewModel = { Scene = updater model.InitiativeViewModel.Scene } }
+
 let updateLocalStorage (model: Model, cmd: Cmd<Msg>) =
     let sceneResults =
         Decode.Auto.fromString<Scene List> (Browser.WebStorage.localStorage.getItem ("scenes"))
@@ -145,6 +151,10 @@ let updateLocalStorage (model: Model, cmd: Cmd<Msg>) =
             |> Option.defaultWith (fun () -> 0)
             |> (fun (n) -> n + 1)
 
+
+        let updatedModel =
+            model |> updateScene (fun s -> if s.Id > 0 then s else { s with Id = nextId })
+
         let updatedScenes =
             if
                 model.InitiativeViewModel.Scene.Id > 0
@@ -158,11 +168,9 @@ let updateLocalStorage (model: Model, cmd: Cmd<Msg>) =
                             s)
                     scenes
             else
-                { model.InitiativeViewModel.Scene with
-                    Id = nextId }
-                :: scenes
+                updatedModel.InitiativeViewModel.Scene :: scenes
 
-        model,
+        updatedModel,
         Cmd.batch
             [ cmd
               Cmd.OfFunc.either
@@ -173,7 +181,8 @@ let updateLocalStorage (model: Model, cmd: Cmd<Msg>) =
                   OnStorageUpdatedError ]
     | Error err ->
         { model with
-            ErrorMessage = "No scenes found" },
+            ErrorMessage = "No scenes found" }
+        |> updateScene (fun s -> if s.Id > 0 then s else { s with Id = 1 }),
         Cmd.OfFunc.either
             (fun () ->
                 Browser.WebStorage.localStorage.setItem (
@@ -219,10 +228,6 @@ let init accessToken sceneId =
 
     )
 
-let updateScene model updater =
-    { model with
-        InitiativeViewModel = { Scene = updater model.InitiativeViewModel.Scene } }
-
 let update (msg: Msg) (model: Model) =
     match msg with
     | NoOp -> model, Cmd.none
@@ -242,30 +247,34 @@ let update (msg: Msg) (model: Model) =
                       IsTokenBeingDragged = false } },
         Cmd.none
     | RollInitiativesClicked ->
-        (updateScene model (fun scene ->
-            { scene with
-                GameState = InitiativeRolled }),
+        (model
+         |> updateScene (fun scene ->
+             { scene with
+                 GameState = InitiativeRolled }),
          Cmd.none)
         |> updateLocalStorage
     | StartCombatClicked ->
-        (updateScene model (fun scene ->
-            { scene with
-                GameState = Active
-                CombatantTurn = 0 }),
+        (model
+         |> updateScene (fun scene ->
+             { scene with
+                 GameState = Active
+                 CombatantTurn = 0 }),
          Cmd.none)
         |> updateLocalStorage
     | EndTurnClicked ->
-        (updateScene model (fun scene ->
-            { scene with
-                GameState = Active
-                CombatantTurn = scene.CombatantTurn + 1 }),
+        (model
+         |> updateScene (fun scene ->
+             { scene with
+                 GameState = Active
+                 CombatantTurn = scene.CombatantTurn + 1 }),
          Cmd.none)
         |> updateLocalStorage
     | ResetClicked ->
-        (updateScene model (fun scene ->
-            { scene with
-                GameState = CharacterSetup
-                CombatantTurn = 0 }),
+        (model
+         |> updateScene (fun scene ->
+             { scene with
+                 GameState = CharacterSetup
+                 CombatantTurn = 0 }),
          Cmd.none)
         |> updateLocalStorage
     | NewCharacterNameUpdated event ->
@@ -308,7 +317,8 @@ let update (msg: Msg) (model: Model) =
         match model.NewCharacter with
         | Some character ->
             let updatedScene =
-                updateScene model (fun scene ->
+                model
+                |> updateScene (fun scene ->
                     { scene with
                         Combatants = character :: scene.Combatants })
 
@@ -318,9 +328,10 @@ let update (msg: Msg) (model: Model) =
             |> updateLocalStorage
         | None -> model, Cmd.none
     | BackgroundUpdated background ->
-        (updateScene model (fun scene ->
-            { scene with
-                BackgroundImage = background }),
+        (model
+         |> updateScene (fun scene ->
+             { scene with
+                 BackgroundImage = background }),
          Cmd.none)
         |> updateLocalStorage
     | OnGetModelSuccess viewModel -> model, Cmd.none
@@ -333,7 +344,8 @@ let update (msg: Msg) (model: Model) =
 
         match sceneResults with
         | Ok scenes ->
-            updateScene model (fun scene ->
+            model
+            |> updateScene (fun scene ->
                 (scenes
                  |> List.tryFind (fun (sceneOption) -> sceneOption.Id.ToString() = sceneId)
                  |> Option.map (fun (scene) ->
@@ -346,7 +358,11 @@ let update (msg: Msg) (model: Model) =
         { model with
             ErrorMessage = err.Message },
         Cmd.none
-    | OnStorageUpdatedSuccess -> model, Cmd.none
+    | OnStorageUpdatedSuccess ->
+        model,
+        match Router.currentUrl () with
+        | [ Route ] -> Cmd.navigate (Route + "?sceneId=" + model.InitiativeViewModel.Scene.Id.ToString())
+        | _ -> Cmd.none
     | OnStorageUpdatedError err ->
         ({ model with
             ErrorMessage = err.Message },
@@ -394,34 +410,37 @@ let update (msg: Msg) (model: Model) =
             ErrorMessage = err.Message },
         Cmd.none
     | OnTokenClicked tokenIndex ->
-        (updateScene model (fun scene ->
-            { scene with
-                Combatants =
-                    scene.Combatants
-                    |> List.mapi (fun ind c ->
-                        if ind = tokenIndex then
-                            { c with IsTokenBeingDragged = true }
-                        else
-                            c) }),
+        (model
+         |> updateScene (fun scene ->
+             { scene with
+                 Combatants =
+                     scene.Combatants
+                     |> List.mapi (fun ind c ->
+                         if ind = tokenIndex then
+                             { c with IsTokenBeingDragged = true }
+                         else
+                             c) }),
          Cmd.none)
     | OnTokenReleased ->
-        (updateScene model (fun scene ->
-            { scene with
-                Combatants = scene.Combatants |> List.map (fun c -> { c with IsTokenBeingDragged = false }) }),
+        (model
+         |> updateScene (fun scene ->
+             { scene with
+                 Combatants = scene.Combatants |> List.map (fun c -> { c with IsTokenBeingDragged = false }) }),
          Cmd.none)
     | OnTokenMove(newX, newY) ->
         let updatedModel =
-            (updateScene model (fun scene ->
-                { scene with
-                    Combatants =
-                        scene.Combatants
-                        |> List.map (fun c ->
-                            if c.IsTokenBeingDragged then
-                                { c with
-                                    LocationX = int newX
-                                    LocationY = int newY }
-                            else
-                                c) }),
+            (model
+             |> updateScene (fun scene ->
+                 { scene with
+                     Combatants =
+                         scene.Combatants
+                         |> List.map (fun c ->
+                             if c.IsTokenBeingDragged then
+                                 { c with
+                                     LocationX = int newX
+                                     LocationY = int newY }
+                             else
+                                 c) }),
              Cmd.none)
 
         let shouldSave =
@@ -470,10 +489,9 @@ let viewPlayerToken player playerIndex isActive dispatch =
 
 
     Html.div
-        [ prop.id "default1"
-          prop.style
-              [ style.left (length.px (player.LocationX - 70))
-                style.top (length.px (player.LocationY - 140)) ]
+        [ prop.style
+              [ style.left (length.px (player.LocationX))
+                style.top (length.px (player.LocationY)) ]
           prop.onMouseDown
           <| (fun (ev) ->
               ev.stopPropagation ()
@@ -589,6 +607,7 @@ let view model dispatch =
                                                   model.NewCharacter
                                                   |> Option.map (fun (c) ->
                                                       c.Name.Length > 0
+                                                      && c.Name <> m.Name
                                                       && m.Name.StartsWith(
                                                           c.Name,
                                                           System.StringComparison.InvariantCultureIgnoreCase

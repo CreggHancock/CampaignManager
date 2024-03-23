@@ -8,7 +8,7 @@ open Thoth.Json
 open Feliz.Bulma
 
 [<Literal>]
-let route = "Login"
+let Route = "Login"
 
 type Model =
     { Username: string

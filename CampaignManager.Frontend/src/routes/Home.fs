@@ -9,7 +9,7 @@ open Fetch
 open Thoth.Json
 
 [<Literal>]
-let route = "Home"
+let Route = "Home"
 
 type Character =
     { Id: int
@@ -63,15 +63,15 @@ let init accessToken =
 
 let update (msg: Msg) (model: Model) =
     match msg with
-    | NavigateToInitiativeTracker -> model, Cmd.navigate (InitiativeTracker.route)
+    | NavigateToInitiativeTracker -> model, Cmd.navigate (InitiativeTracker.Route)
     | OnGetModelSuccess response -> { model with HomeViewModel = response }, Cmd.none
     | OnGetModelError error ->
         { model with
             ErrorMessage = error.Message },
         Cmd.none
-    | NavigateToInitiativeCharacter -> model, Cmd.navigate (InitiativeTracker.route)
+    | NavigateToInitiativeCharacter -> model, Cmd.navigate (InitiativeTracker.Route)
     | NavigateToInitiativeTrackerWithId id ->
-        model, Cmd.navigate (InitiativeTracker.route + "?sceneId=" + id.ToString())
+        model, Cmd.navigate (InitiativeTracker.Route + "?sceneId=" + id.ToString())
     | OnGotModelFromStorageSuccess scenesString ->
         let sceneResults = Decode.Auto.fromString<Scene List> (scenesString)
 

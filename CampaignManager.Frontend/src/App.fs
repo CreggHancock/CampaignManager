@@ -95,36 +95,36 @@ let update msg model =
 
             let pageFromUrl =
                 match segments with
-                | [ Home.route ] ->
+                | [ Home.Route ] ->
                     let (homeModel, homeCmd) = Home.init accessToken
                     (Home homeModel, Cmd.map (fun (cmd) -> (HomeMsg) cmd) homeCmd)
-                | [ InitiativeTracker.route ] ->
+                | [ InitiativeTracker.Route ] ->
                     let (initiativeTrackerModel, initiativeTrackerCmd) =
                         InitiativeTracker.init accessToken None
 
                     (InitiativeTracker initiativeTrackerModel,
                      Cmd.map (fun (cmd) -> (InitiativeTrackerMsg) cmd) initiativeTrackerCmd)
-                | [ InitiativeTracker.route; Route.Query [ "sceneId", Route.Int sceneId ] ] ->
+                | [ InitiativeTracker.Route; Route.Query [ "sceneId", Route.Int sceneId ] ] ->
                     let (initiativeTrackerModel, initiativeTrackerCmd) =
                         InitiativeTracker.init accessToken (Option.Some sceneId)
 
                     (InitiativeTracker initiativeTrackerModel,
                      Cmd.map (fun (cmd) -> (InitiativeTrackerMsg) cmd) initiativeTrackerCmd)
-                | [ Login.route ] ->
+                | [ Login.Route ] ->
                     let (loginModel, loginCmd) = Login.init ()
                     (Login loginModel, loginCmd)
-                | _ -> (NotFound, Cmd.navigate (fullPath = Home.route))
+                | _ -> (NotFound, Cmd.navigate (fullPath = Home.Route))
 
             { model with
                 CurrentUrl = segments
                 ActivePage = fst pageFromUrl },
             Cmd.batch [ preNavigateCmds; snd pageFromUrl ]
-        | LoginClicked -> (model, Cmd.navigate (fullPath = Login.route))
+        | LoginClicked -> (model, Cmd.navigate (fullPath = Login.Route))
         | LogoutClicked ->
             ({ model with UserInfo = None },
              Cmd.OfFunc.perform (fun () -> Browser.WebStorage.localStorage.removeItem ("accessToken")) () (fun () ->
                  OnLogoutSuccess))
-        | OnLogoutSuccess -> (model, Cmd.navigate (fullPath = Login.route))
+        | OnLogoutSuccess -> (model, Cmd.navigate (fullPath = Login.Route))
         | OnLogoutError error ->
             { model with
                 ErrorMessage = error.Message },
