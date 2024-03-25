@@ -71,7 +71,8 @@ type Model =
       NewCharacter: Combatant option
       ErrorMessage: string
       IsLoggedIn: bool
-      MonsterOptions: MonsterSummary List }
+      MonsterOptions: MonsterSummary List
+      BackgroundDropdownToggled: bool }
 
 type Msg =
     | NoOp
@@ -101,6 +102,7 @@ type Msg =
     | OnTokenClicked of int * float * float
     | OnTokenReleased
     | OnTokenMove of float * float
+    | BackgroundDropdownToggled
 
 
 let getInitiativeViewModel accessToken maybeSceneId =
@@ -232,7 +234,8 @@ let init accessToken sceneId =
        NewCharacter = None
        ErrorMessage = ""
        IsLoggedIn = Option.isSome accessToken
-       MonsterOptions = [] },
+       MonsterOptions = []
+       BackgroundDropdownToggled = false },
      Cmd.batch
          [ getInitiativeViewModel accessToken sceneId
            getMonsterOptions ()
@@ -477,6 +480,10 @@ let update (msg: Msg) (model: Model) =
             updateLocalStorage updatedModel
         else
             updatedModel
+    | BackgroundDropdownToggled ->
+        ({ model with
+            BackgroundDropdownToggled = not model.BackgroundDropdownToggled },
+         Cmd.none)
 
 
 
@@ -562,34 +569,44 @@ let view model dispatch =
               ev.preventDefault ()
               dispatch <| OnTokenMove(ev.clientX, ev.clientY))
           prop.children
-              [ Html.select
+              [ Bulma.dropdown
                     [ prop.id "map-select"
                       prop.className "map-select"
-                      prop.onChange (fun ev -> dispatch (BackgroundUpdated ev))
+                      if model.BackgroundDropdownToggled then
+                          dropdown.isActive
+                      else
+                          prop.text ""
                       prop.children
-                          [ Html.option
-                                [ prop.value
-                                      "https://rattrapgames.com/cdn/shop/products/RAT-MAT-GF001_1024x1024@2x.jpg?v=1576461000"
-                                  prop.text "Field" ]
-                            Html.option
-                                [ prop.value
-                                      "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5ae20baf-98de-45dd-b5fb-fb5fe71856ff/dfpohu9-30e97ff5-b72c-46bb-9f32-3f37646858cd.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzVhZTIwYmFmLTk4ZGUtNDVkZC1iNWZiLWZiNWZlNzE4NTZmZlwvZGZwb2h1OS0zMGU5N2ZmNS1iNzJjLTQ2YmItOWYzMi0zZjM3NjQ2ODU4Y2QuanBnIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.ESuTEe8KcpxBfKkGCZrOymAwEDFRDJm2y4QGjxj2eHE"
-                                  prop.text "House" ]
-                            Html.option
-                                [ prop.value
-                                      "https://i.pinimg.com/originals/e6/4b/b2/e64bb20325420e33f58b4f7458ae2e66.jpg"
-                                  prop.text "Camp" ]
-                            Html.option [ prop.value "https://i.redd.it/rx669zmdv8q61.jpg"; prop.text "Vallaki" ]
+                          [ Bulma.dropdownTrigger
+                                [ Bulma.button.button
+                                      [ prop.text "Map"
+                                        prop.onClick (fun ev ->
+                                            ev.stopPropagation ()
+                                            ev.preventDefault ()
+                                            dispatch BackgroundDropdownToggled) ]
+
+                                  ]
+                            Bulma.dropdownMenu
+                                [ Bulma.dropdownContent
+                                      [ Bulma.dropdownItem.div
+                                            [ Bulma.input.text
+                                                  [ prop.onChange (fun ev -> dispatch (BackgroundUpdated ev)) ] ] ]
+
+                                  ]
 
                             ] ]
                 Html.div
                     [ prop.className "game-map"
                       prop.id "battleMap"
-                      (Html.img
-                          [ prop.id "draggable-image"
-                            prop.className "map-image"
-                            prop.src model.InitiativeViewModel.Scene.BackgroundImage ])
-                      :: List.mapi
+                      ([ Html.img
+                             [ prop.id "draggable-image"
+                               prop.className "map-image"
+                               prop.src model.InitiativeViewModel.Scene.BackgroundImage ]
+                         Html.div
+                             [ prop.className "grid"
+
+                               ] ])
+                      @ List.mapi
                           (fun ind player ->
                               viewPlayerToken player ind (model.InitiativeViewModel.Scene.CombatantTurn = ind) dispatch)
                           model.InitiativeViewModel.Scene.Combatants

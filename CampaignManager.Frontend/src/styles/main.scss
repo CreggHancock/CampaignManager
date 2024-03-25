@@ -5,14 +5,8 @@
     overflow: hidden;
     position: relative;
     .map-select {
-      position: absolute;
-      z-index: 30;
-      border-radius: 0;
-      background: rgba(35, 35, 35, 1);
-      border: 3px inset rgba(255, 255, 255, 0.25);
-      color: #f9f9f9;
-      padding: 0.35rem 1rem;
-      width: max-content;
+        background: #000;
+        border: 2px inset #fff;
     }
 
     .create-character {
@@ -113,6 +107,16 @@
       linear-gradient(-45deg, #fff, #000);
     background-repeat: no-repeat;
     background-origin: padding-box, border-box;
+    .grid {
+        background-size: 40px 40px;
+        background-image:
+            linear-gradient(to right, grey 1px, transparent 1px),
+            linear-gradient(to bottom, grey 1px, transparent 1px);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
     .map-image {
       pointer-events: auto;
       width: 100%;
@@ -253,8 +257,8 @@
         pointer-events: auto;
         display: flex;
         flex: 0 0 auto;
-        width: calc(100px * 0.5);
-        height: calc(180px * 0.5);
+        width: calc(100px * 0.65);
+        height: calc(180px * 0.6);
         //overflow: hidden;
         padding: 5px;
         border: 2px solid #000;
@@ -384,8 +388,8 @@
           }
         }
         &:hover {
-          width: calc(100px * 0.65);
-          height: calc(180px * 0.6);
+          width: calc(100px * 0.7);
+          height: calc(180px * 0.65);
           .character-details {
             opacity: 1;
             pointer-events: auto;
