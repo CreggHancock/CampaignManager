@@ -47,7 +47,9 @@ type Combatant =
       Health: int
       MaxHealth: int
       ArmorClass: int
-      IsTokenBeingDragged: bool }
+      IsTokenBeingDragged: bool
+      PreviousLocationX: int
+      PreviousLocationY: int }
 
 type Scene =
     { Id: int
@@ -96,7 +98,7 @@ type Msg =
     | NewCharacterNameOptionClicked of string
     | OnGetMonsterDetailsSuccess of Monster
     | OnGetMonsterDetailsError of exn
-    | OnTokenClicked of int
+    | OnTokenClicked of int * float * float
     | OnTokenReleased
     | OnTokenMove of float * float
 
@@ -202,6 +204,16 @@ let updateLocalStorage (model: Model, cmd: Cmd<Msg>) =
 [<Import("initialize", "../js/pan.js")>]
 let initializePan: unit -> unit = jsNative
 
+[<Import("setDraggable", "../js/pan.js")>]
+let setDraggable: bool -> unit = jsNative
+
+[<Import("getPanOffset", "../js/pan.js")>]
+let getPanOffset
+    : unit
+          -> {| xOffset: int
+                yOffset: int
+                scale: int |} =
+    jsNative
 
 let init accessToken sceneId =
     ({ InitiativeViewModel =
@@ -244,7 +256,9 @@ let update (msg: Msg) (model: Model) =
                       Health = 0
                       MaxHealth = 0
                       ArmorClass = 0
-                      IsTokenBeingDragged = false } },
+                      IsTokenBeingDragged = false
+                      PreviousLocationX = 0
+                      PreviousLocationY = 0 } },
         Cmd.none
     | RollInitiativesClicked ->
         (model
@@ -409,7 +423,7 @@ let update (msg: Msg) (model: Model) =
         { model with
             ErrorMessage = err.Message },
         Cmd.none
-    | OnTokenClicked tokenIndex ->
+    | OnTokenClicked(tokenIndex, newX, newY) ->
         (model
          |> updateScene (fun scene ->
              { scene with
@@ -417,17 +431,22 @@ let update (msg: Msg) (model: Model) =
                      scene.Combatants
                      |> List.mapi (fun ind c ->
                          if ind = tokenIndex then
-                             { c with IsTokenBeingDragged = true }
+                             { c with
+                                 IsTokenBeingDragged = true
+                                 PreviousLocationX = int newX
+                                 PreviousLocationY = int newY }
                          else
                              c) }),
-         Cmd.none)
+         Cmd.OfFunc.perform setDraggable false (fun () -> NoOp))
     | OnTokenReleased ->
         (model
          |> updateScene (fun scene ->
              { scene with
                  Combatants = scene.Combatants |> List.map (fun c -> { c with IsTokenBeingDragged = false }) }),
-         Cmd.none)
+         Cmd.OfFunc.perform setDraggable true (fun () -> NoOp))
     | OnTokenMove(newX, newY) ->
+        let offsetTransform = (getPanOffset ())
+
         let updatedModel =
             (model
              |> updateScene (fun scene ->
@@ -437,8 +456,12 @@ let update (msg: Msg) (model: Model) =
                          |> List.map (fun c ->
                              if c.IsTokenBeingDragged then
                                  { c with
-                                     LocationX = int newX
-                                     LocationY = int newY }
+                                     LocationX =
+                                         ((int newX - c.PreviousLocationX) / offsetTransform.scale) + c.LocationX
+                                     LocationY =
+                                         ((int newY - c.PreviousLocationY) / offsetTransform.scale) + c.LocationY
+                                     PreviousLocationX = int newX
+                                     PreviousLocationY = int newY }
                              else
                                  c) }),
              Cmd.none)
@@ -496,7 +519,7 @@ let viewPlayerToken player playerIndex isActive dispatch =
           <| (fun (ev) ->
               ev.stopPropagation ()
               ev.preventDefault ()
-              dispatch <| OnTokenClicked playerIndex)
+              dispatch <| OnTokenClicked(playerIndex, ev.clientX, ev.clientY))
           prop.className
               $"""map-token initiative-card {getClassFromPlayer player.PlayerType} {if isActive then "active" else ""}"""
           prop.children
@@ -536,6 +559,7 @@ let view model dispatch =
           prop.onMouseMove
           <| (fun (ev) ->
               ev.stopPropagation ()
+              ev.preventDefault ()
               dispatch <| OnTokenMove(ev.clientX, ev.clientY))
           prop.children
               [ Html.select
