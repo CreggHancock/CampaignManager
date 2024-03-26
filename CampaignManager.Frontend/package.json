@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "start": "dotnet tool restore && dotnet fable watch src --runFast vite && sass --watch src/styles/main.scss src/styles/main.css",
-    "build": "dotnet tool restore && dotnet fable src --run vite build && sass src/styles/main.scss src/styles/main.css",
+    "build": "dotnet tool restore && dotnet fable src --run vite build --emptyOutDir && sass src/styles/main.scss src/styles/main.css",
     "clean": "dotnet fable clean src --yes"
   },
   "dependencies": {
