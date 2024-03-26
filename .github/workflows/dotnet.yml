@@ -24,8 +24,15 @@ jobs:
       - name: Restore tools
         run: dotnet tool restore
         working-directory: ./CampaignManager.Frontend/src
-      - name: Build
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+      - name: Install Node dependencies
+        run: npm install
+      - name: Build Backend
         run: dotnet build --no-restore
       - name: Build Frontend
-        run: dotnet fable
+        run: npm run build
         working-directory: ./CampaignManager.Frontend/src
