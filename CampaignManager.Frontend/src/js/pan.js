@@ -29,6 +29,18 @@ export function initialize() {
       },
     });
 
+    board.addEventListener("mouseenter", function (_) {
+        if (panZoomTiger.isPaused()) {
+            panZoomTiger.resume();
+        }
+    })
+
+    board.addEventListener("mouseleave", function (_) {
+        if (!panZoomTiger.isPaused()) {
+            panZoomTiger.pause();
+        }
+    })
+
     // Listen for mouse move on the board
     board.addEventListener("mousemove", function (e) {
       if (e.buttons === 1 && draggable) {
