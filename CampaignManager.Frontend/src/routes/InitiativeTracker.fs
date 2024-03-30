@@ -10,6 +10,7 @@ open Thoth.Json
 open Fable.Core.Util
 open Fable.Core
 open Feliz.Router
+open Fable.Core.JS
 
 [<Literal>]
 let Route = "InitiativeTracker"
@@ -21,7 +22,6 @@ type CombatantType =
 
 type GameState =
     | CharacterSetup
-    | InitiativeRolled
     | Active
 
 type Monster =
@@ -49,7 +49,8 @@ type Combatant =
       ArmorClass: int
       IsTokenBeingDragged: bool
       PreviousLocationX: int
-      PreviousLocationY: int }
+      PreviousLocationY: int
+      RolledInitiative: int option }
 
 type Scene =
     { Id: int
@@ -72,7 +73,8 @@ type Model =
       ErrorMessage: string
       IsLoggedIn: bool
       MonsterOptions: MonsterSummary List
-      BackgroundDropdownToggled: bool }
+      BackgroundDropdownToggled: bool
+      InitiativePopupOpen: bool }
 
 type Msg =
     | NoOp
@@ -103,6 +105,9 @@ type Msg =
     | OnTokenReleased
     | OnTokenMove of float * float
     | BackgroundDropdownToggled
+    | CharacterInitiativeSet of int * int option
+    | RollInitiativeCancelClicked
+    | RollInitiativeRollClicked
 
 
 let getInitiativeViewModel accessToken maybeSceneId =
@@ -235,7 +240,8 @@ let init accessToken sceneId =
        ErrorMessage = ""
        IsLoggedIn = Option.isSome accessToken
        MonsterOptions = []
-       BackgroundDropdownToggled = false },
+       BackgroundDropdownToggled = false
+       InitiativePopupOpen = false },
      Cmd.batch
          [ getInitiativeViewModel accessToken sceneId
            getMonsterOptions ()
@@ -261,17 +267,17 @@ let update (msg: Msg) (model: Model) =
                       ArmorClass = 0
                       IsTokenBeingDragged = false
                       PreviousLocationX = 0
-                      PreviousLocationY = 0 } },
+                      PreviousLocationY = 0
+                      RolledInitiative = None } },
         Cmd.none
     | RollInitiativesClicked ->
-        (model
-         |> updateScene (fun scene ->
-             { scene with
-                 GameState = InitiativeRolled }),
+        ({ model with
+            InitiativePopupOpen = true },
          Cmd.none)
         |> updateLocalStorage
     | StartCombatClicked ->
-        (model
+        ({ model with
+            InitiativePopupOpen = false }
          |> updateScene (fun scene ->
              { scene with
                  GameState = Active
@@ -484,6 +490,44 @@ let update (msg: Msg) (model: Model) =
         ({ model with
             BackgroundDropdownToggled = not model.BackgroundDropdownToggled },
          Cmd.none)
+    | CharacterInitiativeSet(combatantIndex, initiative) ->
+        (model
+         |> updateScene (fun s ->
+             { s with
+                 Combatants =
+                     List.mapi
+                         (fun ind (combatant: Combatant) ->
+                             if ind = combatantIndex then
+                                 { combatant with
+                                     RolledInitiative = initiative }
+                             else
+                                 combatant)
+                         s.Combatants }),
+         Cmd.none)
+    | RollInitiativeCancelClicked ->
+        ({ model with
+            InitiativePopupOpen = false },
+         Cmd.none)
+    | RollInitiativeRollClicked ->
+        (model
+         |> updateScene (fun s ->
+             { s with
+                 Combatants =
+                     List.map
+                         (fun (combatant: Combatant) ->
+                             match combatant.RolledInitiative with
+                             | Some _ -> combatant
+                             | None ->
+                                 { combatant with
+                                     RolledInitiative =
+                                         Math.random ()
+                                         |> (fun i -> i * 20.0)
+                                         |> Math.floor
+                                         |> int
+                                         |> (fun i -> i + 1)
+                                         |> Some })
+                         s.Combatants }),
+         Cmd.none)
 
 
 
@@ -553,6 +597,33 @@ let viewStateButton neededGameState currentGameState (buttonText: string) (butto
                   dispatch onClickMsg
               else
                   dispatch NoOp) ]
+
+let viewCharacterInitiativeEntry (combatant: Combatant) (combatantIndex: int) dispatch =
+    [ Html.div
+          [ prop.className "flex-50"
+            prop.children
+                [ Html.text combatant.Name
+                  Bulma.label
+                      [ Bulma.text.span "Roll automatically"
+                        Bulma.input.checkbox
+                            [ prop.onChange (fun (ev: bool) ->
+                                  dispatch (CharacterInitiativeSet(combatantIndex, (if ev then Some 0 else None))))
+                              Option.isNone combatant.RolledInitiative |> prop.value ] ] ] ]
+      match combatant.RolledInitiative with
+      | Some initiative ->
+          Html.div
+              [ prop.className "flex-50"
+                prop.children
+                    [ Bulma.input.text
+                          [ Bulma.input.isSmall
+                            prop.placeholder "Initiative"
+                            prop.name "initiative"
+                            prop.required true
+                            prop.onChange (fun ev -> dispatch (CharacterInitiativeSet(combatantIndex, Some ev)))
+                            initiative.ToString() |> prop.value ] ] ]
+      | None -> Html.div [ prop.className "flex-50" ]
+
+      ]
 
 
 let view model dispatch =
@@ -624,136 +695,154 @@ let view model dispatch =
                                                   (fun player -> viewPlayerCard player dispatch)
                                                   model.InitiativeViewModel.Scene.Combatants
                                               |> prop.children ] ] ] ] ]
-                Html.div
-                    [ prop.classes
-                          [ "create-character"
-                            if Option.isSome model.NewCharacter then
-                                ""
-                            else
-                                "element-hidden" ]
-                      prop.id "createCharacterForm"
-                      prop.children
-                          [ Html.h1 [ prop.className "container-title"; prop.text "Add Character" ]
-                            Html.div
-                                [ prop.classes [ "flex-50"; "create-character-name" ]
-                                  prop.children (
-                                      let filteredOptions =
-                                          if
-                                              model.NewCharacter
-                                              |> Option.map (fun (c) -> c.PlayerType <> Player)
-                                              |> Option.defaultValue false
-                                          then
-                                              model.MonsterOptions
-                                              |> List.filter (fun (m) ->
-                                                  model.NewCharacter
-                                                  |> Option.map (fun (c) ->
-                                                      c.Name.Length > 0
-                                                      && c.Name <> m.Name
-                                                      && m.Name.StartsWith(
-                                                          c.Name,
-                                                          System.StringComparison.InvariantCultureIgnoreCase
-                                                      ))
-                                                  |> Option.defaultWith (fun () -> false))
-                                          else
-                                              []
+                match model.NewCharacter with
+                | Some character ->
+                    Html.div
+                        [ prop.classes [ "create-character" ]
+                          prop.id "createCharacterForm"
+                          prop.children
+                              [ Html.h1 [ prop.className "container-title"; prop.text "Add Character" ]
+                                Html.div
+                                    [ prop.classes [ "flex-50"; "create-character-name" ]
+                                      prop.children (
+                                          let filteredOptions =
+                                              if character.PlayerType <> Player then
+                                                  model.MonsterOptions
+                                                  |> List.filter (fun (m) ->
+                                                      character
+                                                      |> (fun (c) ->
+                                                          c.Name.Length > 0
+                                                          && c.Name <> m.Name
+                                                          && m.Name.StartsWith(
+                                                              c.Name,
+                                                              System.StringComparison.InvariantCultureIgnoreCase
+                                                          )))
+                                              else
+                                                  []
 
-                                      [ Bulma.input.text
-                                            [ prop.placeholder "Name"
-                                              prop.name "characterName"
-                                              prop.type' "text"
-                                              prop.id "characterName"
-                                              prop.required true
-                                              prop.className (
-                                                  if List.length filteredOptions > 0 then
-                                                      "input-with-filters"
-                                                  else
-                                                      "input-no-filters"
-                                              )
-                                              prop.onChange (fun ev -> dispatch (NewCharacterNameUpdated ev))
-                                              (model.NewCharacter
-                                               |> Option.map (fun (c) -> c.Name)
-                                               |> Option.defaultWith (fun () -> "")
-                                               |> prop.value) ]
-                                        if List.isEmpty filteredOptions |> not then
-                                            Html.div
-                                                [ prop.className "filter-box"
-                                                  prop.children (
-                                                      filteredOptions
-                                                      |> List.sortBy (fun (m) -> m.Name)
-                                                      |> List.take (
-                                                          if List.length filteredOptions > 4 then
-                                                              4
-                                                          else
-                                                              List.length filteredOptions
-                                                      )
-                                                      |> List.map (fun (m) ->
-                                                          Html.div
-                                                              [ prop.className "filter-option"
-                                                                prop.children
-                                                                    [ Bulma.button.button
-                                                                          [ button.isInverted
-                                                                            color.isInfo
-                                                                            prop.text m.Name
-                                                                            prop.onClick (fun _ ->
-                                                                                dispatch
-                                                                                <| NewCharacterNameOptionClicked
-                                                                                    m.Index) ] ] ])
-                                                  ) ]
-                                        else
-                                            Html.none
+                                          [ Bulma.input.text
+                                                [ prop.placeholder "Name"
+                                                  prop.name "characterName"
+                                                  prop.type' "text"
+                                                  prop.id "characterName"
+                                                  prop.required true
+                                                  prop.className (
+                                                      if List.length filteredOptions > 0 then
+                                                          "input-with-filters"
+                                                      else
+                                                          "input-no-filters"
+                                                  )
+                                                  prop.onChange (fun ev -> dispatch (NewCharacterNameUpdated ev))
+                                                  prop.value character.Name ]
+                                            if List.isEmpty filteredOptions |> not then
+                                                Html.div
+                                                    [ prop.className "filter-box"
+                                                      prop.children (
+                                                          filteredOptions
+                                                          |> List.sortBy (fun (m) -> m.Name)
+                                                          |> List.take (
+                                                              if List.length filteredOptions > 4 then
+                                                                  4
+                                                              else
+                                                                  List.length filteredOptions
+                                                          )
+                                                          |> List.map (fun (m) ->
+                                                              Html.div
+                                                                  [ prop.className "filter-option"
+                                                                    prop.children
+                                                                        [ Bulma.button.button
+                                                                              [ button.isInverted
+                                                                                color.isInfo
+                                                                                prop.text m.Name
+                                                                                prop.onClick (fun _ ->
+                                                                                    dispatch
+                                                                                    <| NewCharacterNameOptionClicked
+                                                                                        m.Index) ] ] ])
+                                                      ) ]
+                                            else
+                                                Html.none
 
-                                        ]
-                                  ) ]
-                            Html.div
-                                [ prop.className "flex-50"
-                                  prop.children
-                                      [ Bulma.input.text
-                                            [ prop.placeholder "Dexterity"
-                                              prop.name "characterDex"
-                                              prop.type' "text"
-                                              prop.id "characterDex"
-                                              prop.required true
-                                              prop.onChange (fun ev -> dispatch (NewCharacterDexterityUpdated ev))
-                                              (model.NewCharacter
-                                               |> Option.map (fun (c) -> c.InitiativeModifier.ToString())
-                                               |> Option.defaultWith (fun () -> "")
-                                               |> prop.value) ] ] ]
-                            Html.div
-                                [ prop.className "flex-50"
-                                  prop.children
-                                      [ Bulma.input.text
-                                            [ prop.placeholder "Image URL"
-                                              prop.name "characterImage"
-                                              prop.type' "text"
-                                              prop.id "characterImage"
-                                              prop.required true
-                                              prop.onChange (fun ev -> dispatch (NewCharacterImageUpdated ev))
-                                              (model.NewCharacter
-                                               |> Option.map (fun (c) -> c.ImageUrl)
-                                               |> Option.defaultWith (fun () -> "")
-                                               |> prop.value) ] ] ]
-                            Html.div
-                                [ prop.className "flex-50"
-                                  prop.children
-                                      [ Html.select
-                                            [ prop.onChange (fun ev -> dispatch (NewCharacterPlayerTypeUpdated ev))
-                                              prop.children
-                                                  [ Html.option [ prop.value "player"; prop.text "Player" ]
-                                                    Html.option [ prop.value "ally"; prop.text "Ally" ]
-                                                    Html.option [ prop.value "enemy"; prop.text "Enemy" ] ] ] ] ]
-                            Html.div
-                                [ prop.className "create-character-buttons"
-                                  prop.children
-                                      [ Bulma.button.button
-                                            [ prop.className "button--cancel"
-                                              prop.type' "button"
-                                              prop.text "Cancel"
-                                              prop.onClick (fun _ -> dispatch NewCharacterCancelClicked) ]
-                                        Bulma.button.button
-                                            [ prop.className "button--submit"
-                                              prop.type' "button"
-                                              prop.text "Create"
-                                              prop.onClick (fun _ -> dispatch NewCharacterCreateClicked) ] ] ] ] ]
+                                            ]
+                                      ) ]
+                                Html.div
+                                    [ prop.className "flex-50"
+                                      prop.children
+                                          [ Bulma.input.text
+                                                [ prop.placeholder "Dexterity"
+                                                  prop.name "characterDex"
+                                                  prop.type' "text"
+                                                  prop.id "characterDex"
+                                                  prop.required true
+                                                  prop.onChange (fun ev -> dispatch (NewCharacterDexterityUpdated ev))
+                                                  character.InitiativeModifier.ToString() |> prop.value ] ] ]
+                                Html.div
+                                    [ prop.className "flex-50"
+                                      prop.children
+                                          [ Bulma.input.text
+                                                [ prop.placeholder "Image URL"
+                                                  prop.name "characterImage"
+                                                  prop.type' "text"
+                                                  prop.id "characterImage"
+                                                  prop.required true
+                                                  prop.onChange (fun ev -> dispatch (NewCharacterImageUpdated ev))
+                                                  prop.value character.ImageUrl ] ] ]
+                                Html.div
+                                    [ prop.className "flex-50"
+                                      prop.children
+                                          [ Html.select
+                                                [ prop.onChange (fun ev -> dispatch (NewCharacterPlayerTypeUpdated ev))
+                                                  prop.children
+                                                      [ Html.option [ prop.value "player"; prop.text "Player" ]
+                                                        Html.option [ prop.value "ally"; prop.text "Ally" ]
+                                                        Html.option [ prop.value "enemy"; prop.text "Enemy" ] ] ] ] ]
+                                Html.div
+                                    [ prop.className "create-character-buttons"
+                                      prop.children
+                                          [ Bulma.button.button
+                                                [ prop.className "button--cancel"
+                                                  prop.type' "button"
+                                                  prop.text "Cancel"
+                                                  prop.onClick (fun _ -> dispatch NewCharacterCancelClicked) ]
+                                            Bulma.button.button
+                                                [ prop.className "button--submit"
+                                                  prop.type' "button"
+                                                  prop.text "Create"
+                                                  prop.onClick (fun _ -> dispatch NewCharacterCreateClicked) ] ] ] ] ]
+                | None -> Html.none
+                if model.InitiativePopupOpen then
+                    Html.div
+                        [ prop.classes [ "create-character" ]
+                          prop.children (
+                              [ Html.h1 [ prop.className "container-title"; prop.text "Roll Initiative" ] ]
+                              @ (model.InitiativeViewModel.Scene.Combatants
+                                 |> List.mapi (fun i c -> viewCharacterInitiativeEntry c i dispatch)
+                                 |> List.concat)
+                              @ [ Html.div
+                                      [ prop.className "roll-initiative-buttons"
+                                        prop.children
+                                            [ Bulma.button.button
+                                                  [ prop.className "button--cancel"
+                                                    prop.type' "button"
+                                                    prop.text "Cancel"
+                                                    prop.onClick (fun _ -> dispatch RollInitiativeCancelClicked) ]
+                                              if
+                                                  model.InitiativeViewModel.Scene.Combatants
+                                                  |> List.exists (fun c -> Option.isNone c.RolledInitiative)
+                                              then
+                                                  Bulma.button.button
+                                                      [ prop.className "button--submit"
+                                                        prop.type' "button"
+                                                        prop.text "Roll"
+                                                        prop.onClick (fun _ -> dispatch RollInitiativeRollClicked) ]
+                                              else
+                                                  Bulma.button.button
+                                                      [ prop.className "button--submit"
+                                                        prop.type' "button"
+                                                        prop.text "Begin Combat"
+                                                        prop.onClick (fun _ -> dispatch StartCombatClicked) ] ] ] ]
+                          ) ]
+                else
+                    Html.none
                 Html.div
                     [ prop.className "game-buttons"
                       prop.id "gameButtons"
@@ -771,13 +860,6 @@ let view model dispatch =
                                 "Roll Initiatives"
                                 "rollInitiative"
                                 RollInitiativesClicked
-                                dispatch
-                            viewStateButton
-                                InitiativeRolled
-                                model.InitiativeViewModel.Scene.GameState
-                                "Start Combat"
-                                "startCombat"
-                                StartCombatClicked
                                 dispatch
                             viewStateButton
                                 Active
