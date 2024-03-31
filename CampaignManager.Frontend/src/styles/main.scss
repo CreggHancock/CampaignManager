@@ -1,16 +1,39 @@
+#root {
+    height: 100vh;
+    > div {
+        padding: 0 !important;
+        height: 100vh;
+        > div {
+            height: 100vh;
+        }
+    }
+}
+
+
+#battleMap {
+    -webkit-overflow-scrolling: auto;
+}
+
 .game-board {
-    margin-top: 1rem;
     width: 100%;
-    height: 90vh;
+    height: 100vh;
     overflow: hidden;
     position: relative;
     .map-select {
+        z-index: 2;
         background: #000;
+        padding: .5rem 1rem;
+        border-radius: 0 0 0 0;
         border: 2px inset #fff;
-    }
+        border-left-width: 0;
+        border-top-width: 0;
+        height: max-content;
+        width: max-content;
+    }   
     .roll-initiative {
         .combatant {
             justify-content: space-between;;
+            min-height: 30px;
         }
     }
     .dropdown-menu {
@@ -23,6 +46,7 @@
 
     .roll-initiative,
     .create-character {
+      z-index: 10;
       position: absolute;
       top: 50%;
       left: 50%;
@@ -63,6 +87,7 @@
       }
       .flex-50 {
         flex: 1 1 calc(50% - 0.5rem);
+        flex-wrap: wrap;
       }
       .flex-33 {
         flex: 1 1 calc(33.333% - 0.667rem);
@@ -74,42 +99,9 @@
         flex: 1 1 calc(75% - 0.25rem);
       }
       input,
-      select {
+      select,
+      .select {
         width: 100%;
-      }
-    }
-    input,
-    button,
-    select {
-      appearance: none;
-      outline: none;
-      font-family: Arial;
-      font-size: 16px;
-      padding: 0.35rem 0.5rem;
-      border-radius: 6px;
-      max-width: 100%;
-      width: auto;
-      min-width: 0px;
-      transition: all 0.2s ease-in-out;
-    }
-    button,
-    select {
-      cursor: pointer;
-    }
-    button {
-      pointer-events: auto;
-      background: rgba(35, 35, 35, 1);
-      border: 3px inset rgba(255, 255, 255, 0.25);
-      color: #f9f9f9;
-      padding: 0.35rem 1rem;
-      &.button--cancel {
-        background: #531119;
-      }
-      &.button--submit {
-        background: #0c3150;
-      }
-      &:hover {
-        background: rgba(20, 20, 20, 1);
       }
     }
     input[type="checkbox"] {
@@ -588,7 +580,7 @@
     }
   }
   .game-buttons {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     right: 0;
     background: #000;
@@ -648,8 +640,6 @@
   }
   .create-character-name {
     position: relative;
-    background: #fff;
-    border-radius: 6px;
   }
   
   #characterName {
@@ -669,7 +659,7 @@
   .create-character-name:focus-within > .filter-box {
     display: initial;
     position: absolute;
-    top: 2.5rem;
+    top: 72px;
     right: 0;
     left: 0;
     background: #fff;

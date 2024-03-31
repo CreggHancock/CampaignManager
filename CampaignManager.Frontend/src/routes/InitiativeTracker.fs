@@ -85,7 +85,7 @@ type Msg =
     | EndTurnClicked
     | ResetClicked
     | NewCharacterNameUpdated of string
-    | NewCharacterDexterityUpdated of string
+    | NewCharacterDexterityUpdated of int
     | NewCharacterImageUpdated of string
     | NewCharacterPlayerTypeUpdated of string
     | NewCharacterCancelClicked
@@ -106,6 +106,7 @@ type Msg =
     | OnTokenReleased
     | OnTokenMove of float * float
     | BackgroundDropdownToggled
+    | BackgroundDropdownSet of bool
     | CharacterInitiativeSet of int * int option
     | RollInitiativeCancelClicked
     | RollInitiativeRollClicked
@@ -311,14 +312,9 @@ let update (msg: Msg) (model: Model) =
         { model with
             NewCharacter = Option.map (fun c -> { c with Name = event }) model.NewCharacter },
         Cmd.none
-    | NewCharacterDexterityUpdated event ->
+    | NewCharacterDexterityUpdated dex ->
         { model with
-            NewCharacter =
-                Option.map
-                    (fun c ->
-                        { c with
-                            InitiativeModifier = int event })
-                    model.NewCharacter },
+            NewCharacter = Option.map (fun c -> { c with InitiativeModifier = dex }) model.NewCharacter },
         Cmd.none
     | NewCharacterImageUpdated event ->
         { model with
@@ -460,42 +456,32 @@ let update (msg: Msg) (model: Model) =
              { scene with
                  Combatants = scene.Combatants |> List.map (fun c -> { c with IsTokenBeingDragged = false }) }),
          Cmd.OfFunc.perform setDraggable true (fun () -> NoOp))
+        |> updateLocalStorage
     | OnTokenMove(newX, newY) ->
         let offsetTransform = (getPanOffset ())
 
-        let updatedModel =
-            (model
-             |> updateScene (fun scene ->
-                 { scene with
-                     Combatants =
-                         scene.Combatants
-                         |> List.map (fun c ->
-                             if c.IsTokenBeingDragged then
-                                 { c with
-                                     LocationX =
-                                         ((int newX - c.PreviousLocationX) / offsetTransform.scale) + c.LocationX
-                                     LocationY =
-                                         ((int newY - c.PreviousLocationY) / offsetTransform.scale) + c.LocationY
-                                     PreviousLocationX = int newX
-                                     PreviousLocationY = int newY }
-                             else
-                                 c) }),
-             Cmd.none)
-
-        let shouldSave =
-            model.InitiativeViewModel.Scene.Combatants
-            |> List.exists (fun (c) ->
-                c.IsTokenBeingDragged
-                && (c.LocationX <> (int newX))
-                && (c.LocationY <> (int newY)))
-
-        if shouldSave then
-            updateLocalStorage updatedModel
-        else
-            updatedModel
+        (model
+         |> updateScene (fun scene ->
+             { scene with
+                 Combatants =
+                     scene.Combatants
+                     |> List.map (fun c ->
+                         if c.IsTokenBeingDragged then
+                             { c with
+                                 LocationX = ((int newX - c.PreviousLocationX) / offsetTransform.scale) + c.LocationX
+                                 LocationY = ((int newY - c.PreviousLocationY) / offsetTransform.scale) + c.LocationY
+                                 PreviousLocationX = int newX
+                                 PreviousLocationY = int newY }
+                         else
+                             c) }),
+         Cmd.none)
     | BackgroundDropdownToggled ->
         ({ model with
             BackgroundDropdownToggled = not model.BackgroundDropdownToggled },
+         Cmd.none)
+    | BackgroundDropdownSet toggled ->
+        ({ model with
+            BackgroundDropdownToggled = toggled },
          Cmd.none)
     | CharacterInitiativeSet(combatantIndex, initiative) ->
         (model
@@ -594,6 +580,7 @@ let viewPlayerToken player playerIndex isActive dispatch =
 let viewStateButton neededGameState currentGameState (buttonText: string) (buttonId: string) onClickMsg dispatch =
     Bulma.button.button
         [ prop.text buttonText
+          color.isDark
           prop.classes
               [ "button"
                 if currentGameState = neededGameState then
@@ -612,7 +599,15 @@ let viewCharacterInitiativeEntry (combatant: Combatant) (combatantIndex: int) di
     [ Html.div
           [ prop.classes [ "flex-75"; "combatant" ]
             prop.children
-                [ Html.span [ Html.text combatant.Name ]
+                [ Html.span
+                      [ Html.text combatant.Name
+                        Html.text " "
+                        Html.text (
+                            if combatant.InitiativeModifier < 0 then
+                                (combatant.InitiativeModifier.ToString())
+                            else
+                                ("+" + (combatant.InitiativeModifier.ToString()))
+                        ) ]
                   Bulma.label
                       [ Bulma.input.checkbox
                             [ prop.onChange (fun (ev: bool) ->
@@ -660,8 +655,9 @@ let view model dispatch =
                       prop.children
                           [ Bulma.dropdownTrigger
                                 [ Bulma.button.button
-                                      [ prop.text "Map"
                                         prop.onClick (fun ev ->
+                                      [ color.isDark
+                                        prop.text "Map"
                                             ev.stopPropagation ()
                                             ev.preventDefault ()
                                             dispatch BackgroundDropdownToggled) ]
@@ -740,7 +736,8 @@ let view model dispatch =
                                               else
                                                   []
 
-                                          [ Bulma.input.text
+                                          [ Bulma.label "Name"
+                                            Bulma.input.text
                                                 [ prop.placeholder "Name"
                                                   prop.name "characterName"
                                                   prop.type' "text"
@@ -787,10 +784,10 @@ let view model dispatch =
                                 Html.div
                                     [ prop.className "flex-50"
                                       prop.children
-                                          [ Bulma.input.text
+                                          [ Bulma.label "Dexterity"
+                                            Bulma.input.number
                                                 [ prop.placeholder "Dexterity"
                                                   prop.name "characterDex"
-                                                  prop.type' "text"
                                                   prop.id "characterDex"
                                                   prop.required true
                                                   prop.onChange (fun ev -> dispatch (NewCharacterDexterityUpdated ev))
@@ -798,7 +795,8 @@ let view model dispatch =
                                 Html.div
                                     [ prop.className "flex-50"
                                       prop.children
-                                          [ Bulma.input.text
+                                          [ Bulma.label "Image URL"
+                                            Bulma.input.text
                                                 [ prop.placeholder "Image URL"
                                                   prop.name "characterImage"
                                                   prop.type' "text"
@@ -809,8 +807,10 @@ let view model dispatch =
                                 Html.div
                                     [ prop.className "flex-50"
                                       prop.children
-                                          [ Html.select
-                                                [ prop.onChange (fun ev -> dispatch (NewCharacterPlayerTypeUpdated ev))
+                                          [ Bulma.label "Type"
+                                            Bulma.select
+                                                [ Bulma.select.isNormal
+                                                  prop.onChange (fun ev -> dispatch (NewCharacterPlayerTypeUpdated ev))
                                                   prop.children
                                                       [ Html.option [ prop.value "player"; prop.text "Player" ]
                                                         Html.option [ prop.value "ally"; prop.text "Ally" ]
@@ -819,12 +819,14 @@ let view model dispatch =
                                     [ prop.className "create-character-buttons"
                                       prop.children
                                           [ Bulma.button.button
-                                                [ prop.className "button--cancel"
+                                                [ color.isDanger
+                                                  prop.className "button--cancel"
                                                   prop.type' "button"
                                                   prop.text "Cancel"
                                                   prop.onClick (fun _ -> dispatch NewCharacterCancelClicked) ]
                                             Bulma.button.button
-                                                [ prop.className "button--submit"
+                                                [ color.isInfo
+                                                  prop.className "button--submit"
                                                   prop.type' "button"
                                                   prop.text "Create"
                                                   prop.onClick (fun _ -> dispatch NewCharacterCreateClicked) ] ] ] ] ]
@@ -841,7 +843,8 @@ let view model dispatch =
                                       [ prop.className "roll-initiative-buttons"
                                         prop.children
                                             [ Bulma.button.button
-                                                  [ prop.className "button--cancel"
+                                                  [ color.isDanger
+                                                    prop.className "button--cancel"
                                                     prop.type' "button"
                                                     prop.text "Cancel"
                                                     prop.onClick (fun _ -> dispatch RollInitiativeCancelClicked) ]
@@ -850,13 +853,15 @@ let view model dispatch =
                                                   |> List.exists (fun c -> Option.isNone c.RolledInitiative)
                                               then
                                                   Bulma.button.button
-                                                      [ prop.className "button--submit"
+                                                      [ color.isInfo
+                                                        prop.className "button--submit"
                                                         prop.type' "button"
                                                         prop.text "Roll"
                                                         prop.onClick (fun _ -> dispatch RollInitiativeRollClicked) ]
                                               else
                                                   Bulma.button.button
-                                                      [ prop.className "button--submit"
+                                                      [ color.isInfo
+                                                        prop.className "button--submit"
                                                         prop.type' "button"
                                                         prop.text "Begin Combat"
                                                         prop.onClick (fun _ -> dispatch StartCombatClicked) ] ] ] ]

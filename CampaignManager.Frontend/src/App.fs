@@ -141,7 +141,10 @@ let Navbar (username: string option) dispatch =
     Bulma.navbar
         [ color.isBlack
           prop.children
-              [ Bulma.navbarBrand.div [ Bulma.navbarItem.a [ Html.i [ prop.className "fa-solid fa-dice-d20" ] ] ]
+              [ Bulma.navbarBrand.div
+                    [ Bulma.navbarItem.a
+                          [ prop.href "#/Home"
+                            prop.children [ Html.i [ prop.className "fa-solid fa-dice-d20" ] ] ] ]
                 Bulma.navbarMenu
                     [ Bulma.navbarStart.div [ Bulma.navbarItem.a [ prop.text "Home"; prop.href "#/Home" ] ]
                       Bulma.navbarEnd.div

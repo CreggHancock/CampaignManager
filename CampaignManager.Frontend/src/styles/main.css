@@ -1,16 +1,38 @@
+#root {
+  height: 100vh;
+}
+#root > div {
+  padding: 0 !important;
+  height: 100vh;
+}
+#root > div > div {
+  height: 100vh;
+}
+
+#battleMap {
+  -webkit-overflow-scrolling: auto;
+}
+
 .game-board {
-  margin-top: 1rem;
   width: 100%;
-  height: 90vh;
+  height: 100vh;
   overflow: hidden;
   position: relative;
 }
 .game-board .map-select {
+  z-index: 2;
   background: #000;
+  padding: 0.5rem 1rem;
+  border-radius: 0 0 0 0;
   border: 2px inset #fff;
+  border-left-width: 0;
+  border-top-width: 0;
+  height: max-content;
+  width: max-content;
 }
 .game-board .roll-initiative .combatant {
   justify-content: space-between;
+  min-height: 30px;
 }
 .game-board .dropdown-menu .is-black {
   background-color: #0a0a0a;
@@ -19,6 +41,7 @@
 }
 .game-board .roll-initiative,
 .game-board .create-character {
+  z-index: 10;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -67,6 +90,7 @@
 .game-board .roll-initiative .flex-50,
 .game-board .create-character .flex-50 {
   flex: 1 1 calc(50% - 0.5rem);
+  flex-wrap: wrap;
 }
 .game-board .roll-initiative .flex-33,
 .game-board .create-character .flex-33 {
@@ -82,43 +106,11 @@
 }
 .game-board .roll-initiative input,
 .game-board .roll-initiative select,
+.game-board .roll-initiative .select,
 .game-board .create-character input,
-.game-board .create-character select {
+.game-board .create-character select,
+.game-board .create-character .select {
   width: 100%;
-}
-.game-board input,
-.game-board button,
-.game-board select {
-  appearance: none;
-  outline: none;
-  font-family: Arial;
-  font-size: 16px;
-  padding: 0.35rem 0.5rem;
-  border-radius: 6px;
-  max-width: 100%;
-  width: auto;
-  min-width: 0px;
-  transition: all 0.2s ease-in-out;
-}
-.game-board button,
-.game-board select {
-  cursor: pointer;
-}
-.game-board button {
-  pointer-events: auto;
-  background: rgb(35, 35, 35);
-  border: 3px inset rgba(255, 255, 255, 0.25);
-  color: #f9f9f9;
-  padding: 0.35rem 1rem;
-}
-.game-board button.button--cancel {
-  background: #531119;
-}
-.game-board button.button--submit {
-  background: #0c3150;
-}
-.game-board button:hover {
-  background: rgb(20, 20, 20);
 }
 .game-board input[type=checkbox] {
   appearance: auto;
@@ -561,7 +553,7 @@
 }
 
 .game-buttons {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   right: 0;
   background: #000;
@@ -622,8 +614,6 @@ body {
 }
 .create-character-name {
   position: relative;
-  background: #fff;
-  border-radius: 6px;
 }
 
 #characterName {
@@ -643,7 +633,7 @@ body {
 .create-character-name:focus-within > .filter-box {
   display: initial;
   position: absolute;
-  top: 2.5rem;
+  top: 72px;
   right: 0;
   left: 0;
   background: #fff;
