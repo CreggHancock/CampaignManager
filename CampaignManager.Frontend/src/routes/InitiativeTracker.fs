@@ -655,9 +655,9 @@ let view model dispatch =
                       prop.children
                           [ Bulma.dropdownTrigger
                                 [ Bulma.button.button
-                                        prop.onClick (fun ev ->
                                       [ color.isDark
                                         prop.text "Map"
+                                        prop.onClick (fun ev ->
                                             ev.stopPropagation ()
                                             ev.preventDefault ()
                                             dispatch BackgroundDropdownToggled) ]
