@@ -8,7 +8,13 @@
         background: #000;
         border: 2px inset #fff;
     }
+    .roll-initiative {
+        .combatant {
+            justify-content: space-between;;
+        }
+    }
 
+    .roll-initiative,
     .create-character {
       position: absolute;
       top: 50%;
@@ -35,6 +41,7 @@
         text-align: center;
         margin-bottom: 1.25rem;
       }
+      .roll-initiative-buttons,
       .create-character-buttons {
         flex: 1 1 100%;
         display: flex;
@@ -52,6 +59,12 @@
       }
       .flex-33 {
         flex: 1 1 calc(33.333% - 0.667rem);
+      }
+      .flex-25 {
+        flex: 1 1 calc(25% - 0.75rem);
+      }
+      .flex-75 {
+        flex: 1 1 calc(75% - 0.25rem);
       }
       input,
       select {
@@ -91,6 +104,14 @@
       &:hover {
         background: rgba(20, 20, 20, 1);
       }
+    }
+    input[type="checkbox"] {
+        appearance: auto;
+        height: 14px;
+        width: 14px;
+    }
+    span {
+        color: #fff;
     }
   }
   .game-map {

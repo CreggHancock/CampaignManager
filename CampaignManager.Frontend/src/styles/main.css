@@ -9,6 +9,10 @@
   background: #000;
   border: 2px inset #fff;
 }
+.game-board .roll-initiative .combatant {
+  justify-content: space-between;
+}
+.game-board .roll-initiative,
 .game-board .create-character {
   position: absolute;
   top: 50%;
@@ -26,9 +30,11 @@
   width: calc(100% - 6rem);
   max-width: 550px;
 }
+.game-board .roll-initiative.element-hidden,
 .game-board .create-character.element-hidden {
   display: none;
 }
+.game-board .roll-initiative .container-title,
 .game-board .create-character .container-title {
   color: #fff;
   flex: 1 1 100%;
@@ -36,24 +42,41 @@
   text-align: center;
   margin-bottom: 1.25rem;
 }
+.game-board .roll-initiative .roll-initiative-buttons,
+.game-board .roll-initiative .create-character-buttons,
+.game-board .create-character .roll-initiative-buttons,
 .game-board .create-character .create-character-buttons {
   flex: 1 1 100%;
   display: flex;
   justify-content: space-between;
   margin-top: 1.25rem;
 }
+.game-board .roll-initiative > div,
 .game-board .create-character > div {
   display: flex;
 }
+.game-board .roll-initiative > div label,
 .game-board .create-character > div label {
   color: #fff;
 }
+.game-board .roll-initiative .flex-50,
 .game-board .create-character .flex-50 {
   flex: 1 1 calc(50% - 0.5rem);
 }
+.game-board .roll-initiative .flex-33,
 .game-board .create-character .flex-33 {
   flex: 1 1 calc(33.333% - 0.667rem);
 }
+.game-board .roll-initiative .flex-25,
+.game-board .create-character .flex-25 {
+  flex: 1 1 calc(25% - 0.75rem);
+}
+.game-board .roll-initiative .flex-75,
+.game-board .create-character .flex-75 {
+  flex: 1 1 calc(75% - 0.25rem);
+}
+.game-board .roll-initiative input,
+.game-board .roll-initiative select,
 .game-board .create-character input,
 .game-board .create-character select {
   width: 100%;
@@ -91,6 +114,14 @@
 }
 .game-board button:hover {
   background: rgb(20, 20, 20);
+}
+.game-board input[type=checkbox] {
+  appearance: auto;
+  height: 14px;
+  width: 14px;
+}
+.game-board span {
+  color: #fff;
 }
 
 .game-map {

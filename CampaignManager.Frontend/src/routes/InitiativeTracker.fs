@@ -281,7 +281,11 @@ let update (msg: Msg) (model: Model) =
          |> updateScene (fun scene ->
              { scene with
                  GameState = Active
-                 CombatantTurn = 0 }),
+                 CombatantTurn = 0
+                 Combatants =
+                     scene.Combatants
+                     |> List.sortBy (fun c -> c.RolledInitiative |> Option.defaultValue 0)
+                     |> List.rev }),
          Cmd.none)
         |> updateLocalStorage
     | EndTurnClicked ->
@@ -289,7 +293,7 @@ let update (msg: Msg) (model: Model) =
          |> updateScene (fun scene ->
              { scene with
                  GameState = Active
-                 CombatantTurn = scene.CombatantTurn + 1 }),
+                 CombatantTurn = (scene.CombatantTurn + 1) % (List.length scene.Combatants) }),
          Cmd.none)
         |> updateLocalStorage
     | ResetClicked ->
@@ -504,6 +508,7 @@ let update (msg: Msg) (model: Model) =
                                  combatant)
                          s.Combatants }),
          Cmd.none)
+        |> updateLocalStorage
     | RollInitiativeCancelClicked ->
         ({ model with
             InitiativePopupOpen = false },
@@ -524,10 +529,11 @@ let update (msg: Msg) (model: Model) =
                                          |> (fun i -> i * 20.0)
                                          |> Math.floor
                                          |> int
-                                         |> (fun i -> i + 1)
+                                         |> (fun i -> i + 1 + combatant.InitiativeModifier)
                                          |> Some })
                          s.Combatants }),
          Cmd.none)
+        |> updateLocalStorage
 
 
 
@@ -600,28 +606,28 @@ let viewStateButton neededGameState currentGameState (buttonText: string) (butto
 
 let viewCharacterInitiativeEntry (combatant: Combatant) (combatantIndex: int) dispatch =
     [ Html.div
-          [ prop.className "flex-50"
+          [ prop.classes [ "flex-75"; "combatant" ]
             prop.children
-                [ Html.text combatant.Name
+                [ Html.span [ Html.text combatant.Name ]
                   Bulma.label
-                      [ Bulma.text.span "Roll automatically"
-                        Bulma.input.checkbox
+                      [ Bulma.input.checkbox
                             [ prop.onChange (fun (ev: bool) ->
-                                  dispatch (CharacterInitiativeSet(combatantIndex, (if ev then Some 0 else None))))
-                              Option.isNone combatant.RolledInitiative |> prop.value ] ] ] ]
+                                  dispatch (CharacterInitiativeSet(combatantIndex, (if ev then None else Some 0))))
+                              Option.isNone combatant.RolledInitiative |> prop.isChecked ]
+                        Bulma.text.span " "
+                        Bulma.text.span "Roll automatically" ] ] ]
       match combatant.RolledInitiative with
       | Some initiative ->
           Html.div
-              [ prop.className "flex-50"
+              [ prop.className "flex-25"
                 prop.children
-                    [ Bulma.input.text
+                    [ Bulma.input.number
                           [ Bulma.input.isSmall
                             prop.placeholder "Initiative"
                             prop.name "initiative"
-                            prop.required true
                             prop.onChange (fun ev -> dispatch (CharacterInitiativeSet(combatantIndex, Some ev)))
                             initiative.ToString() |> prop.value ] ] ]
-      | None -> Html.div [ prop.className "flex-50" ]
+      | None -> Html.div [ prop.className "flex-25" ]
 
       ]
 
@@ -811,7 +817,7 @@ let view model dispatch =
                 | None -> Html.none
                 if model.InitiativePopupOpen then
                     Html.div
-                        [ prop.classes [ "create-character" ]
+                        [ prop.classes [ "roll-initiative" ]
                           prop.children (
                               [ Html.h1 [ prop.className "container-title"; prop.text "Roll Initiative" ] ]
                               @ (model.InitiativeViewModel.Scene.Combatants
