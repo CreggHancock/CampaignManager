@@ -12,6 +12,11 @@
 .game-board .roll-initiative .combatant {
   justify-content: space-between;
 }
+.game-board .dropdown-menu .is-black {
+  background-color: #0a0a0a;
+  border-radius: 0 0 10px 0;
+  border: 2px inset #fff;
+}
 .game-board .roll-initiative,
 .game-board .create-character {
   position: absolute;

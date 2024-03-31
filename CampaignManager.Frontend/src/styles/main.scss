@@ -13,6 +13,13 @@
             justify-content: space-between;;
         }
     }
+    .dropdown-menu {
+        .is-black {
+            background-color: #0a0a0a;
+            border-radius: 0 0 10px 0;
+            border: 2px inset #fff;
+        }
+    }
 
     .roll-initiative,
     .create-character {

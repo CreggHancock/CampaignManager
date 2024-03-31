@@ -63,7 +63,8 @@ type Scene =
       CombatantTurn: int
       Round: int
       Combatants: Combatant List
-      GameState: GameState }
+      GameState: GameState
+      ShowGrid: bool }
 
 type InitiativeViewModel = { Scene: Scene }
 
@@ -108,6 +109,7 @@ type Msg =
     | CharacterInitiativeSet of int * int option
     | RollInitiativeCancelClicked
     | RollInitiativeRollClicked
+    | ShowGridToggled of bool
 
 
 let getInitiativeViewModel accessToken maybeSceneId =
@@ -235,7 +237,8 @@ let init accessToken sceneId =
               Height = 0
               SquareSize = 0
               GameState = CharacterSetup
-              BackgroundImage = "https://rattrapgames.com/cdn/shop/products/RAT-MAT-GF001_1024x1024@2x.jpg?v=1576461000" } }
+              BackgroundImage = "https://rattrapgames.com/cdn/shop/products/RAT-MAT-GF001_1024x1024@2x.jpg?v=1576461000"
+              ShowGrid = false } }
        NewCharacter = None
        ErrorMessage = ""
        IsLoggedIn = Option.isSome accessToken
@@ -534,6 +537,7 @@ let update (msg: Msg) (model: Model) =
                          s.Combatants }),
          Cmd.none)
         |> updateLocalStorage
+    | ShowGridToggled toggled -> (model |> updateScene (fun s -> { s with ShowGrid = toggled }), Cmd.none)
 
 
 
@@ -665,9 +669,19 @@ let view model dispatch =
                                   ]
                             Bulma.dropdownMenu
                                 [ Bulma.dropdownContent
-                                      [ Bulma.dropdownItem.div
-                                            [ Bulma.input.text
-                                                  [ prop.onChange (fun ev -> dispatch (BackgroundUpdated ev)) ] ] ]
+                                      [ Bulma.color.isBlack
+                                        prop.children
+                                            [ Bulma.dropdownItem.div
+                                                  [ Bulma.input.text
+                                                        [ prop.onChange (fun ev -> dispatch (BackgroundUpdated ev)) ] ]
+                                              Bulma.dropdownItem.div
+                                                  [ Bulma.label
+                                                        [ Bulma.input.checkbox
+                                                              [ prop.onChange (fun (ev: bool) ->
+                                                                    dispatch (ShowGridToggled ev))
+                                                                prop.isChecked model.InitiativeViewModel.Scene.ShowGrid ]
+                                                          Bulma.text.span " "
+                                                          Bulma.text.span "Display Grid" ] ] ] ]
 
                                   ]
 
@@ -679,10 +693,10 @@ let view model dispatch =
                              [ prop.id "draggable-image"
                                prop.className "map-image"
                                prop.src model.InitiativeViewModel.Scene.BackgroundImage ]
-                         Html.div
-                             [ prop.className "grid"
-
-                               ] ])
+                         if model.InitiativeViewModel.Scene.ShowGrid then
+                             Html.div [ prop.className "grid" ]
+                         else
+                             Html.none ])
                       @ List.mapi
                           (fun ind player ->
                               viewPlayerToken player ind (model.InitiativeViewModel.Scene.CombatantTurn = ind) dispatch)
@@ -860,13 +874,16 @@ let view model dispatch =
                                 "addCharacter"
                                 AddCharacterClicked
                                 dispatch
-                            viewStateButton
-                                CharacterSetup
-                                model.InitiativeViewModel.Scene.GameState
-                                "Roll Initiatives"
-                                "rollInitiative"
-                                RollInitiativesClicked
-                                dispatch
+                            if List.isEmpty model.InitiativeViewModel.Scene.Combatants |> not then
+                                viewStateButton
+                                    CharacterSetup
+                                    model.InitiativeViewModel.Scene.GameState
+                                    "Roll Initiatives"
+                                    "rollInitiative"
+                                    RollInitiativesClicked
+                                    dispatch
+                            else
+                                Html.none
                             viewStateButton
                                 Active
                                 model.InitiativeViewModel.Scene.GameState
