@@ -589,7 +589,7 @@ let viewStateButton neededGameState currentGameState (buttonText: string) (butto
                     "button-hidden" ]
           prop.type' "button"
           prop.id buttonId
-          prop.onClick (fun _ ->
+          prop.onPointerUp (fun _ ->
               if currentGameState = neededGameState then
                   dispatch onClickMsg
               else
@@ -657,7 +657,7 @@ let view model dispatch =
                                 [ Bulma.button.button
                                       [ color.isDark
                                         prop.text "Map"
-                                        prop.onClick (fun ev ->
+                                        prop.onPointerUp (fun ev ->
                                             ev.stopPropagation ()
                                             ev.preventDefault ()
                                             dispatch BackgroundDropdownToggled) ]
@@ -771,7 +771,7 @@ let view model dispatch =
                                                                               [ button.isInverted
                                                                                 color.isInfo
                                                                                 prop.text m.Name
-                                                                                prop.onClick (fun _ ->
+                                                                                prop.onPointerUp (fun _ ->
                                                                                     dispatch
                                                                                     <| NewCharacterNameOptionClicked
                                                                                         m.Index) ] ] ])
@@ -823,13 +823,13 @@ let view model dispatch =
                                                   prop.className "button--cancel"
                                                   prop.type' "button"
                                                   prop.text "Cancel"
-                                                  prop.onClick (fun _ -> dispatch NewCharacterCancelClicked) ]
+                                                  prop.onPointerUp (fun _ -> dispatch NewCharacterCancelClicked) ]
                                             Bulma.button.button
                                                 [ color.isInfo
                                                   prop.className "button--submit"
                                                   prop.type' "button"
                                                   prop.text "Create"
-                                                  prop.onClick (fun _ -> dispatch NewCharacterCreateClicked) ] ] ] ] ]
+                                                  prop.onPointerUp (fun _ -> dispatch NewCharacterCreateClicked) ] ] ] ] ]
                 | None -> Html.none
                 if model.InitiativePopupOpen then
                     Html.div
@@ -847,7 +847,7 @@ let view model dispatch =
                                                     prop.className "button--cancel"
                                                     prop.type' "button"
                                                     prop.text "Cancel"
-                                                    prop.onClick (fun _ -> dispatch RollInitiativeCancelClicked) ]
+                                                    prop.onPointerUp (fun _ -> dispatch RollInitiativeCancelClicked) ]
                                               if
                                                   model.InitiativeViewModel.Scene.Combatants
                                                   |> List.exists (fun c -> Option.isNone c.RolledInitiative)
@@ -857,14 +857,14 @@ let view model dispatch =
                                                         prop.className "button--submit"
                                                         prop.type' "button"
                                                         prop.text "Roll"
-                                                        prop.onClick (fun _ -> dispatch RollInitiativeRollClicked) ]
+                                                        prop.onPointerUp (fun _ -> dispatch RollInitiativeRollClicked) ]
                                               else
                                                   Bulma.button.button
                                                       [ color.isInfo
                                                         prop.className "button--submit"
                                                         prop.type' "button"
                                                         prop.text "Begin Combat"
-                                                        prop.onClick (fun _ -> dispatch StartCombatClicked) ] ] ] ]
+                                                        prop.onPointerUp (fun _ -> dispatch StartCombatClicked) ] ] ] ]
                           ) ]
                 else
                     Html.none
