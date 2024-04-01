@@ -459,8 +459,8 @@
 }
 .hud-wrapper .initiative .initiative-card.active {
   background: linear-gradient(150deg, #2f1f67, #7c359e);
-  width: 65px;
-  height: 108px;
+  width: 70px;
+  height: 117px;
 }
 .hud-wrapper .initiative .initiative-card span {
   z-index: 10;
@@ -543,6 +543,8 @@
   font-weight: 700;
   z-index: 20;
   font-size: 14px !important;
+  background: #232323;
+  color: #f9f9f9;
 }
 .remove-button:hover {
   background: #5c1010 !important;
@@ -564,6 +566,8 @@
   border-bottom-width: 0;
   height: max-content;
   width: max-content;
+  display: inline-flex;
+  gap: 0.5rem;
 }
 .game-buttons .button-hidden {
   display: none;

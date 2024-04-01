@@ -109,6 +109,7 @@ type Msg =
     | RollInitiativeCancelClicked
     | RollInitiativeRollClicked
     | ShowGridToggled of bool
+    | OnTokenDeleteClicked of int
 
 
 let getInitiativeViewModel accessToken maybeSceneId =
@@ -520,10 +521,16 @@ let update (msg: Msg) (model: Model) =
          Cmd.OfFunc.perform setDraggable (true, "initiative-popup") (fun () -> NoOp))
         |> updateLocalStorage
     | ShowGridToggled toggled -> (model |> updateScene (fun s -> { s with ShowGrid = toggled }), Cmd.none)
+    | OnTokenDeleteClicked tokenIndex ->
+        (model
+         |> updateScene (fun scene ->
+             { scene with
+                 Combatants = scene.Combatants |> List.removeAt tokenIndex }),
+         Cmd.none)
 
 
 
-let viewPlayerCard player dispatch =
+let viewPlayerCard player ind currentTurn dispatch =
     let getClassFromPlayer playerType =
         match playerType with
         | Enemy -> "enemy"
@@ -532,8 +539,10 @@ let viewPlayerCard player dispatch =
 
 
     Html.div
-        [ prop.id "default1"
-          prop.className $"initiative-card {getClassFromPlayer player.PlayerType}"
+        [ prop.classes
+              [ "initiative-card"
+                getClassFromPlayer player.PlayerType
+                if ind = currentTurn then "active" else "" ]
           prop.children
               [ Html.img [ prop.src player.ImageUrl; prop.title player.Name ]
                 Html.div
@@ -544,7 +553,17 @@ let viewPlayerCard player dispatch =
                                   prop.children
                                       [ Html.span [ prop.className "stat-label"; prop.text "Dex." ]
                                         Html.span
-                                            [ prop.className "stat-mod"; prop.text $"{player.InitiativeModifier}" ] ] ] ] ] ] ]
+                                            [ prop.className "stat-mod"; prop.text $"{player.InitiativeModifier}" ] ] ] ] ]
+                if player.PlayerType <> Player then
+                    Html.button
+                        [ prop.className "remove-button"
+                          prop.onPointerUp (fun ev ->
+                              ev.stopPropagation ()
+                              ev.preventDefault ()
+                              dispatch <| OnTokenDeleteClicked ind)
+                          prop.children [ Html.i [ prop.className "fa-solid fa-skull" ] ] ]
+                else
+                    Html.none ] ]
 
 let viewPlayerToken player playerIndex isActive dispatch =
     let getClassFromPlayer playerType =
@@ -703,8 +722,13 @@ let view model dispatch =
                                       [ Html.div
                                             [ prop.className "initiative"
                                               prop.id "initiativeRotation"
-                                              List.map
-                                                  (fun player -> viewPlayerCard player dispatch)
+                                              List.mapi
+                                                  (fun ind player ->
+                                                      viewPlayerCard
+                                                          player
+                                                          ind
+                                                          model.InitiativeViewModel.Scene.CombatantTurn
+                                                          dispatch)
                                                   model.InitiativeViewModel.Scene.Combatants
                                               |> prop.children ] ] ] ] ]
                 match model.NewCharacter with
