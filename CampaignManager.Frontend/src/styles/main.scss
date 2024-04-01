@@ -591,6 +591,8 @@
     border-bottom-width: 0;
     height: max-content;
     width: max-content;
+    display: inline-flex;
+    gap: .5rem;
     .button-hidden {
       display: none;
     }

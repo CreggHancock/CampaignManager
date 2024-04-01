@@ -9,7 +9,6 @@ open Thoth.Fetch
 open Thoth.Json
 open Fable.Core.Util
 open Fable.Core
-open Feliz.Router
 open Fable.Core.JS
 
 [<Literal>]
@@ -106,7 +105,6 @@ type Msg =
     | OnTokenReleased
     | OnTokenMove of float * float
     | BackgroundDropdownToggled
-    | BackgroundDropdownSet of bool
     | CharacterInitiativeSet of int * int option
     | RollInitiativeCancelClicked
     | RollInitiativeRollClicked
@@ -215,7 +213,7 @@ let updateLocalStorage (model: Model, cmd: Cmd<Msg>) =
 let initializePan: unit -> unit = jsNative
 
 [<Import("setDraggable", "../js/pan.js")>]
-let setDraggable: bool -> unit = jsNative
+let setDraggable (canDrag: bool, blockingId: string) : unit = jsNative
 
 [<Import("getPanOffset", "../js/pan.js")>]
 let getPanOffset
@@ -273,11 +271,11 @@ let update (msg: Msg) (model: Model) =
                       PreviousLocationX = 0
                       PreviousLocationY = 0
                       RolledInitiative = None } },
-        Cmd.none
+        Cmd.OfFunc.perform setDraggable (false, "new-character-popup") (fun () -> NoOp)
     | RollInitiativesClicked ->
         ({ model with
             InitiativePopupOpen = true },
-         Cmd.none)
+         Cmd.OfFunc.perform setDraggable (false, "initiative-popup") (fun () -> NoOp))
         |> updateLocalStorage
     | StartCombatClicked ->
         ({ model with
@@ -338,7 +336,9 @@ let update (msg: Msg) (model: Model) =
             { model with
                 NewCharacter = Option.map (fun c -> { c with PlayerType = Player }) model.NewCharacter },
             Cmd.none
-    | NewCharacterCancelClicked -> { model with NewCharacter = None }, Cmd.none
+    | NewCharacterCancelClicked ->
+        { model with NewCharacter = None },
+        Cmd.OfFunc.perform setDraggable (true, "new-character-popup") (fun () -> NoOp)
     | NewCharacterCreateClicked ->
         match model.NewCharacter with
         | Some character ->
@@ -350,7 +350,7 @@ let update (msg: Msg) (model: Model) =
 
             ({ updatedScene with
                 NewCharacter = None },
-             Cmd.none)
+             Cmd.OfFunc.perform setDraggable (true, "new-character-popup") (fun () -> NoOp))
             |> updateLocalStorage
         | None -> model, Cmd.none
     | BackgroundUpdated background ->
@@ -449,13 +449,13 @@ let update (msg: Msg) (model: Model) =
                                  PreviousLocationY = int newY }
                          else
                              c) }),
-         Cmd.OfFunc.perform setDraggable false (fun () -> NoOp))
+         Cmd.OfFunc.perform setDraggable (false, "token") (fun () -> NoOp))
     | OnTokenReleased ->
         (model
          |> updateScene (fun scene ->
              { scene with
                  Combatants = scene.Combatants |> List.map (fun c -> { c with IsTokenBeingDragged = false }) }),
-         Cmd.OfFunc.perform setDraggable true (fun () -> NoOp))
+         Cmd.OfFunc.perform setDraggable (true, "token") (fun () -> NoOp))
         |> updateLocalStorage
     | OnTokenMove(newX, newY) ->
         let offsetTransform = (getPanOffset ())
@@ -478,11 +478,7 @@ let update (msg: Msg) (model: Model) =
     | BackgroundDropdownToggled ->
         ({ model with
             BackgroundDropdownToggled = not model.BackgroundDropdownToggled },
-         Cmd.none)
-    | BackgroundDropdownSet toggled ->
-        ({ model with
-            BackgroundDropdownToggled = toggled },
-         Cmd.none)
+         Cmd.OfFunc.perform setDraggable (model.BackgroundDropdownToggled, "background-dropdown") (fun () -> NoOp))
     | CharacterInitiativeSet(combatantIndex, initiative) ->
         (model
          |> updateScene (fun s ->
@@ -501,7 +497,7 @@ let update (msg: Msg) (model: Model) =
     | RollInitiativeCancelClicked ->
         ({ model with
             InitiativePopupOpen = false },
-         Cmd.none)
+         Cmd.OfFunc.perform setDraggable (true, "initiative-popup") (fun () -> NoOp))
     | RollInitiativeRollClicked ->
         (model
          |> updateScene (fun s ->
@@ -521,7 +517,7 @@ let update (msg: Msg) (model: Model) =
                                          |> (fun i -> i + 1 + combatant.InitiativeModifier)
                                          |> Some })
                          s.Combatants }),
-         Cmd.none)
+         Cmd.OfFunc.perform setDraggable (true, "initiative-popup") (fun () -> NoOp))
         |> updateLocalStorage
     | ShowGridToggled toggled -> (model |> updateScene (fun s -> { s with ShowGrid = toggled }), Cmd.none)
 
@@ -660,7 +656,7 @@ let view model dispatch =
                                         prop.onPointerUp (fun ev ->
                                             ev.stopPropagation ()
                                             ev.preventDefault ()
-                                            dispatch BackgroundDropdownToggled) ]
+                                            dispatch <| BackgroundDropdownToggled) ]
 
                                   ]
                             Bulma.dropdownMenu
