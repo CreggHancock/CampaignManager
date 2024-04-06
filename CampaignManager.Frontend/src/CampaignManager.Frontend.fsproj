@@ -3,6 +3,7 @@
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="common\Scene.fs" />
     <Compile Include="routes\Login.fs" />
     <Compile Include="routes\InitiativeTracker.fs" />
     <Compile Include="routes\Home.fs" />
