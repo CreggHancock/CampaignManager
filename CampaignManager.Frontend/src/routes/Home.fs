@@ -27,7 +27,8 @@ type HomeViewModel =
 
 type Model =
     { HomeViewModel: HomeViewModel
-      ErrorMessage: string }
+      ErrorMessage: string
+      EditingSceneName: (int * string) Option }
 
 type Msg =
     | NoOp
@@ -42,7 +43,7 @@ type Msg =
     | OnGotTemplateFromStorageError of exn
     | OnTemplateStorageUpdatedError of exn
     | OnTemplateSceneToggled of Scene
-    | CreateSceneFromTemplate
+    | CreateSceneFromTemplate of Scene
     | OnTemplateSceneCreated of int
     | OnTemplateSceneCreateError of exn
     | DeleteScene of Scene
@@ -50,6 +51,8 @@ type Msg =
     | ExportScene of Scene
     | ImportSceneFileSuccess of string
     | ImportSceneFileError
+    | SetEditingSceneName of (int * string) option
+    | SaveSceneName
 
 
 
@@ -93,7 +96,11 @@ let addTemplateSceneToLocalStorage (templateScene: Scene) (model: Model, cmd: Cm
         { model with
             HomeViewModel =
                 { model.HomeViewModel with
-                    UserScenes = { templateScene with Id = nextId } :: model.HomeViewModel.UserScenes } }
+                    UserScenes =
+                        { templateScene with
+                            Id = nextId
+                            Name = $"{templateScene.Name} (Copy)" }
+                        :: model.HomeViewModel.UserScenes } }
 
     updatedModel,
     Cmd.OfFunc.either
@@ -132,8 +139,9 @@ let init accessToken =
     { HomeViewModel =
         { UserCharacters = []
           UserScenes = []
-      ErrorMessage = "" },
           TemplateSceneId = None }
+      ErrorMessage = ""
+      EditingSceneName = None },
     getHomeViewModel accessToken
 
 let update (msg: Msg) (model: Model) =
@@ -215,6 +223,20 @@ let update (msg: Msg) (model: Model) =
         match sceneResult with
         | Ok scene -> (model, Cmd.none) |> addTemplateSceneToLocalStorage scene
         | Error err -> { model with ErrorMessage = err }, Cmd.none
+    | SetEditingSceneName maybeScene ->
+        { model with
+            EditingSceneName = maybeScene },
+        Cmd.none
+    | SaveSceneName ->
+        match model.EditingSceneName with
+        | Some(sceneId, newName) ->
+            ({ model with EditingSceneName = None }, Cmd.none)
+            |> updateSceneLocalStorage (
+                model.HomeViewModel.UserScenes
+                |> List.map (fun s -> if s.Id = sceneId then { s with Name = newName } else s)
+            )
+
+        | None -> (model, Cmd.none)
 
 let viewCharacters (characters: Character List) : Fable.React.ReactElement =
     Html.div (
@@ -222,7 +244,12 @@ let viewCharacters (characters: Character List) : Fable.React.ReactElement =
         :: List.map (fun (character: Character) -> Html.div [ Html.text character.Name ]) characters
     )
 
-let viewScenes (scenes: Scene List) (templateSceneId: int Option) dispatch : Fable.React.ReactElement =
+let viewScenes
+    (scenes: Scene List)
+    (templateSceneId: int Option)
+    (editingScene: (int * string) Option)
+    dispatch
+    : Fable.React.ReactElement =
     Html.div
         [ prop.className "scene-list columns is-4 is-variable is-multiline mt-2"
           prop.children (
@@ -251,14 +278,108 @@ let viewScenes (scenes: Scene List) (templateSceneId: int Option) dispatch : Fab
                                                                                       [ prop.alt "Placeholder image"
                                                                                         prop.src scene.BackgroundImage ] ] ] ] ]
                                                           Bulma.mediaContent
-                                                              [ Bulma.title.p
-                                                                    [ Bulma.title.is4
-                                                                      prop.text (
-                                                                          if scene.Name = "" then
-                                                                              "Scene " + scene.Id.ToString()
-                                                                          else
-                                                                              scene.Name
-                                                                      ) ] ]
+                                                              [ match editingScene with
+                                                                | Some(sceneId, name) ->
+                                                                    if sceneId = scene.Id then
+                                                                        Bulma.field.div
+                                                                            [ prop.className "scene-name"
+                                                                              prop.children
+                                                                                  [ Bulma.control.div
+                                                                                        [ Bulma.input.text
+                                                                                              [ prop.value name
+                                                                                                prop.onChange
+                                                                                                    (fun ev ->
+                                                                                                        dispatch (
+                                                                                                            SetEditingSceneName
+                                                                                                            <| Some(
+                                                                                                                sceneId,
+                                                                                                                ev
+                                                                                                            )
+                                                                                                        )) ] ]
+                                                                                    Bulma.button.button
+                                                                                        [ button.isSmall
+                                                                                          color.isInfo
+                                                                                          prop.title "Save"
+                                                                                          prop.onClick (fun _ ->
+                                                                                              dispatch SaveSceneName)
+                                                                                          prop.children
+                                                                                              [ Bulma.icon
+                                                                                                    [ Html.i
+                                                                                                          [ prop.classes
+                                                                                                                [ "fa-floppy-disk"
+                                                                                                                  "fa-solid" ] ] ]
+
+
+                                                                                                ]
+
+                                                                                          ]
+                                                                                    Bulma.button.button
+                                                                                        [ button.isSmall
+                                                                                          color.isDanger
+                                                                                          prop.title "Cancel"
+                                                                                          prop.onClick (fun _ ->
+                                                                                              dispatch
+                                                                                              <| SetEditingSceneName
+                                                                                                  None)
+                                                                                          prop.children
+                                                                                              [ Bulma.icon
+                                                                                                    [ Html.i
+                                                                                                          [ prop.classes
+                                                                                                                [ "fa-xmark"
+                                                                                                                  "fa-solid" ] ] ]
+
+
+                                                                                                ]
+
+                                                                                          ] ] ]
+                                                                    else
+                                                                        Bulma.title.p
+                                                                            [ Bulma.title.is4
+                                                                              prop.text (
+                                                                                  if scene.Name = "" then
+                                                                                      "Scene " + scene.Id.ToString()
+                                                                                  else
+                                                                                      scene.Name
+                                                                              ) ]
+                                                                | None ->
+                                                                    Html.span
+                                                                        [ prop.className "scene-name"
+                                                                          prop.children
+                                                                              [ Bulma.title.p
+                                                                                    [ Bulma.title.is4
+                                                                                      prop.text (
+                                                                                          if scene.Name = "" then
+                                                                                              "Scene "
+                                                                                              + scene.Id.ToString()
+                                                                                          else
+                                                                                              scene.Name
+                                                                                      ) ]
+
+                                                                                Bulma.button.button
+                                                                                    [ button.isSmall
+                                                                                      button.isInverted
+                                                                                      color.isWhite
+                                                                                      prop.title "Edit Name"
+                                                                                      prop.onClick (fun _ ->
+                                                                                          dispatch
+                                                                                          <| SetEditingSceneName(
+                                                                                              Some(
+                                                                                                  scene.Id,
+                                                                                                  scene.Name
+                                                                                              )
+                                                                                          ))
+                                                                                      prop.children
+                                                                                          [ Bulma.icon
+                                                                                                [ Html.i
+                                                                                                      [ prop.classes
+                                                                                                            [ "fa-pen"
+                                                                                                              "fa-solid" ] ] ]
+
+
+                                                                                            ]
+
+                                                                                      ] ] ] ]
+
                                                           Bulma.content scene.Description ] ]
                                               Bulma.cardFooter
                                                   [ Bulma.cardFooterItem.div
@@ -375,7 +496,11 @@ let view model userName dispatch =
                                                           prop.children
                                                               [ Html.i [ prop.className "fa-solid fa-file-arrow-up" ] ] ]
                                                     Html.span [ prop.className "file-label"; prop.text "Import" ] ] ] ] ] ] ]
-                (viewScenes model.HomeViewModel.UserScenes model.HomeViewModel.TemplateSceneId dispatch)
+                (viewScenes
+                    model.HomeViewModel.UserScenes
+                    model.HomeViewModel.TemplateSceneId
+                    model.EditingSceneName
+                    dispatch)
                 Bulma.button.button
                     [ button.isMedium
                       Bulma.spacing.mr1
