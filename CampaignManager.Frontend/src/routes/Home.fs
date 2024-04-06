@@ -9,11 +9,6 @@ open Fetch
 open Thoth.Json
 open Scene
 open Browser.Types
-open Fable.Core.JsInterop
-open Fable.Core
-open Feliz.Styles
-open System.ComponentModel
-open System
 
 [<Literal>]
 let Route = "Home"
@@ -27,7 +22,7 @@ type Character =
 type HomeViewModel =
     { UserCharacters: Character List
       UserScenes: Scene List
-      TemplateScene: Scene Option }
+      TemplateSceneId: int Option }
 
 
 type Model =
@@ -66,7 +61,7 @@ let updateTemplateLocalStorage (model: Model, cmd: Cmd<Msg>) =
               (fun () ->
                   Browser.WebStorage.localStorage.setItem (
                       "template",
-                      Encode.Auto.toString (0, model.HomeViewModel.TemplateScene)
+                      Encode.Auto.toString (0, model.HomeViewModel.TemplateSceneId)
                   ))
               ()
               (fun () -> NoOp)
@@ -137,8 +132,8 @@ let init accessToken =
     { HomeViewModel =
         { UserCharacters = []
           UserScenes = []
-          TemplateScene = None }
       ErrorMessage = "" },
+          TemplateSceneId = None }
     getHomeViewModel accessToken
 
 let update (msg: Msg) (model: Model) =
@@ -169,14 +164,14 @@ let update (msg: Msg) (model: Model) =
             ErrorMessage = error.Message },
         Cmd.none
     | OnGotTemplateFromStorageSuccess templateString ->
-        let sceneResults = Decode.Auto.fromString<Scene Option> (templateString)
+        let sceneResults = Decode.Auto.fromString<int Option> (templateString)
 
         match sceneResults with
         | Ok scene ->
             { model with
                 HomeViewModel =
                     { model.HomeViewModel with
-                        TemplateScene = scene } },
+                        TemplateSceneId = scene } },
             Cmd.none
         | Error err -> { model with ErrorMessage = err }, Cmd.none
     | OnGotTemplateFromStorageError error ->
@@ -188,23 +183,20 @@ let update (msg: Msg) (model: Model) =
             ErrorMessage = error.Message },
         Cmd.none
     | OnTemplateSceneToggled scene ->
-        if model.HomeViewModel.TemplateScene |> Option.map (fun t -> t.Id) = Some scene.Id then
+        if model.HomeViewModel.TemplateSceneId = Some scene.Id then
             { model with
                 HomeViewModel =
                     { model.HomeViewModel with
-                        TemplateScene = None } },
+                        TemplateSceneId = None } },
             Cmd.none
         else
             { model with
                 HomeViewModel =
                     { model.HomeViewModel with
-                        TemplateScene = Some scene } },
+                        TemplateSceneId = Some scene.Id } },
             Cmd.none
         |> updateTemplateLocalStorage
-    | CreateSceneFromTemplate ->
-        match model.HomeViewModel.TemplateScene with
-        | Some scene -> (model, Cmd.none) |> addTemplateSceneToLocalStorage scene
-        | None -> (model, Cmd.none)
+    | CreateSceneFromTemplate scene -> (model, Cmd.none) |> addTemplateSceneToLocalStorage scene
     | OnTemplateSceneCreated id -> model, Cmd.navigate (InitiativeTracker.Route + "?sceneId=" + id.ToString())
     | OnTemplateSceneCreateError error ->
         { model with
@@ -230,7 +222,7 @@ let viewCharacters (characters: Character List) : Fable.React.ReactElement =
         :: List.map (fun (character: Character) -> Html.div [ Html.text character.Name ]) characters
     )
 
-let viewScenes (scenes: Scene List) (templateScene: Scene Option) dispatch : Fable.React.ReactElement =
+let viewScenes (scenes: Scene List) (templateSceneId: int Option) dispatch : Fable.React.ReactElement =
     Html.div
         [ prop.className "scene-list columns is-4 is-variable is-multiline mt-2"
           prop.children (
@@ -282,9 +274,8 @@ let viewScenes (scenes: Scene List) (templateScene: Scene Option) dispatch : Fab
                                                                                 [ prop.classes
                                                                                       [ "fa-bookmark"
                                                                                         if
-                                                                                            (templateScene
-                                                                                             |> Option.map (fun t ->
-                                                                                                 t.Id)) = Some scene.Id
+                                                                                            (templateSceneId = Some
+                                                                                                scene.Id)
                                                                                         then
                                                                                             "fa-solid"
                                                                                         else
@@ -384,19 +375,22 @@ let view model userName dispatch =
                                                           prop.children
                                                               [ Html.i [ prop.className "fa-solid fa-file-arrow-up" ] ] ]
                                                     Html.span [ prop.className "file-label"; prop.text "Import" ] ] ] ] ] ] ]
-                (viewScenes model.HomeViewModel.UserScenes model.HomeViewModel.TemplateScene dispatch)
+                (viewScenes model.HomeViewModel.UserScenes model.HomeViewModel.TemplateSceneId dispatch)
                 Bulma.button.button
                     [ button.isMedium
                       Bulma.spacing.mr1
                       color.isInfo
                       prop.text "New Scene"
                       prop.onClick (fun _ -> dispatch NavigateToInitiativeTracker) ]
-                match model.HomeViewModel.TemplateScene with
-                | Some scene ->
-                    Bulma.button.button
-                        [ button.isMedium
-                          Bulma.spacing.ml1
-                          color.isBlack
-                          prop.text "Create From Template"
-                          prop.onClick (fun _ -> dispatch CreateSceneFromTemplate) ]
+                match model.HomeViewModel.TemplateSceneId with
+                | Some sceneId ->
+                    match model.HomeViewModel.UserScenes |> List.tryFind (fun s -> s.Id = sceneId) with
+                    | Some scene ->
+                        Bulma.button.button
+                            [ button.isMedium
+                              Bulma.spacing.ml1
+                              color.isBlack
+                              prop.text "Create From Template"
+                              prop.onClick (fun _ -> dispatch <| CreateSceneFromTemplate scene) ]
+                    | None -> Html.none
                 | None -> Html.none ] ]
