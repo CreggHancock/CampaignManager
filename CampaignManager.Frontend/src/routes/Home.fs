@@ -8,6 +8,12 @@ open Thoth.Fetch
 open Fetch
 open Thoth.Json
 open Scene
+open Browser.Types
+open Fable.Core.JsInterop
+open Fable.Core
+open Feliz.Styles
+open System.ComponentModel
+open System
 
 [<Literal>]
 let Route = "Home"
@@ -46,6 +52,9 @@ type Msg =
     | OnTemplateSceneCreateError of exn
     | DeleteScene of Scene
     | OnSceneStorageUpdatedError of exn
+    | ExportScene of Scene
+    | ImportSceneFileSuccess of string
+    | ImportSceneFileError
 
 
 
@@ -208,6 +217,12 @@ let update (msg: Msg) (model: Model) =
         { model with
             ErrorMessage = error.Message },
         Cmd.none
+    | ImportSceneFileSuccess fileString ->
+        let sceneResult = Decode.Auto.fromString<Scene> (fileString)
+
+        match sceneResult with
+        | Ok scene -> (model, Cmd.none) |> addTemplateSceneToLocalStorage scene
+        | Error err -> { model with ErrorMessage = err }, Cmd.none
 
 let viewCharacters (characters: Character List) : Fable.React.ReactElement =
     Html.div (
@@ -217,7 +232,7 @@ let viewCharacters (characters: Character List) : Fable.React.ReactElement =
 
 let viewScenes (scenes: Scene List) (templateScene: Scene Option) dispatch : Fable.React.ReactElement =
     Html.div
-        [ prop.className "columns is-4 is-variable is-multiline"
+        [ prop.className "scene-list columns is-4 is-variable is-multiline mt-2"
           prop.children (
               List.map
                   (fun (scene: Scene) ->
@@ -280,6 +295,30 @@ let viewScenes (scenes: Scene List) (templateScene: Scene Option) dispatch : Fab
 
                                                                 ] ]
                                                     Bulma.cardFooterItem.a
+                                                        [ button.isMedium
+                                                          color.isWhite
+                                                          let sceneName =
+                                                              (if scene.Name = "" then
+                                                                   "Scene " + scene.Id.ToString()
+                                                               else
+                                                                   scene.Name)
+
+                                                          prop.href
+                                                              $"data:text/json;charset=utf-8,{Encode.Auto.toString (0, scene)}"
+
+                                                          prop.type' "text/json"
+                                                          prop.download $"{sceneName}.json"
+                                                          prop.title "Export Scene"
+
+                                                          prop.children
+                                                              [ Bulma.icon
+                                                                    [ Html.i
+                                                                          [ prop.classes
+                                                                                [ "fa-file-arrow-down"; "fa-solid" ] ] ]
+
+
+                                                                ] ]
+                                                    Bulma.cardFooterItem.a
                                                         [ button.isSmall
                                                           color.isDark
                                                           prop.text "Continue"
@@ -317,6 +356,34 @@ let view model userName dispatch =
                      Html.text ""
                  else
                      Html.h1 [ prop.text "Scenes"; Bulma.color.hasTextWhite ])
+                Html.span
+                    [ prop.className "file file-import"
+
+                      prop.children
+                          [ Html.label
+                                [ prop.className "file-label"
+                                  prop.children
+                                      [ Html.input
+                                            [ prop.className "file-input"
+                                              prop.type' "file"
+                                              prop.name "resume"
+                                              prop.onChange (fun (file: File) ->
+                                                  let reader = Browser.Dom.FileReader.Create()
+
+                                                  reader.onload <-
+                                                      fun _ -> dispatch (ImportSceneFileSuccess(string reader.result))
+
+                                                  reader.onerror <- fun _ -> dispatch ImportSceneFileError
+
+                                                  reader.readAsText (file)) ]
+                                        Html.span
+                                            [ prop.className "file-cta"
+                                              prop.children
+                                                  [ Html.span
+                                                        [ prop.className "file-icon"
+                                                          prop.children
+                                                              [ Html.i [ prop.className "fa-solid fa-file-arrow-up" ] ] ]
+                                                    Html.span [ prop.className "file-label"; prop.text "Import" ] ] ] ] ] ] ]
                 (viewScenes model.HomeViewModel.UserScenes model.HomeViewModel.TemplateScene dispatch)
                 Bulma.button.button
                     [ button.isMedium

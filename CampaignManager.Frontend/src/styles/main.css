@@ -9,6 +9,15 @@
   height: 100vh;
 }
 
+.scene-list {
+  max-height: 520px;
+  overflow-x: auto;
+}
+
+.file-import {
+  justify-content: flex-end;
+}
+
 #battleMap {
   -webkit-overflow-scrolling: auto;
 }
