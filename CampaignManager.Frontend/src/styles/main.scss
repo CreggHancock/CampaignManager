@@ -10,8 +10,9 @@
 }
 
 .scene-list {
-    max-height: 520px;
-    overflow-x: auto;
+    max-height: 525px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .scene-name {
