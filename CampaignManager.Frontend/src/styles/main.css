@@ -143,6 +143,7 @@
   overflow: hidden;
   position: relative;
   cursor: grab;
+  touch-action: none;
   border: 15px inset transparent;
   border-radius: 10px;
   filter: drop-shadow(-2px 2px 30px #000);
