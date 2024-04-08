@@ -56,27 +56,6 @@ export function initialize() {
         }
     });
 
-    board.addEventListener("touchstart", function (e) {
-        if (e.target.closest(".map-token")) {
-            blockingElements.push("touch-token");
-            panZoomTiger.pause();
-        }
-    });
-
-    board.addEventListener("touchend", function (_) {
-        if (panZoomTiger.isPaused()) {
-            blockingElements.push("touch-token");
-            panZoomTiger.resume();
-        }
-    });
-
-      // Listen for mouse move on the board
-      board.addEventListener("mousemove", function (e) {
-        if (e.buttons === 1 && !panZoomTiger.isPaused()) {
-          // left mouse button pressed
-          panZoomTiger.moveBy(e.movementX, e.movementY);
-        }
-      });
     });
   });
 }

@@ -508,6 +508,7 @@ let viewPlayerCard player ind currentTurn dispatch =
               [ "initiative-card"
                 getClassFromPlayer player.PlayerType
                 if ind = currentTurn then "active" else "" ]
+          prop.tabIndex 0
           prop.children
               [ Html.img [ prop.src player.ImageUrl; prop.title player.Name ]
                 Html.div
@@ -542,7 +543,7 @@ let viewPlayerToken player playerIndex isActive dispatch =
         [ prop.style
               [ style.left (length.px (player.LocationX))
                 style.top (length.px (player.LocationY)) ]
-          prop.onMouseDown
+          prop.onPointerDown
           <| (fun (ev) ->
               ev.stopPropagation ()
               ev.preventDefault ()
@@ -614,12 +615,12 @@ let viewCharacterInitiativeEntry (combatant: Combatant) (combatantIndex: int) di
 let view model dispatch =
     Html.div
         [ prop.className "game-board"
-          prop.onMouseUp
+          prop.onPointerUp
           <| (fun (ev) ->
               ev.stopPropagation ()
               ev.preventDefault ()
               dispatch <| OnTokenReleased)
-          prop.onMouseMove
+          prop.onPointerMove
           <| (fun (ev) ->
               ev.stopPropagation ()
               ev.preventDefault ()

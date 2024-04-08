@@ -310,7 +310,7 @@
   overflow: hidden;
   object-fit: cover;
   border: 2px solid #000;
-  z-index: 9;
+  z-index: 1;
   border-radius: 3px;
 }
 .hud-wrapper .initiative .initiative-card:last-of-type .character-details {
@@ -321,7 +321,7 @@
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 20;
+  z-index: 1;
   background: #232323;
   border: 3px inset rgba(255, 255, 255, 0.25);
   padding: 0.75rem;
@@ -406,13 +406,16 @@
 .hud-wrapper .initiative .initiative-card .character-details .stats.cha .stat-mod {
   background: rgba(215, 184, 11, 0.6);
 }
-.hud-wrapper .initiative .initiative-card:hover {
+.hud-wrapper .initiative .initiative-card:hover, .hud-wrapper .initiative .initiative-card:focus {
   width: 70px;
   height: 117px;
 }
-.hud-wrapper .initiative .initiative-card:hover .character-details {
+.hud-wrapper .initiative .initiative-card:hover .character-details, .hud-wrapper .initiative .initiative-card:focus .character-details {
   opacity: 1;
   pointer-events: auto;
+}
+.hud-wrapper .initiative .initiative-card:hover .remove-button, .hud-wrapper .initiative .initiative-card:focus .remove-button {
+  display: flex;
 }
 .hud-wrapper .initiative .initiative-card .roll-value {
   display: flex;
@@ -558,17 +561,13 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  z-index: 20;
+  z-index: 1;
   font-size: 14px !important;
   background: #232323;
   color: #f9f9f9;
 }
 .remove-button:hover {
   background: #5c1010 !important;
-}
-
-.initiative-card:hover .remove-button {
-  display: flex;
 }
 
 .game-buttons {
