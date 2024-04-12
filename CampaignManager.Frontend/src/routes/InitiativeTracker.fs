@@ -75,6 +75,7 @@ type Msg =
     | RollInitiativeRollClicked
     | ShowGridToggled of bool
     | OnTokenDeleteClicked of int
+    | OnTokenCopyClicked of int
 
 
 let getInitiativeViewModel accessToken maybeSceneId =
@@ -492,6 +493,19 @@ let update (msg: Msg) (model: Model) =
              { scene with
                  Combatants = scene.Combatants |> List.removeAt tokenIndex }),
          Cmd.none)
+        |> updateLocalStorage
+    | OnTokenCopyClicked tokenIndex ->
+        let copiedCombatant =
+            model.InitiativeViewModel.Scene.Combatants
+            |> List.toArray
+            |> (fun combatants -> combatants[tokenIndex])
+
+        (model
+         |> updateScene (fun scene ->
+             { scene with
+                 Combatants = copiedCombatant :: scene.Combatants }),
+         Cmd.none)
+        |> updateLocalStorage
 
 
 
@@ -528,6 +542,17 @@ let viewPlayerCard player ind currentTurn dispatch =
                               ev.preventDefault ()
                               dispatch <| OnTokenDeleteClicked ind)
                           prop.children [ Html.i [ prop.className "fa-solid fa-skull" ] ] ]
+                else
+                    Html.none
+
+                if player.PlayerType <> Player then
+                    Html.button
+                        [ prop.className "copy-button"
+                          prop.onPointerUp (fun ev ->
+                              ev.stopPropagation ()
+                              ev.preventDefault ()
+                              dispatch <| OnTokenCopyClicked ind)
+                          prop.children [ Html.i [ prop.className "fa-solid fa-copy" ] ] ]
                 else
                     Html.none ] ]
 

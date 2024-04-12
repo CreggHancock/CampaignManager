@@ -433,6 +433,9 @@
           .remove-button {
             display: flex;
           }
+          .copy-button {
+            display: flex;
+          }
         }
         .roll-value {
           display: flex;
@@ -577,7 +580,7 @@
     display: none;
     position: absolute;
     bottom: 0;
-    left: 50%;
+    left: 25%;
     transform: translateX(-50%);
     border-radius: 50% !important;
     padding: 0.15rem !important;
@@ -593,6 +596,28 @@
     color: #f9f9f9;
     &:hover {
       background: #5c1010 !important;
+    }
+  }
+  .copy-button {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 75%;
+    transform: translateX(-50%);
+    border-radius: 50% !important;
+    padding: 0.15rem !important;
+    height: 26px;
+    width: 26px !important;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    z-index: 5;
+    font-size: 14px !important;
+    background: #232323;
+    color: #f9f9f9;
+    &:hover {
+      background:  #0c3150 !important;
     }
   }
   .game-buttons {
