@@ -269,8 +269,7 @@ let update (msg: Msg) (model: Model) =
         (model
          |> updateScene (fun scene ->
              { scene with
-                 GameState = CharacterSetup
-                 CombatantTurn = 0 }),
+                 GameState = CharacterSetup }),
          Cmd.none)
         |> updateLocalStorage
     | NewCharacterNameUpdated event ->
@@ -910,7 +909,7 @@ let view model dispatch =
                             viewStateButton
                                 Active
                                 model.InitiativeViewModel.Scene.GameState
-                                "Reset"
+                                "Add More Characters"
                                 "reset"
                                 ResetClicked
                                 dispatch ] ] ] ]
