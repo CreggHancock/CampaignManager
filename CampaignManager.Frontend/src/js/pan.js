@@ -25,6 +25,8 @@ export function setDraggable(canDrag, blockingId) {
 export function initialize() {
   window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
+
+      blockingElements = [];
       const board = document.getElementById("battleMap");
       console.log("initialize called");
       // Move the map
