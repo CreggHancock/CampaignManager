@@ -533,16 +533,8 @@ let viewPlayerCard player ind currentTurn dispatch =
                                       [ Html.span [ prop.className "stat-label"; prop.text "Dex." ]
                                         Html.span
                                             [ prop.className "stat-mod"; prop.text $"{player.InitiativeModifier}" ] ] ] ] ]
-                if player.PlayerType <> Player then
-                    Html.button
-                        [ prop.className "remove-button"
-                          prop.onPointerUp (fun ev ->
-                              ev.stopPropagation ()
-                              ev.preventDefault ()
-                              dispatch <| OnTokenDeleteClicked ind)
-                          prop.children [ Html.i [ prop.className "fa-solid fa-skull" ] ] ]
-                else
-                    Html.none
+
+
 
                 if player.PlayerType <> Player then
                     Html.button
@@ -552,6 +544,17 @@ let viewPlayerCard player ind currentTurn dispatch =
                               ev.preventDefault ()
                               dispatch <| OnTokenCopyClicked ind)
                           prop.children [ Html.i [ prop.className "fa-solid fa-copy" ] ] ]
+                else
+                    Html.none
+
+                if player.PlayerType <> Player then
+                    Html.button
+                        [ prop.className "remove-button"
+                          prop.onPointerUp (fun ev ->
+                              ev.stopPropagation ()
+                              ev.preventDefault ()
+                              dispatch <| OnTokenDeleteClicked ind)
+                          prop.children [ Html.i [ prop.className "fa-solid fa-skull" ] ] ]
                 else
                     Html.none ] ]
 
