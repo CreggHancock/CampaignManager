@@ -269,7 +269,9 @@
   display: flex;
   justify-content: center;
 }
-.hud-wrapper .initiative {
+
+.initiative,
+.selected-character {
   pointer-events: none;
   display: flex;
   gap: 0px;
@@ -281,12 +283,16 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.hud-wrapper .initiative::-webkit-scrollbar {
+.initiative::-webkit-scrollbar,
+.selected-character::-webkit-scrollbar {
   display: none;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.hud-wrapper .initiative .initiative-card {
+.initiative .initiative-card,
+.initiative .initiative-card__selected,
+.selected-character .initiative-card,
+.selected-character .initiative-card__selected {
   pointer-events: auto;
   display: flex;
   flex: 0 0 auto;
@@ -298,10 +304,16 @@
   position: relative;
   transition: background 0.35s ease-in-out, width 0.35s ease-in-out, height 0.35s ease-in-out, transform 0.75s ease-in-out;
 }
-.hud-wrapper .initiative .initiative-card .character-name {
+.initiative .initiative-card .character-name,
+.initiative .initiative-card__selected .character-name,
+.selected-character .initiative-card .character-name,
+.selected-character .initiative-card__selected .character-name {
   display: none;
 }
-.hud-wrapper .initiative .initiative-card img {
+.initiative .initiative-card img,
+.initiative .initiative-card__selected img,
+.selected-character .initiative-card img,
+.selected-character .initiative-card__selected img {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -313,11 +325,17 @@
   z-index: 1;
   border-radius: 3px;
 }
-.hud-wrapper .initiative .initiative-card:last-of-type .character-details {
+.initiative .initiative-card:last-of-type .character-details,
+.initiative .initiative-card__selected:last-of-type .character-details,
+.selected-character .initiative-card:last-of-type .character-details,
+.selected-character .initiative-card__selected:last-of-type .character-details {
   left: unset;
   right: 0;
 }
-.hud-wrapper .initiative .initiative-card .character-details {
+.initiative .initiative-card .character-details,
+.initiative .initiative-card__selected .character-details,
+.selected-character .initiative-card .character-details,
+.selected-character .initiative-card__selected .character-details {
   position: absolute;
   top: 100%;
   left: 0;
@@ -334,7 +352,10 @@
   opacity: 0;
   pointer-events: none;
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats {
+.initiative .initiative-card .character-details .stats,
+.initiative .initiative-card__selected .character-details .stats,
+.selected-character .initiative-card .character-details .stats,
+.selected-character .initiative-card__selected .character-details .stats {
   font-family: Roboto Mono;
   display: flex;
   justify-content: space-between;
@@ -345,11 +366,17 @@
   font-size: 14px;
   flex: 1 1 100%;
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats .stat-label {
+.initiative .initiative-card .character-details .stats .stat-label,
+.initiative .initiative-card__selected .character-details .stats .stat-label,
+.selected-character .initiative-card .character-details .stats .stat-label,
+.selected-character .initiative-card__selected .character-details .stats .stat-label {
   flex: 0 0 auto;
   text-align: right;
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats .stat-mod {
+.initiative .initiative-card .character-details .stats .stat-mod,
+.initiative .initiative-card__selected .character-details .stats .stat-mod,
+.selected-character .initiative-card .character-details .stats .stat-mod,
+.selected-character .initiative-card__selected .character-details .stats .stat-mod {
   flex: 0 0 30px;
   font-weight: 900;
   width: 30px;
@@ -361,12 +388,21 @@
   justify-content: center;
   align-items: center;
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats .stat-score {
+.initiative .initiative-card .character-details .stats .stat-score,
+.initiative .initiative-card__selected .character-details .stats .stat-score,
+.selected-character .initiative-card .character-details .stats .stat-score,
+.selected-character .initiative-card__selected .character-details .stats .stat-score {
   color: rgba(255, 255, 255, 0.5);
   flex: 0 0 33px;
   text-align: right;
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats.lvl, .hud-wrapper .initiative .initiative-card .character-details .stats.hp {
+.initiative .initiative-card .character-details .stats.lvl, .initiative .initiative-card .character-details .stats.hp,
+.initiative .initiative-card__selected .character-details .stats.lvl,
+.initiative .initiative-card__selected .character-details .stats.hp,
+.selected-character .initiative-card .character-details .stats.lvl,
+.selected-character .initiative-card .character-details .stats.hp,
+.selected-character .initiative-card__selected .character-details .stats.lvl,
+.selected-character .initiative-card__selected .character-details .stats.hp {
   flex: 1 1 calc(50% - 1rem);
   flex-direction: column;
   border: 2px inset #f9f9f9;
@@ -374,53 +410,104 @@
   border-radius: 5px;
   overflow: hidden;
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats.lvl .stat-label, .hud-wrapper .initiative .initiative-card .character-details .stats.hp .stat-label {
+.initiative .initiative-card .character-details .stats.lvl .stat-label, .initiative .initiative-card .character-details .stats.hp .stat-label,
+.initiative .initiative-card__selected .character-details .stats.lvl .stat-label,
+.initiative .initiative-card__selected .character-details .stats.hp .stat-label,
+.selected-character .initiative-card .character-details .stats.lvl .stat-label,
+.selected-character .initiative-card .character-details .stats.hp .stat-label,
+.selected-character .initiative-card__selected .character-details .stats.lvl .stat-label,
+.selected-character .initiative-card__selected .character-details .stats.hp .stat-label {
   border-bottom: 2px inset #ddd;
   width: calc(100% - 0.5rem);
   text-align: center;
   background: rgba(255, 255, 255, 0.85);
   color: #111;
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats.lvl .stat-label,
-.hud-wrapper .initiative .initiative-card .character-details .stats.lvl .stat-level,
-.hud-wrapper .initiative .initiative-card .character-details .stats.lvl .stat-hp, .hud-wrapper .initiative .initiative-card .character-details .stats.hp .stat-label,
-.hud-wrapper .initiative .initiative-card .character-details .stats.hp .stat-level,
-.hud-wrapper .initiative .initiative-card .character-details .stats.hp .stat-hp {
+.initiative .initiative-card .character-details .stats.lvl .stat-label,
+.initiative .initiative-card .character-details .stats.lvl .stat-level,
+.initiative .initiative-card .character-details .stats.lvl .stat-hp, .initiative .initiative-card .character-details .stats.hp .stat-label,
+.initiative .initiative-card .character-details .stats.hp .stat-level,
+.initiative .initiative-card .character-details .stats.hp .stat-hp,
+.initiative .initiative-card__selected .character-details .stats.lvl .stat-label,
+.initiative .initiative-card__selected .character-details .stats.lvl .stat-level,
+.initiative .initiative-card__selected .character-details .stats.lvl .stat-hp,
+.initiative .initiative-card__selected .character-details .stats.hp .stat-label,
+.initiative .initiative-card__selected .character-details .stats.hp .stat-level,
+.initiative .initiative-card__selected .character-details .stats.hp .stat-hp,
+.selected-character .initiative-card .character-details .stats.lvl .stat-label,
+.selected-character .initiative-card .character-details .stats.lvl .stat-level,
+.selected-character .initiative-card .character-details .stats.lvl .stat-hp,
+.selected-character .initiative-card .character-details .stats.hp .stat-label,
+.selected-character .initiative-card .character-details .stats.hp .stat-level,
+.selected-character .initiative-card .character-details .stats.hp .stat-hp,
+.selected-character .initiative-card__selected .character-details .stats.lvl .stat-label,
+.selected-character .initiative-card__selected .character-details .stats.lvl .stat-level,
+.selected-character .initiative-card__selected .character-details .stats.lvl .stat-hp,
+.selected-character .initiative-card__selected .character-details .stats.hp .stat-label,
+.selected-character .initiative-card__selected .character-details .stats.hp .stat-level,
+.selected-character .initiative-card__selected .character-details .stats.hp .stat-hp {
   padding: 0.25rem;
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats.str .stat-mod {
+.initiative .initiative-card .character-details .stats.str .stat-mod,
+.initiative .initiative-card__selected .character-details .stats.str .stat-mod,
+.selected-character .initiative-card .character-details .stats.str .stat-mod,
+.selected-character .initiative-card__selected .character-details .stats.str .stat-mod {
   background: rgba(145, 42, 42, 0.6);
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats.dex .stat-mod {
+.initiative .initiative-card .character-details .stats.dex .stat-mod,
+.initiative .initiative-card__selected .character-details .stats.dex .stat-mod,
+.selected-character .initiative-card .character-details .stats.dex .stat-mod,
+.selected-character .initiative-card__selected .character-details .stats.dex .stat-mod {
   background: rgba(67, 133, 62, 0.6);
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats.con .stat-mod {
+.initiative .initiative-card .character-details .stats.con .stat-mod,
+.initiative .initiative-card__selected .character-details .stats.con .stat-mod,
+.selected-character .initiative-card .character-details .stats.con .stat-mod,
+.selected-character .initiative-card__selected .character-details .stats.con .stat-mod {
   background: rgba(209, 140, 67, 0.6);
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats.wis .stat-mod {
+.initiative .initiative-card .character-details .stats.wis .stat-mod,
+.initiative .initiative-card__selected .character-details .stats.wis .stat-mod,
+.selected-character .initiative-card .character-details .stats.wis .stat-mod,
+.selected-character .initiative-card__selected .character-details .stats.wis .stat-mod {
   background: rgba(84, 42, 117, 0.6);
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats.int .stat-mod {
+.initiative .initiative-card .character-details .stats.int .stat-mod,
+.initiative .initiative-card__selected .character-details .stats.int .stat-mod,
+.selected-character .initiative-card .character-details .stats.int .stat-mod,
+.selected-character .initiative-card__selected .character-details .stats.int .stat-mod {
   background: rgba(52, 89, 148, 0.6);
 }
-.hud-wrapper .initiative .initiative-card .character-details .stats.cha .stat-mod {
+.initiative .initiative-card .character-details .stats.cha .stat-mod,
+.initiative .initiative-card__selected .character-details .stats.cha .stat-mod,
+.selected-character .initiative-card .character-details .stats.cha .stat-mod,
+.selected-character .initiative-card__selected .character-details .stats.cha .stat-mod {
   background: rgba(215, 184, 11, 0.6);
 }
-.hud-wrapper .initiative .initiative-card:hover, .hud-wrapper .initiative .initiative-card:focus {
+.initiative .initiative-card:hover, .initiative .initiative-card:focus,
+.initiative .initiative-card__selected:hover,
+.initiative .initiative-card__selected:focus,
+.selected-character .initiative-card:hover,
+.selected-character .initiative-card:focus,
+.selected-character .initiative-card__selected:hover,
+.selected-character .initiative-card__selected:focus {
   width: 70px;
   height: 117px;
 }
-.hud-wrapper .initiative .initiative-card:hover .character-details, .hud-wrapper .initiative .initiative-card:focus .character-details {
+.initiative .initiative-card:hover .character-details, .initiative .initiative-card:focus .character-details,
+.initiative .initiative-card__selected:hover .character-details,
+.initiative .initiative-card__selected:focus .character-details,
+.selected-character .initiative-card:hover .character-details,
+.selected-character .initiative-card:focus .character-details,
+.selected-character .initiative-card__selected:hover .character-details,
+.selected-character .initiative-card__selected:focus .character-details {
   opacity: 1;
   pointer-events: auto;
 }
-.hud-wrapper .initiative .initiative-card:hover .remove-button, .hud-wrapper .initiative .initiative-card:focus .remove-button {
-  display: flex;
-}
-.hud-wrapper .initiative .initiative-card:hover .copy-button, .hud-wrapper .initiative .initiative-card:focus .copy-button {
-  display: flex;
-}
-.hud-wrapper .initiative .initiative-card .roll-value {
+.initiative .initiative-card .roll-value,
+.initiative .initiative-card__selected .roll-value,
+.selected-character .initiative-card .roll-value,
+.selected-character .initiative-card__selected .roll-value {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -436,7 +523,10 @@
   background: rgba(0, 0, 0, 0.8);
   border: 2px solid #fff;
 }
-.hud-wrapper .initiative .initiative-card .initiative-input {
+.initiative .initiative-card .initiative-input,
+.initiative .initiative-card__selected .initiative-input,
+.selected-character .initiative-card .initiative-input,
+.selected-character .initiative-card__selected .initiative-input {
   position: absolute;
   top: 70px;
   left: 50%;
@@ -453,7 +543,10 @@
   text-align: center;
   padding: 0.15rem;
 }
-.hud-wrapper .initiative .initiative-card:before {
+.initiative .initiative-card:before,
+.initiative .initiative-card__selected:before,
+.selected-character .initiative-card:before,
+.selected-character .initiative-card__selected:before {
   content: "";
   background: url("https://media.giphy.com/media/YqhIK6Gbor6CLeloBq/giphy-downsized-large.gif");
   position: absolute;
@@ -468,30 +561,54 @@
   mix-blend-mode: overlay;
   transform: rotate(180deg);
 }
-.hud-wrapper .initiative .initiative-card.player {
+.initiative .initiative-card.player,
+.initiative .initiative-card__selected.player,
+.selected-character .initiative-card.player,
+.selected-character .initiative-card__selected.player {
   background: linear-gradient(150deg, #0c3150, #58c8e1);
 }
-.hud-wrapper .initiative .initiative-card.ally {
+.initiative .initiative-card.ally,
+.initiative .initiative-card__selected.ally,
+.selected-character .initiative-card.ally,
+.selected-character .initiative-card__selected.ally {
   background: linear-gradient(150deg, #afa9a3, #f8eae4);
 }
-.hud-wrapper .initiative .initiative-card.enemy {
+.initiative .initiative-card.enemy,
+.initiative .initiative-card__selected.enemy,
+.selected-character .initiative-card.enemy,
+.selected-character .initiative-card__selected.enemy {
   background: linear-gradient(150deg, #531119, #c44159);
 }
-.hud-wrapper .initiative .initiative-card.enemy.active {
+.initiative .initiative-card.enemy.active,
+.initiative .initiative-card__selected.enemy.active,
+.selected-character .initiative-card.enemy.active,
+.selected-character .initiative-card__selected.enemy.active {
   background: linear-gradient(150deg, #333008, #edde0c);
 }
-.hud-wrapper .initiative .initiative-card.active {
+.initiative .initiative-card.active,
+.initiative .initiative-card__selected.active,
+.selected-character .initiative-card.active,
+.selected-character .initiative-card__selected.active {
   background: linear-gradient(150deg, #2f1f67, #7c359e);
   width: 70px;
   height: 117px;
 }
-.hud-wrapper .initiative .initiative-card span {
+.initiative .initiative-card span,
+.initiative .initiative-card__selected span,
+.selected-character .initiative-card span,
+.selected-character .initiative-card__selected span {
   z-index: 10;
 }
-.hud-wrapper .initiative .initiative-card.low-roll .roll-value {
+.initiative .initiative-card.low-roll .roll-value,
+.initiative .initiative-card__selected.low-roll .roll-value,
+.selected-character .initiative-card.low-roll .roll-value,
+.selected-character .initiative-card__selected.low-roll .roll-value {
   color: #ff0000;
 }
-.hud-wrapper .initiative .initiative-card.high-roll .roll-value {
+.initiative .initiative-card.high-roll .roll-value,
+.initiative .initiative-card__selected.high-roll .roll-value,
+.selected-character .initiative-card.high-roll .roll-value,
+.selected-character .initiative-card__selected.high-roll .roll-value {
   color: #06ff06;
 }
 
@@ -551,7 +668,6 @@
 }
 
 .remove-button {
-  display: none;
   position: absolute;
   bottom: 0;
   left: 25%;
@@ -574,7 +690,6 @@
 }
 
 .copy-button {
-  display: none;
   position: absolute;
   bottom: 0;
   left: 75%;
@@ -593,6 +708,28 @@
   color: #f9f9f9;
 }
 .copy-button:hover {
+  background: #0c3150 !important;
+}
+
+.edit-button {
+  position: absolute;
+  top: 0;
+  left: 25%;
+  transform: translateX(-50%);
+  border-radius: 50% !important;
+  padding: 0.15rem !important;
+  height: 26px;
+  width: 26px !important;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  z-index: 5;
+  font-size: 14px !important;
+  background: #232323;
+  color: #f9f9f9;
+}
+.edit-button:hover {
   background: #0c3150 !important;
 }
 
@@ -692,6 +829,23 @@ body {
   justify-content: flex-start;
   width: 100%;
   text-align: left;
+}
+
+.selected-character {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  height: min-content;
+  scrollbar-width: initial;
+  overflow-x: initial;
+}
+.selected-character .initiative-card__selected {
+  width: 80px;
+  height: 140px;
+}
+.selected-character .initiative-card__selected:hover, .selected-character .initiative-card__selected:focus {
+  width: 80px;
+  height: 140px;
 }
 
 /*# sourceMappingURL=main.css.map */

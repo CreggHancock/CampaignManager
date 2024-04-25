@@ -39,7 +39,9 @@ type Model =
       IsLoggedIn: bool
       MonsterOptions: MonsterSummary List
       BackgroundDropdownToggled: bool
-      InitiativePopupOpen: bool }
+      InitiativePopupOpen: bool
+      SelectedCharacterIndex: int option
+      EditingCharacter: (int * Combatant) option }
 
 type Msg =
     | NoOp
@@ -76,6 +78,15 @@ type Msg =
     | ShowGridToggled of bool
     | OnTokenDeleteClicked of int
     | OnTokenCopyClicked of int
+    | OnPlayerCardClicked of int
+    | OnTokenEditClicked of (int * Combatant)
+    | EditCharacterNameUpdated of string
+    | EditCharacterNameOptionClicked of string
+    | EditCharacterDexterityUpdated of int
+    | EditCharacterImageUpdated of string
+    | EditCharacterPlayerTypeUpdated of string
+    | EditCharacterCancelClicked
+    | EditCharacterSaveClicked of (int * Combatant)
 
 
 let getInitiativeViewModel accessToken maybeSceneId =
@@ -210,7 +221,9 @@ let init accessToken sceneId =
        IsLoggedIn = Option.isSome accessToken
        MonsterOptions = []
        BackgroundDropdownToggled = false
-       InitiativePopupOpen = false },
+       InitiativePopupOpen = false
+       SelectedCharacterIndex = None
+       EditingCharacter = None },
      Cmd.batch
          [ getInitiativeViewModel accessToken sceneId
            getMonsterOptions ()
@@ -395,7 +408,19 @@ let update (msg: Msg) (model: Model) =
                             response.Image
                             |> Option.map (fun (img) -> "https://www.dnd5eapi.co" + img)
                             |> Option.defaultWith (fun () -> "")
-                        InitiativeModifier = (response.Dexterity - 10) / 2 }) },
+                        InitiativeModifier = (response.Dexterity - 10) / 2 })
+            EditingCharacter =
+                model.EditingCharacter
+                |> Option.map (fun (ind, n) ->
+                    (ind,
+                     { n with
+                         Health = response.HitPoints
+                         MaxHealth = response.HitPoints
+                         ImageUrl =
+                             response.Image
+                             |> Option.map (fun (img) -> "https://www.dnd5eapi.co" + img)
+                             |> Option.defaultWith (fun () -> "")
+                         InitiativeModifier = (response.Dexterity - 10) / 2 })) },
          Cmd.none)
     | OnGetMonsterDetailsError err ->
         { model with
@@ -505,6 +530,72 @@ let update (msg: Msg) (model: Model) =
                  Combatants = copiedCombatant :: scene.Combatants }),
          Cmd.none)
         |> updateLocalStorage
+    | OnPlayerCardClicked cardIndex ->
+        ({ model with
+            SelectedCharacterIndex = Some cardIndex },
+         Cmd.none)
+    | OnTokenEditClicked(playerIndex, combatant) ->
+        ({ model with
+            EditingCharacter = Some(playerIndex, combatant) },
+         Cmd.none)
+    | EditCharacterNameUpdated event ->
+        ({ model with
+            EditingCharacter = Option.map (fun (ind, c) -> (ind, { c with Name = event })) model.EditingCharacter },
+         Cmd.none)
+    | EditCharacterNameOptionClicked(monsterIndex: string) ->
+        let selectedMonster =
+            model.MonsterOptions |> List.tryFind (fun (m) -> m.Index = monsterIndex)
+
+        match selectedMonster with
+        | Some monster ->
+            ({ model with
+                EditingCharacter =
+                    model.EditingCharacter
+                    |> Option.map (fun (ind, character) -> (ind, { character with Name = monster.Name })) },
+             getMonsterDetails monsterIndex)
+        | None -> (model, Cmd.none)
+    | EditCharacterDexterityUpdated dex ->
+        { model with
+            EditingCharacter =
+                Option.map (fun (ind, c) -> (ind, { c with InitiativeModifier = dex })) model.EditingCharacter },
+        Cmd.none
+    | EditCharacterImageUpdated event ->
+        { model with
+            EditingCharacter = Option.map (fun (ind, c) -> (ind, { c with ImageUrl = event })) model.EditingCharacter },
+        Cmd.none
+    | EditCharacterPlayerTypeUpdated event ->
+        match event with
+        | "player" ->
+            { model with
+                EditingCharacter =
+                    Option.map (fun (ind, c) -> (ind, { c with PlayerType = Player })) model.EditingCharacter },
+            Cmd.none
+        | "enemy" ->
+            { model with
+                EditingCharacter =
+                    Option.map (fun (ind, c) -> (ind, { c with PlayerType = Enemy })) model.EditingCharacter },
+            Cmd.none
+        | "ally" ->
+            { model with
+                EditingCharacter =
+                    Option.map (fun (ind, c) -> (ind, { c with PlayerType = Ally })) model.EditingCharacter },
+            Cmd.none
+        | _ ->
+            { model with
+                EditingCharacter =
+                    Option.map (fun (ind, c) -> (ind, { c with PlayerType = Player })) model.EditingCharacter },
+            Cmd.none
+    | EditCharacterCancelClicked -> { model with EditingCharacter = None }, Cmd.none
+    | EditCharacterSaveClicked(combatantIndex, updatedCombatant) ->
+        ({ model with EditingCharacter = None }
+         |> updateScene (fun scene ->
+             { scene with
+                 Combatants =
+                     scene.Combatants
+                     |> List.mapi (fun ind (combatant: Combatant) ->
+                         if ind = combatantIndex then updatedCombatant else combatant) }),
+         Cmd.none)
+        |> updateLocalStorage
 
 
 
@@ -521,7 +612,23 @@ let viewPlayerCard player ind currentTurn dispatch =
               [ "initiative-card"
                 getClassFromPlayer player.PlayerType
                 if ind = currentTurn then "active" else "" ]
-          prop.tabIndex 0
+          prop.tabIndex ind
+          prop.onPointerUp (fun ev ->
+              ev.stopPropagation ()
+              ev.preventDefault ()
+              dispatch <| OnPlayerCardClicked ind)
+          prop.children [ Html.img [ prop.src player.ImageUrl; prop.title player.Name ] ] ]
+
+let viewSelectedPlayer player ind dispatch =
+    let getClassFromPlayer playerType =
+        match playerType with
+        | Enemy -> "enemy"
+        | Ally -> "ally"
+        | Player -> "player"
+
+
+    Html.div
+        [ prop.classes [ "initiative-card__selected"; getClassFromPlayer player.PlayerType ]
           prop.children
               [ Html.img [ prop.src player.ImageUrl; prop.title player.Name ]
                 Html.div
@@ -535,7 +642,13 @@ let viewPlayerCard player ind currentTurn dispatch =
                                             [ prop.className "stat-mod"; prop.text $"{player.InitiativeModifier}" ] ] ] ] ]
 
 
-
+                Html.button
+                    [ prop.className "edit-button"
+                      prop.onPointerUp (fun ev ->
+                          ev.stopPropagation ()
+                          ev.preventDefault ()
+                          dispatch <| OnTokenEditClicked(ind, player))
+                      prop.children [ Html.i [ prop.className "fa-solid fa-pencil" ] ] ]
                 if player.PlayerType <> Player then
                     Html.button
                         [ prop.className "copy-button"
@@ -844,6 +957,137 @@ let view model dispatch =
                                                   prop.text "Create"
                                                   prop.onPointerUp (fun _ -> dispatch NewCharacterCreateClicked) ] ] ] ] ]
                 | None -> Html.none
+                match model.EditingCharacter with
+                | Some(ind, combatant) ->
+                    Html.div
+                        [ prop.classes [ "create-character" ]
+                          prop.id "createCharacterForm"
+                          prop.children
+                              [ Html.h1 [ prop.className "container-title"; prop.text "Edit Character" ]
+                                Html.div
+                                    [ prop.classes [ "flex-50"; "create-character-name" ]
+                                      prop.children (
+                                          let filteredOptions =
+                                              if combatant.PlayerType <> Player then
+                                                  model.MonsterOptions
+                                                  |> List.filter (fun (m) ->
+                                                      combatant
+                                                      |> (fun (c) ->
+                                                          c.Name.Length > 0
+                                                          && c.Name <> m.Name
+                                                          && m.Name.StartsWith(
+                                                              c.Name,
+                                                              System.StringComparison.InvariantCultureIgnoreCase
+                                                          )))
+                                              else
+                                                  []
+
+                                          [ Bulma.label "Name"
+                                            Bulma.input.text
+                                                [ prop.placeholder "Name"
+                                                  prop.name "characterName"
+                                                  prop.type' "text"
+                                                  prop.id "characterName"
+                                                  prop.required true
+                                                  prop.className (
+                                                      if List.length filteredOptions > 0 then
+                                                          "input-with-filters"
+                                                      else
+                                                          "input-no-filters"
+                                                  )
+                                                  prop.onChange (fun ev -> dispatch (EditCharacterNameUpdated ev))
+                                                  prop.value combatant.Name ]
+                                            if List.isEmpty filteredOptions |> not then
+                                                Html.div
+                                                    [ prop.className "filter-box"
+                                                      prop.children (
+                                                          filteredOptions
+                                                          |> List.sortBy (fun (m) -> m.Name)
+                                                          |> List.take (
+                                                              if List.length filteredOptions > 4 then
+                                                                  4
+                                                              else
+                                                                  List.length filteredOptions
+                                                          )
+                                                          |> List.map (fun (m) ->
+                                                              Html.div
+                                                                  [ prop.className "filter-option"
+                                                                    prop.children
+                                                                        [ Bulma.button.button
+                                                                              [ button.isInverted
+                                                                                color.isInfo
+                                                                                prop.text m.Name
+                                                                                prop.onPointerUp (fun _ ->
+                                                                                    dispatch
+                                                                                    <| EditCharacterNameOptionClicked
+                                                                                        m.Index) ] ] ])
+                                                      ) ]
+                                            else
+                                                Html.none
+
+                                            ]
+                                      ) ]
+                                Html.div
+                                    [ prop.className "flex-50"
+                                      prop.children
+                                          [ Bulma.label "Dexterity"
+                                            Bulma.input.number
+                                                [ prop.placeholder "Dexterity"
+                                                  prop.name "characterDex"
+                                                  prop.id "characterDex"
+                                                  prop.required true
+                                                  prop.onChange (fun ev -> dispatch (EditCharacterDexterityUpdated ev))
+                                                  combatant.InitiativeModifier.ToString() |> prop.value ] ] ]
+                                Html.div
+                                    [ prop.className "flex-50"
+                                      prop.children
+                                          [ Bulma.label "Image URL"
+                                            Bulma.input.text
+                                                [ prop.placeholder "Image URL"
+                                                  prop.name "characterImage"
+                                                  prop.type' "text"
+                                                  prop.id "characterImage"
+                                                  prop.required true
+                                                  prop.onChange (fun ev -> dispatch (EditCharacterImageUpdated ev))
+                                                  prop.value combatant.ImageUrl ] ] ]
+                                Html.div
+                                    [ prop.className "flex-50"
+                                      prop.children
+                                          [ Bulma.label "Type"
+                                            Bulma.select
+                                                [ Bulma.select.isNormal
+                                                  prop.onChange (fun ev -> dispatch (EditCharacterPlayerTypeUpdated ev))
+                                                  prop.children
+                                                      [ Html.option
+                                                            [ prop.value "player"
+                                                              prop.text "Player"
+                                                              prop.selected (combatant.PlayerType = Player) ]
+                                                        Html.option
+                                                            [ prop.value "ally"
+                                                              prop.text "Ally"
+                                                              prop.selected (combatant.PlayerType = Ally) ]
+                                                        Html.option
+                                                            [ prop.value "enemy"
+                                                              prop.text "Enemy"
+                                                              prop.selected (combatant.PlayerType = Enemy) ] ] ] ] ]
+                                Html.div
+                                    [ prop.className "create-character-buttons"
+                                      prop.children
+                                          [ Bulma.button.button
+                                                [ color.isDanger
+                                                  prop.className "button--cancel"
+                                                  prop.type' "button"
+                                                  prop.text "Cancel"
+                                                  prop.onPointerUp (fun _ -> dispatch EditCharacterCancelClicked) ]
+                                            Bulma.button.button
+                                                [ color.isInfo
+                                                  prop.className "button--submit"
+                                                  prop.type' "button"
+                                                  prop.text "Save"
+                                                  prop.onPointerUp (fun _ ->
+                                                      dispatch <| EditCharacterSaveClicked(ind, combatant)) ] ] ] ] ]
+
+                | None -> Html.none
                 if model.InitiativePopupOpen then
                     Html.div
                         [ prop.classes [ "roll-initiative" ]
@@ -881,6 +1125,20 @@ let view model dispatch =
                           ) ]
                 else
                     Html.none
+                match model.SelectedCharacterIndex with
+                | Some index ->
+                    if List.length model.InitiativeViewModel.Scene.Combatants > index then
+                        let selectedCombatant =
+                            model.InitiativeViewModel.Scene.Combatants
+                            |> List.toArray
+                            |> (fun combatants -> combatants[index])
+
+                        Html.div
+                            [ prop.className "selected-character"
+                              prop.children [ viewSelectedPlayer selectedCombatant index dispatch ] ]
+                    else
+                        Html.none
+                | None -> Html.none
                 Html.div
                     [ prop.className "game-buttons"
                       prop.id "gameButtons"
