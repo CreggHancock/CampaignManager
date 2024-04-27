@@ -51,6 +51,8 @@
     .roll-initiative,
     .create-character,
     .map-select {
+      overflow-y: auto;
+      max-height: 50vh;
       z-index: 10;
       position: absolute;
       top: 50%;

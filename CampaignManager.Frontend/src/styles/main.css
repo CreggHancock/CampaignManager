@@ -47,6 +47,8 @@
 .game-board .roll-initiative,
 .game-board .create-character,
 .game-board .map-select {
+  overflow-y: auto;
+  max-height: 50vh;
   z-index: 10;
   position: absolute;
   top: 50%;
