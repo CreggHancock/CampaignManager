@@ -1127,7 +1127,7 @@ let view model dispatch =
                                                           [ prop.custom ("data-tooltip", "Edit Character")
                                                             color.isDark
                                                             prop.classes [ "button"; "has-tooltip-arrow" ]
-                                                            Bulma.button.isSmall
+                                                            button.isSmall
                                                             prop.children
                                                                 [ Bulma.icon
                                                                       [ Html.i [ prop.className "fa-solid fa-pencil" ] ] ]
@@ -1143,7 +1143,7 @@ let view model dispatch =
                                                               [ prop.custom ("data-tooltip", "Duplicate Character")
                                                                 color.isDark
                                                                 prop.classes [ "button"; "has-tooltip-arrow" ]
-                                                                Bulma.button.isSmall
+                                                                button.isSmall
                                                                 prop.children
                                                                     [ Bulma.icon
                                                                           [ Html.i [ prop.className "fa-solid fa-copy" ] ] ]
@@ -1160,7 +1160,7 @@ let view model dispatch =
                                                               [ prop.custom ("data-tooltip", "Delete Character")
                                                                 color.isDark
                                                                 prop.classes [ "button"; "has-tooltip-arrow" ]
-                                                                Bulma.button.isSmall
+                                                                button.isSmall
                                                                 prop.children
                                                                     [ Bulma.icon
                                                                           [ Html.i
@@ -1182,7 +1182,7 @@ let view model dispatch =
                           [ Bulma.button.button
                                 [ prop.custom ("data-tooltip", "Map")
                                   color.isDark
-                                  Bulma.button.isSmall
+                                  button.isSmall
                                   prop.classes [ "button"; "has-tooltip-arrow"; "has-tooltip-left" ]
                                   prop.children [ Bulma.icon [ Html.i [ prop.className "fa-solid fa-image" ] ] ]
                                   prop.onPointerUp (fun ev ->
