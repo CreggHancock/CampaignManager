@@ -121,6 +121,13 @@ let getMonsterDetails index =
         (fun (response) -> OnGetMonsterDetailsSuccess response)
         OnGetMonsterDetailsError
 
+let closeAllPopups model =
+    { model with
+        NewCharacter = None
+        EditingCharacter = None
+        InitiativePopupOpen = false
+        BackgroundDropdownToggled = false }
+
 let updateScene updater model =
     { model with
         InitiativeViewModel = { Scene = updater model.InitiativeViewModel.Scene } }
@@ -235,26 +242,29 @@ let update (msg: Msg) (model: Model) =
     match msg with
     | NoOp -> model, Cmd.none
     | AddCharacterClicked ->
-        { model with
-            NewCharacter =
-                Some
-                    { Name = ""
-                      InitiativeModifier = 0
-                      ImageUrl = ""
-                      PlayerType = Player
-                      LocationX = 0
-                      LocationY = 0
-                      Health = 0
-                      MaxHealth = 0
-                      ArmorClass = 0
-                      IsTokenBeingDragged = false
-                      PreviousLocationX = 0
-                      PreviousLocationY = 0
-                      RolledInitiative = None } },
-        Cmd.OfFunc.perform setDraggable (false, "new-character-popup") (fun () -> NoOp)
+        match model.NewCharacter with
+        | Some _ -> (closeAllPopups model, Cmd.none)
+        | None ->
+            { closeAllPopups model with
+                NewCharacter =
+                    Some
+                        { Name = ""
+                          InitiativeModifier = 0
+                          ImageUrl = ""
+                          PlayerType = Player
+                          LocationX = 0
+                          LocationY = 0
+                          Health = 0
+                          MaxHealth = 0
+                          ArmorClass = 0
+                          IsTokenBeingDragged = false
+                          PreviousLocationX = 0
+                          PreviousLocationY = 0
+                          RolledInitiative = None } },
+            Cmd.OfFunc.perform setDraggable (false, "new-character-popup") (fun () -> NoOp)
     | RollInitiativesClicked ->
-        ({ model with
-            InitiativePopupOpen = true },
+        ({ closeAllPopups model with
+            InitiativePopupOpen = not model.InitiativePopupOpen },
          Cmd.OfFunc.perform setDraggable (false, "initiative-popup") (fun () -> NoOp))
         |> updateLocalStorage
     | StartCombatClicked ->
@@ -467,7 +477,7 @@ let update (msg: Msg) (model: Model) =
                              c) }),
          Cmd.none)
     | BackgroundDropdownToggled ->
-        ({ model with
+        ({ closeAllPopups model with
             BackgroundDropdownToggled = not model.BackgroundDropdownToggled },
          Cmd.OfFunc.perform setDraggable (model.BackgroundDropdownToggled, "background-dropdown") (fun () -> NoOp))
     | CharacterInitiativeSet(combatantIndex, initiative) ->
@@ -535,9 +545,12 @@ let update (msg: Msg) (model: Model) =
             SelectedCharacterIndex = Some cardIndex },
          Cmd.none)
     | OnTokenEditClicked(playerIndex, combatant) ->
-        ({ model with
-            EditingCharacter = Some(playerIndex, combatant) },
-         Cmd.none)
+        match model.EditingCharacter with
+        | Some _ -> (closeAllPopups model, Cmd.none)
+        | None ->
+            ({ closeAllPopups model with
+                EditingCharacter = Some(playerIndex, combatant) },
+             Cmd.none)
     | EditCharacterNameUpdated event ->
         ({ model with
             EditingCharacter = Option.map (fun (ind, c) -> (ind, { c with Name = event })) model.EditingCharacter },
@@ -642,34 +655,7 @@ let viewSelectedPlayer player ind dispatch =
                                             [ prop.className "stat-mod"; prop.text $"{player.InitiativeModifier}" ] ] ] ] ]
 
 
-                Html.button
-                    [ prop.className "edit-button"
-                      prop.onPointerUp (fun ev ->
-                          ev.stopPropagation ()
-                          ev.preventDefault ()
-                          dispatch <| OnTokenEditClicked(ind, player))
-                      prop.children [ Html.i [ prop.className "fa-solid fa-pencil" ] ] ]
-                if player.PlayerType <> Player then
-                    Html.button
-                        [ prop.className "copy-button"
-                          prop.onPointerUp (fun ev ->
-                              ev.stopPropagation ()
-                              ev.preventDefault ()
-                              dispatch <| OnTokenCopyClicked ind)
-                          prop.children [ Html.i [ prop.className "fa-solid fa-copy" ] ] ]
-                else
-                    Html.none
-
-                if player.PlayerType <> Player then
-                    Html.button
-                        [ prop.className "remove-button"
-                          prop.onPointerUp (fun ev ->
-                              ev.stopPropagation ()
-                              ev.preventDefault ()
-                              dispatch <| OnTokenDeleteClicked ind)
-                          prop.children [ Html.i [ prop.className "fa-solid fa-skull" ] ] ]
-                else
-                    Html.none ] ]
+                ] ]
 
 let viewPlayerToken player playerIndex isActive dispatch =
     let getClassFromPlayer playerType =
@@ -698,19 +684,24 @@ let viewPlayerToken player playerIndex isActive dispatch =
 
                       ] ] ]
 
-let viewStateButton neededGameState currentGameState (buttonText: string) (buttonId: string) onClickMsg dispatch =
+let viewStateButton neededGameState currentGameState (buttonText: string) (icon: string) onClickMsg dispatch =
     Bulma.button.button
-        [ prop.text buttonText
+        [ prop.custom ("data-tooltip", buttonText)
           color.isDark
+          Bulma.button.isSmall
           prop.classes
               [ "button"
                 if currentGameState = neededGameState then
                     ""
                 else
-                    "button-hidden" ]
-          prop.type' "button"
-          prop.id buttonId
-          prop.onPointerUp (fun _ ->
+                    "button-hidden"
+                "has-tooltip-arrow"
+                "has-tooltip-left" ]
+          prop.children [ Bulma.icon [ Html.i [ prop.className icon ] ] ]
+          prop.onPointerUp (fun ev ->
+              ev.stopPropagation ()
+              ev.preventDefault ()
+
               if currentGameState = neededGameState then
                   dispatch onClickMsg
               else
@@ -766,44 +757,7 @@ let view model dispatch =
               ev.preventDefault ()
               dispatch <| OnTokenMove(ev.clientX, ev.clientY))
           prop.children
-              [ Bulma.dropdown
-                    [ prop.id "map-select"
-                      prop.className "map-select"
-                      if model.BackgroundDropdownToggled then
-                          dropdown.isActive
-                      else
-                          prop.text ""
-                      prop.children
-                          [ Bulma.dropdownTrigger
-                                [ Bulma.button.button
-                                      [ color.isDark
-                                        prop.text "Map"
-                                        prop.onPointerUp (fun ev ->
-                                            ev.stopPropagation ()
-                                            ev.preventDefault ()
-                                            dispatch <| BackgroundDropdownToggled) ]
-
-                                  ]
-                            Bulma.dropdownMenu
-                                [ Bulma.dropdownContent
-                                      [ Bulma.color.isBlack
-                                        prop.children
-                                            [ Bulma.dropdownItem.div
-                                                  [ Bulma.input.text
-                                                        [ prop.onChange (fun ev -> dispatch (BackgroundUpdated ev)) ] ]
-                                              Bulma.dropdownItem.div
-                                                  [ Bulma.label
-                                                        [ Bulma.input.checkbox
-                                                              [ prop.onChange (fun (ev: bool) ->
-                                                                    dispatch (ShowGridToggled ev))
-                                                                prop.isChecked model.InitiativeViewModel.Scene.ShowGrid ]
-                                                          Bulma.text.span " "
-                                                          Bulma.text.span "Display Grid" ] ] ] ]
-
-                                  ]
-
-                            ] ]
-                Html.div
+              [ Html.div
                     [ prop.className "game-map"
                       prop.id "battleMap"
                       ([ Html.img
@@ -837,6 +791,35 @@ let view model dispatch =
                                                           dispatch)
                                                   model.InitiativeViewModel.Scene.Combatants
                                               |> prop.children ] ] ] ] ]
+                if model.BackgroundDropdownToggled then
+                    Html.div
+                        [ prop.classes [ "map-select" ]
+                          prop.children
+                              [ Html.h1 [ prop.className "container-title"; prop.text "Customize Map" ]
+                                Html.div
+                                    [ prop.className "flex-50"
+                                      prop.children
+                                          [ Bulma.label "Background URL"
+                                            Bulma.input.text
+                                                [ prop.onChange (fun ev -> dispatch (BackgroundUpdated ev)) ] ] ]
+                                Html.div
+                                    [ prop.className "flex-100"
+                                      prop.children
+                                          [ Bulma.label
+                                                [ Bulma.text.span "Display Grid"
+                                                  Bulma.text.span " "
+                                                  Bulma.input.checkbox
+                                                      [ prop.onChange (fun (ev: bool) -> dispatch (ShowGridToggled ev))
+                                                        prop.isChecked model.InitiativeViewModel.Scene.ShowGrid ] ] ] ]
+                                Html.div
+                                    [ prop.className "map-buttons"
+                                      prop.children
+                                          [ Bulma.button.button
+                                                [ color.isDanger
+                                                  prop.className "button--cancel"
+                                                  prop.type' "button"
+                                                  prop.text "Close"
+                                                  prop.onPointerUp (fun _ -> dispatch (BackgroundDropdownToggled)) ] ] ] ] ]
                 match model.NewCharacter with
                 | Some character ->
                     Html.div
@@ -1135,7 +1118,60 @@ let view model dispatch =
 
                         Html.div
                             [ prop.className "selected-character"
-                              prop.children [ viewSelectedPlayer selectedCombatant index dispatch ] ]
+                              prop.children
+                                  [ Html.div
+                                        [ prop.className "selected-character__actions"
+                                          prop.children
+                                              [ Html.div
+                                                    [ Bulma.button.button
+                                                          [ prop.custom ("data-tooltip", "Edit Character")
+                                                            color.isDark
+                                                            prop.classes [ "button"; "has-tooltip-arrow" ]
+                                                            Bulma.button.isSmall
+                                                            prop.children
+                                                                [ Bulma.icon
+                                                                      [ Html.i [ prop.className "fa-solid fa-pencil" ] ] ]
+                                                            prop.onPointerUp (fun ev ->
+                                                                ev.stopPropagation ()
+                                                                ev.preventDefault ()
+
+                                                                dispatch
+                                                                <| OnTokenEditClicked(index, selectedCombatant)) ] ]
+                                                if selectedCombatant.PlayerType <> Player then
+                                                    Html.div
+                                                        [ Bulma.button.button
+                                                              [ prop.custom ("data-tooltip", "Duplicate Character")
+                                                                color.isDark
+                                                                prop.classes [ "button"; "has-tooltip-arrow" ]
+                                                                Bulma.button.isSmall
+                                                                prop.children
+                                                                    [ Bulma.icon
+                                                                          [ Html.i [ prop.className "fa-solid fa-copy" ] ] ]
+                                                                prop.onPointerUp (fun ev ->
+                                                                    ev.stopPropagation ()
+                                                                    ev.preventDefault ()
+                                                                    dispatch <| OnTokenCopyClicked index) ] ]
+                                                else
+                                                    Html.none
+
+                                                if selectedCombatant.PlayerType <> Player then
+                                                    Html.div
+                                                        [ Bulma.button.button
+                                                              [ prop.custom ("data-tooltip", "Delete Character")
+                                                                color.isDark
+                                                                prop.classes [ "button"; "has-tooltip-arrow" ]
+                                                                Bulma.button.isSmall
+                                                                prop.children
+                                                                    [ Bulma.icon
+                                                                          [ Html.i
+                                                                                [ prop.className "fa-solid fa-skull" ] ] ]
+                                                                prop.onPointerUp (fun ev ->
+                                                                    ev.stopPropagation ()
+                                                                    ev.preventDefault ()
+                                                                    dispatch <| OnTokenDeleteClicked index) ] ]
+                                                else
+                                                    Html.none ] ]
+                                    viewSelectedPlayer selectedCombatant index dispatch ] ]
                     else
                         Html.none
                 | None -> Html.none
@@ -1143,11 +1179,21 @@ let view model dispatch =
                     [ prop.className "game-buttons"
                       prop.id "gameButtons"
                       prop.children
-                          [ viewStateButton
+                          [ Bulma.button.button
+                                [ prop.custom ("data-tooltip", "Map")
+                                  color.isDark
+                                  Bulma.button.isSmall
+                                  prop.classes [ "button"; "has-tooltip-arrow"; "has-tooltip-left" ]
+                                  prop.children [ Bulma.icon [ Html.i [ prop.className "fa-solid fa-image" ] ] ]
+                                  prop.onPointerUp (fun ev ->
+                                      ev.stopPropagation ()
+                                      ev.preventDefault ()
+                                      dispatch BackgroundDropdownToggled) ]
+                            viewStateButton
                                 CharacterSetup
                                 model.InitiativeViewModel.Scene.GameState
                                 "Add"
-                                "addCharacter"
+                                "fa-solid fa-user-plus"
                                 AddCharacterClicked
                                 dispatch
                             if List.isEmpty model.InitiativeViewModel.Scene.Combatants |> not then
@@ -1155,7 +1201,7 @@ let view model dispatch =
                                     CharacterSetup
                                     model.InitiativeViewModel.Scene.GameState
                                     "Roll Initiatives"
-                                    "rollInitiative"
+                                    "fa-solid fa-dice-d20"
                                     RollInitiativesClicked
                                     dispatch
                             else
@@ -1164,13 +1210,13 @@ let view model dispatch =
                                 Active
                                 model.InitiativeViewModel.Scene.GameState
                                 "End Turn"
-                                "endTurn"
+                                "fa-solid fa-hourglass-end"
                                 EndTurnClicked
                                 dispatch
                             viewStateButton
                                 Active
                                 model.InitiativeViewModel.Scene.GameState
                                 "Add More Characters"
-                                "reset"
+                                "fa-solid fa-user-plus"
                                 ResetClicked
                                 dispatch ] ] ] ]

@@ -35,17 +35,6 @@
   overflow: hidden;
   position: relative;
 }
-.game-board .map-select {
-  z-index: 2;
-  background: #000;
-  padding: 0.5rem 1rem;
-  border-radius: 0 0 0 0;
-  border: 2px inset #fff;
-  border-left-width: 0;
-  border-top-width: 0;
-  height: max-content;
-  width: max-content;
-}
 .game-board .roll-initiative .combatant {
   justify-content: space-between;
   min-height: 30px;
@@ -56,7 +45,8 @@
   border: 2px inset #fff;
 }
 .game-board .roll-initiative,
-.game-board .create-character {
+.game-board .create-character,
+.game-board .map-select {
   z-index: 10;
   position: absolute;
   top: 50%;
@@ -65,21 +55,23 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  background: #000;
+  background: rgba(0, 0, 0, 0.91);
   padding: 1rem;
   border-radius: 10px;
-  border: 2px inset #fff;
+  border: 3px inset #994a00;
   font-family: Arial;
   box-shadow: -5px 5px 20px #000;
   width: calc(100% - 6rem);
   max-width: 550px;
 }
 .game-board .roll-initiative.element-hidden,
-.game-board .create-character.element-hidden {
+.game-board .create-character.element-hidden,
+.game-board .map-select.element-hidden {
   display: none;
 }
 .game-board .roll-initiative .container-title,
-.game-board .create-character .container-title {
+.game-board .create-character .container-title,
+.game-board .map-select .container-title {
   color: #fff;
   flex: 1 1 100%;
   margin: 0;
@@ -89,43 +81,59 @@
 .game-board .roll-initiative .roll-initiative-buttons,
 .game-board .roll-initiative .create-character-buttons,
 .game-board .create-character .roll-initiative-buttons,
-.game-board .create-character .create-character-buttons {
+.game-board .create-character .create-character-buttons,
+.game-board .map-select .roll-initiative-buttons,
+.game-board .map-select .create-character-buttons {
   flex: 1 1 100%;
   display: flex;
   justify-content: space-between;
   margin-top: 1.25rem;
 }
 .game-board .roll-initiative > div,
-.game-board .create-character > div {
+.game-board .create-character > div,
+.game-board .map-select > div {
   display: flex;
 }
 .game-board .roll-initiative > div label,
-.game-board .create-character > div label {
+.game-board .create-character > div label,
+.game-board .map-select > div label {
   color: #fff;
 }
 .game-board .roll-initiative .flex-50,
-.game-board .create-character .flex-50 {
+.game-board .create-character .flex-50,
+.game-board .map-select .flex-50 {
   flex: 1 1 calc(50% - 0.5rem);
   flex-wrap: wrap;
 }
 .game-board .roll-initiative .flex-33,
-.game-board .create-character .flex-33 {
+.game-board .create-character .flex-33,
+.game-board .map-select .flex-33 {
   flex: 1 1 calc(33.333% - 0.667rem);
 }
 .game-board .roll-initiative .flex-25,
-.game-board .create-character .flex-25 {
+.game-board .create-character .flex-25,
+.game-board .map-select .flex-25 {
   flex: 1 1 calc(25% - 0.75rem);
 }
 .game-board .roll-initiative .flex-75,
-.game-board .create-character .flex-75 {
+.game-board .create-character .flex-75,
+.game-board .map-select .flex-75 {
   flex: 1 1 calc(75% - 0.25rem);
+}
+.game-board .roll-initiative .flex-100,
+.game-board .create-character .flex-100,
+.game-board .map-select .flex-100 {
+  flex: 1 1 100%;
 }
 .game-board .roll-initiative input,
 .game-board .roll-initiative select,
 .game-board .roll-initiative .select,
 .game-board .create-character input,
 .game-board .create-character select,
-.game-board .create-character .select {
+.game-board .create-character .select,
+.game-board .map-select input,
+.game-board .map-select select,
+.game-board .map-select .select {
   width: 100%;
 }
 .game-board input[type=checkbox] {
@@ -668,10 +676,6 @@
 }
 
 .remove-button {
-  position: absolute;
-  bottom: 0;
-  left: 25%;
-  transform: translateX(-50%);
   border-radius: 50% !important;
   padding: 0.15rem !important;
   height: 26px;
@@ -690,10 +694,6 @@
 }
 
 .copy-button {
-  position: absolute;
-  bottom: 0;
-  left: 75%;
-  transform: translateX(-50%);
   border-radius: 50% !important;
   padding: 0.15rem !important;
   height: 26px;
@@ -712,10 +712,6 @@
 }
 
 .edit-button {
-  position: absolute;
-  top: 0;
-  left: 25%;
-  transform: translateX(-50%);
   border-radius: 50% !important;
   padding: 0.15rem !important;
   height: 26px;
@@ -736,17 +732,19 @@
 .game-buttons {
   position: fixed;
   bottom: 0;
-  right: 0;
-  background: #000;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.91);
   padding: 1rem;
-  border-radius: 10px 0 0 0;
-  border: 2px inset #fff;
-  border-right-width: 0;
-  border-bottom-width: 0;
+  border-radius: 10px;
+  border: 3px inset #994a00;
   height: max-content;
   width: max-content;
   display: inline-flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
+  top: 0;
+  margin: auto 0;
+  flex-direction: column;
+  padding: 0.5rem;
 }
 .game-buttons .button-hidden {
   display: none;
@@ -834,10 +832,25 @@ body {
 .selected-character {
   position: fixed;
   left: 0;
-  bottom: 0;
+  bottom: 2px;
+  right: 0;
+  margin: auto;
   height: min-content;
   scrollbar-width: initial;
   overflow-x: initial;
+  align-items: flex-end;
+}
+.selected-character .selected-character__actions {
+  background: rgba(0, 0, 0, 0.91);
+  padding: 0.25rem;
+  border-radius: 10px;
+  border: 3px inset #994a00;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, auto);
+  height: 80px;
+  grid-gap: 2px;
+  pointer-events: auto;
 }
 .selected-character .initiative-card__selected {
   width: 80px;
