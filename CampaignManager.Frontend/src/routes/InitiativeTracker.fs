@@ -287,7 +287,10 @@ let update (msg: Msg) (model: Model) =
          |> updateScene (fun scene ->
              { scene with
                  GameState = Active
-                 CombatantTurn = (scene.CombatantTurn + 1) % (List.length scene.Combatants) }),
+                 CombatantTurn = (scene.CombatantTurn + 1) % (List.length scene.Combatants) })
+         |> (fun updatedModel ->
+             { updatedModel with
+                 SelectedCharacterIndex = Some updatedModel.InitiativeViewModel.Scene.CombatantTurn }),
          Cmd.none)
         |> updateLocalStorage
     | ResetClicked ->
@@ -439,7 +442,8 @@ let update (msg: Msg) (model: Model) =
             ErrorMessage = err.Message },
         Cmd.none
     | OnTokenClicked(tokenIndex, newX, newY) ->
-        (model
+        ({ model with
+            SelectedCharacterIndex = Some tokenIndex }
          |> updateScene (fun scene ->
              { scene with
                  Combatants =
