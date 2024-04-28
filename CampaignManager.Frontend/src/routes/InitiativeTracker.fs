@@ -87,6 +87,8 @@ type Msg =
     | EditCharacterPlayerTypeUpdated of string
     | EditCharacterCancelClicked
     | EditCharacterSaveClicked of (int * Combatant)
+    | OnCombatantScrollClicked
+    | OnCombatantScrollReleased
 
 
 let getInitiativeViewModel accessToken maybeSceneId =
@@ -609,7 +611,8 @@ let update (msg: Msg) (model: Model) =
                          if ind = combatantIndex then updatedCombatant else combatant) }),
          Cmd.none)
         |> updateLocalStorage
-
+    | OnCombatantScrollClicked -> (model, Cmd.OfFunc.perform setDraggable (false, "combatant-scroll") (fun () -> NoOp))
+    | OnCombatantScrollReleased -> (model, Cmd.OfFunc.perform setDraggable (true, "combatant-scroll") (fun () -> NoOp))
 
 
 let viewPlayerCard player ind currentTurn dispatch =
@@ -781,7 +784,11 @@ let view model dispatch =
                                   prop.children
                                       [ Html.div
                                             [ prop.className "initiative"
-                                              prop.id "initiativeRotation"
+                                              prop.onPointerDown (fun ev ->
+                                                  ev.preventDefault ()
+                                                  ev.stopPropagation ()
+                                                  dispatch OnCombatantScrollClicked)
+                                              prop.onPointerOut (fun _ -> dispatch OnCombatantScrollReleased)
                                               List.mapi
                                                   (fun ind player ->
                                                       viewPlayerCard
