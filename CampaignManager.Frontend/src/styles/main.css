@@ -360,7 +360,7 @@
 }
 .initiative .initiative-card__selected img,
 .selected-character .initiative-card__selected img {
-  border-radius: 10px;
+  border-radius: 10px 10px 10px 0px;
   border: 3px outset #994a00;
 }
 .initiative .initiative-card,
@@ -792,7 +792,7 @@ body {
 .selected-character .selected-character__actions {
   background: rgba(0, 0, 0, 0.85);
   padding: 0.25rem;
-  border-radius: 10px;
+  border-radius: 10px 0px 0px 10px;
   border: 3px inset #994a00;
   display: grid;
   grid-auto-flow: column;
