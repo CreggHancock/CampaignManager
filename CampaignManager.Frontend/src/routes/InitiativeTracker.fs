@@ -812,7 +812,8 @@ let view model dispatch =
                                       prop.children
                                           [ Bulma.label "Background URL"
                                             Bulma.input.text
-                                                [ prop.onChange (fun ev -> dispatch (BackgroundUpdated ev)) ] ] ]
+                                                [ prop.value model.InitiativeViewModel.Scene.BackgroundImage
+                                                  prop.onChange (fun ev -> dispatch (BackgroundUpdated ev)) ] ] ]
                                 Html.div
                                     [ prop.className "flex-100"
                                       prop.children
