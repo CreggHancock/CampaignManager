@@ -223,7 +223,7 @@ let init accessToken sceneId =
               Height = 0
               SquareSize = 0
               GameState = GameState.CharacterSetup
-              BackgroundImage = "https://rattrapgames.com/cdn/shop/products/RAT-MAT-GF001_1024x1024@2x.jpg?v=1576461000"
+              BackgroundImage = "./img/abandonedFortress.png"
               ShowGrid = false } }
        NewCharacter = None
        ErrorMessage = ""
