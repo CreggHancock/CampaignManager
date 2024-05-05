@@ -1,3 +1,5 @@
+@import "../../node_modules/bulma-slider/dist/css/bulma-slider.min.css";
+
 #root {
     height: 100vh;
     > div {
@@ -139,7 +141,6 @@
     background-repeat: no-repeat;
     background-origin: padding-box, border-box;
     .grid {
-        background-size: 40px 40px;
         background-image:
             linear-gradient(to right, grey 1px, transparent 1px),
             linear-gradient(to bottom, grey 1px, transparent 1px);

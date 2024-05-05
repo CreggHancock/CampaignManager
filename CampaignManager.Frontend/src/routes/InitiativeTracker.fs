@@ -89,6 +89,7 @@ type Msg =
     | EditCharacterSaveClicked of (int * Combatant)
     | OnCombatantScrollClicked
     | OnCombatantScrollReleased
+    | OnGridSizeChanged of int
 
 
 let getInitiativeViewModel accessToken maybeSceneId =
@@ -224,7 +225,8 @@ let init accessToken sceneId =
               SquareSize = 0
               GameState = GameState.CharacterSetup
               BackgroundImage = "./img/abandonedFortress.png"
-              ShowGrid = false } }
+              ShowGrid = false
+              GridSize = 5 } }
        NewCharacter = None
        ErrorMessage = ""
        IsLoggedIn = Option.isSome accessToken
@@ -617,6 +619,9 @@ let update (msg: Msg) (model: Model) =
         |> updateLocalStorage
     | OnCombatantScrollClicked -> (model, Cmd.OfFunc.perform setDraggable (false, "combatant-scroll") (fun () -> NoOp))
     | OnCombatantScrollReleased -> (model, Cmd.OfFunc.perform setDraggable (true, "combatant-scroll") (fun () -> NoOp))
+    | OnGridSizeChanged gridSizeString ->
+        (model |> updateScene (fun scene -> { scene with GridSize = gridSizeString }), Cmd.none)
+        |> updateLocalStorage
 
 
 let viewPlayerCard player ind currentTurn dispatch =
@@ -772,7 +777,11 @@ let view model dispatch =
                                prop.className "map-image"
                                prop.src model.InitiativeViewModel.Scene.BackgroundImage ]
                          if model.InitiativeViewModel.Scene.ShowGrid then
-                             Html.div [ prop.className "grid" ]
+                             Html.div
+                                 [ prop.className "grid"
+                                   prop.style
+                                       [ style.backgroundSize
+                                             $"{model.InitiativeViewModel.Scene.GridSize}px {model.InitiativeViewModel.Scene.GridSize}px" ] ]
                          else
                              Html.none ])
                       @ List.mapi
@@ -823,8 +832,18 @@ let view model dispatch =
                                                   Bulma.input.checkbox
                                                       [ prop.onChange (fun (ev: bool) -> dispatch (ShowGridToggled ev))
                                                         prop.isChecked model.InitiativeViewModel.Scene.ShowGrid ] ] ] ]
+                                if model.InitiativeViewModel.Scene.ShowGrid then
+                                    Html.div
+                                        [ prop.className "flex-50"
+                                          prop.children
+                                              [ Bulma.label "Grid Size"
+                                                Slider.slider
+                                                    [ color.isPrimary
+                                                      slider.isFullWidth
+                                                      prop.value model.InitiativeViewModel.Scene.GridSize
+                                                      prop.onChange (fun (ev: int) -> dispatch (OnGridSizeChanged ev)) ] ] ]
                                 Html.div
-                                    [ prop.className "map-buttons"
+                                    [ prop.className "map-buttons flex-100"
                                       prop.children
                                           [ Bulma.button.button
                                                 [ color.isDanger

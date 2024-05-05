@@ -1,3 +1,4 @@
+@import "../../node_modules/bulma-slider/dist/css/bulma-slider.min.css";
 #root {
   height: 100vh;
 }

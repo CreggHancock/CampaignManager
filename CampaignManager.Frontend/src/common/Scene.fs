@@ -36,4 +36,5 @@ type Scene =
       Round: int
       Combatants: Combatant List
       GameState: GameState
-      ShowGrid: bool }
+      ShowGrid: bool
+      GridSize: int }
