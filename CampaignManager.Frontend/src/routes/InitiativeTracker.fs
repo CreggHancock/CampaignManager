@@ -811,6 +811,26 @@ let view model dispatch =
                                                           dispatch)
                                                   model.InitiativeViewModel.Scene.Combatants
                                               |> prop.children ] ] ] ] ]
+                match model.SelectedCharacterIndex with
+                | Some index ->
+                    if List.length model.InitiativeViewModel.Scene.Combatants > index then
+                        let selectedCombatant =
+                            model.InitiativeViewModel.Scene.Combatants
+                            |> List.toArray
+                            |> (fun combatants -> combatants[index])
+
+                        Html.div
+                            [ prop.className "intro-cards"
+                              prop.children
+                                  [ Html.div
+                                        [ prop.className "character-introduction"
+                                          prop.children
+                                              [ Html.span [ prop.className "name"; prop.text selectedCombatant.Name ]
+
+                                              ] ] ] ]
+                    else
+                        Html.none
+                | None -> Html.none
                 if model.BackgroundDropdownToggled then
                     Html.div
                         [ prop.classes [ "map-select" ]

@@ -163,7 +163,6 @@
   background-origin: padding-box, border-box;
 }
 .game-map .grid {
-  background-size: 40px 40px;
   background-image: linear-gradient(to right, grey 1px, transparent 1px), linear-gradient(to bottom, grey 1px, transparent 1px);
   position: absolute;
   width: 100%;
@@ -576,13 +575,19 @@
 .character-introduction {
   width: max-content;
   position: absolute;
-  top: 150px;
+  top: 125px;
   left: 50%;
   transform: translateX(-50%);
   color: #fff;
-  display: none;
   align-items: center;
   gap: 1rem;
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   height: max-content;
   text-shadow: 1px 1px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000, 0 0 2px #000, 0 0 3px #000, 0 0 4px #000, 0 0 5px #000, 0 0 4px #000, 0 0 5px #000, 0 0 4px #000, 0 0 5px #000, 0 0 4px #000, 0 0 5px #000;
 }
@@ -591,7 +596,7 @@
   animation: fadeIntro 7s forwards;
 }
 .character-introduction .name {
-  font-size: calc(25px + 45 * (100vw - 380px) / 1540);
+  font-size: calc(25px + 25 * (100vw - 380px) / 1540);
 }
 .character-introduction .level {
   font-size: calc(25px + 5 * (100vw - 380px) / 1540);
@@ -805,6 +810,7 @@ body {
 .selected-character .initiative-card__selected {
   width: 80px;
   height: 140px;
+  pointer-events: none;
 }
 .selected-character .initiative-card__selected:hover, .selected-character .initiative-card__selected:focus {
   width: 80px;
